@@ -1,261 +1,252 @@
 ---
-description: Bootstrap ΩmegaWiki from user sources plus optional discovery, then ingest the final paper set in parallel
-argument-hint: "[topic] [--no-introduction]"
+description: Khởi tạo ΩmegaWiki từ các nguồn của người dùng cộng với khám phá tùy chọn, sau đó ingest tập hợp bài báo cuối cùng song song
+argument-hint: "[chủ-đề] [--no-introduction]"
 ---
 
 # /init
 
-> Build a wiki from `raw/` with deterministic source preparation, planner-guided discovery, provisional notes/web scaffolding, and parallel `/ingest` fan-out/fan-in.
+> Xây dựng wiki từ `raw/` với chuẩn bị nguồn xác định, khám phá hướng dẫn bởi planner, tạo khung ghi chú/web tạm thời và `/ingest` song song fan-out/fan-in.
 
-Use these local references on demand:
+Sử dụng các tài liệu tham khảo cục bộ này theo yêu cầu:
 
-- `references/prepare-and-discovery.md` — prepare flow, final selection, fetch, and source-manifest rules
-- `references/planner-policy.md` — planner behavior and LLM trim expectations
-- `references/parallel-ingest.md` — worktree isolation, subagent prompt contract, merge, and cleanup
+- `references/prepare-and-discovery.md` — luồng chuẩn bị, lựa chọn cuối cùng, lấy và quy tắc manifest nguồn
+- `references/planner-policy.md` — hành vi planner và kỳ vọng cắt giảm LLM
+- `references/parallel-ingest.md` — cô lập worktree, hợp đồng lời nhắc tiểu tác nhân, hợp nhất và dọn dẹp
 
-## Inputs
+## Đầu Vào
 
-- `topic` (optional): research direction keywords; omit when `raw/` already defines the seed set
-- `--no-introduction` (optional): disable external discovery; use only when the user explicitly requests it
-- User-owned sources under `raw/papers/`, `raw/notes/`, `raw/web/`
+- `topic` (tùy chọn): từ khóa hướng nghiên cứu; bỏ qua khi `raw/papers/` đã xác định tập hợp hạt giống hoặc khi notes/web đã nắm bắt ý định
+- `--no-introduction` (tùy chọn): vô hiệu hóa khám phá bài báo bên ngoài; chỉ sử dụng `raw/papers/`, `raw/notes/` và `raw/web/` thuộc sở hữu người dùng
+- ràng buộc tham số: coi `topic` và `--no-introduction` là đầu vào của người dùng, không phải nút điều khiển chiến lược tác nhân. Không suy ra `--no-introduction` chỉ từ trạng thái kho lưu trữ. Chỉ sử dụng nó khi người dùng yêu cầu rõ ràng vô hiệu hóa khám phá bên ngoài.
+- `raw/papers/`: nguồn bài báo thuộc sở hữu người dùng (`.tex`, `.pdf`, kho lưu trữ)
+- `raw/notes/`: ghi chú thuộc sở hữu người dùng thể hiện mục tiêu, giả thuyết, loại trừ và các hướng phụ ưa thích
+- `raw/web/`: các trang web đã lưu thuộc sở hữu người dùng thể hiện mục tiêu, giả thuyết, loại trừ và các hướng phụ ưa thích
 
-## Outputs
+## Đầu Ra
 
-- `wiki/` scaffold and provisional pages (Summary, topics, ideas, concepts, claims)
-- `raw/tmp/` and `raw/discovered/` prepared sources
-- Final paper pages via parallel `/ingest` subagents
-- `.checkpoints/init-*.json` manifests for resume and replay
-- Updated `wiki/index.md`, `wiki/log.md`, `wiki/graph/*`
+- `wiki/` khung thông qua `tools/research_wiki.py init`
+- `raw/tmp/` — các nguồn cục bộ đã chuẩn bị được tạo ra, được tái sử dụng bởi `/init` và `/ingest` cục bộ trực tiếp
+- `raw/discovered/` — các bài báo mới tải xuống được `/init` chọn khi khám phá được bật
+- `wiki/Summary/{area}.md`, `wiki/topics/{topic}.md`, `wiki/ideas/{slug}.md` tạm thời, `wiki/concepts/{slug}.md`, `wiki/claims/{slug}.md`
+- `wiki/papers/*.md` cộng với các khái niệm / khẳng định / người có nguồn gốc từ bài báo thông qua `/ingest` song song
+- đã cập nhật `wiki/index.md`, `wiki/log.md`, `wiki/graph/edges.jsonl`, `wiki/graph/context_brief.md`, `wiki/graph/open_questions.md`
+- `.checkpoints/init-prepare.json`, `.checkpoints/init-plan.json`, `.checkpoints/init-sources.json`
 
-## Wiki Interaction
+## Tương Tác Wiki
 
-### Reads
+### Đọc
 
 - `raw/papers/`, `raw/notes/`, `raw/web/`
-- `.checkpoints/init-prepare.json` and `.checkpoints/init-sources.json` for resume, planning, and fan-out
-- `wiki/index.md` plus existing `wiki/topics/`, `wiki/ideas/`, `wiki/concepts/`, `wiki/claims/` for duplicate avoidance and scaffold alignment
+- `.checkpoints/init-prepare.json` và `.checkpoints/init-sources.json` để tiếp tục, lập kế hoạch và fan-out
+- `wiki/index.md` cộng với `wiki/topics/`, `wiki/ideas/`, `wiki/concepts/`, `wiki/claims/` hiện có để tránh trùng lặp và căn chỉnh khung
 
-### Writes
+### Ghi
 
-- `wiki/` scaffold and provisional pages
-- `raw/tmp/` and `raw/discovered/`
+- `wiki/` khung và các trang tạm thời
+- `raw/tmp/` và `raw/discovered/`
 - `wiki/index.md`, `wiki/log.md`, `wiki/graph/*`
-- `.checkpoints/init-prepare.json`, `.checkpoints/init-plan.json`, `.checkpoints/init-sources.json`, and `init-session` checkpoint metadata
+- `.checkpoints/init-prepare.json`, `.checkpoints/init-plan.json`, `.checkpoints/init-sources.json`, và siêu dữ liệu checkpoint `init-session`
 
-### Graph edges created
+### Các cạnh đồ thị được tạo
 
-- `/init` itself creates only scaffold-level edges when provisional pages need them
-- all paper-driven edges are delegated to `/ingest`
+- `/init` chỉ tự tạo các cạnh cấp khung khi các trang tạm thời cần chúng
+- tất cả các cạnh do bài báo tạo ra được ủy quyền cho `/ingest`
 
-## Workflow
+## Quy Trình Làm Việc
 
-**Pre-condition**: working directory is the project root containing `wiki/`, `raw/`, and `tools/`. Set `WIKI_ROOT=wiki/`. Resolve `PYTHON_BIN` once and reuse it for every Python command during `/init` so the workflow stays on the interpreter that `setup.sh` prepared:
+**Điều kiện tiên quyết**: thư mục làm việc là thư mục gốc dự án chứa `wiki/`, `raw/` và `tools/`. Đặt `WIKI_ROOT=wiki/`. Giải quyết `PYTHON_BIN` một lần và tái sử dụng cho mọi lệnh Python trong `/init` để quy trình làm việc sử dụng trình thông dịch mà `setup.sh` đã chuẩn bị:
 
 ```bash
-# Find the project root via git so worktree subagents can still locate .venv.
-# .venv is gitignored, so a subagent whose cwd is ../.worktrees/<branch>/
-# doesn't have one — without this lookup it falls back to system python3 and
-# misses the .env-loaded API keys plus the installed deps (deepxiv-sdk etc.).
-# git rev-parse --git-common-dir returns the main repo's .git regardless of
-# which worktree the shell is in; its parent is the project root.
-GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null || true)
-PROJECT_ROOT=""
-if [ -n "$GIT_COMMON_DIR" ]; then
-  PROJECT_ROOT=$(cd "$(dirname "$GIT_COMMON_DIR")" 2>/dev/null && pwd)
-fi
-
-if   [ -x "$PROJECT_ROOT/.venv/bin/python" ];         then PYTHON_BIN="$PROJECT_ROOT/.venv/bin/python"
-elif [ -x "$PROJECT_ROOT/.venv/Scripts/python.exe" ]; then PYTHON_BIN="$PROJECT_ROOT/.venv/Scripts/python.exe"
-elif [ -x .venv/bin/python ];                         then PYTHON_BIN=.venv/bin/python
-elif [ -x .venv/Scripts/python.exe ];                 then PYTHON_BIN=.venv/Scripts/python.exe
-else                                                       PYTHON_BIN=python3
+if [ -x .venv/bin/python ]; then
+  PYTHON_BIN=.venv/bin/python
+elif [ -x .venv/Scripts/python.exe ]; then
+  PYTHON_BIN=.venv/Scripts/python.exe
+else
+  PYTHON_BIN=python3
 fi
 export PYTHON_BIN
 ```
 
-### Step 1: Initialize wiki structure
+### Bước 1: Khởi tạo cấu trúc wiki
 
 ```bash
 "$PYTHON_BIN" tools/research_wiki.py init wiki/
 ```
 
-Create the standard wiki directories, `graph/`, `outputs/`, `index.md`, and `log.md`. Do not add a second init log entry here.
+Tạo các thư mục wiki tiêu chuẩn, `graph/`, `outputs/`, `index.md` và `log.md`. Không thêm mục nhật ký khởi tạo thứ hai ở đây.
 
-### Step 2: Prepare local inputs into `raw/tmp/`
+### Bước 2: Chuẩn bị đầu vào cục bộ vào `raw/tmp/`
 
 ```bash
 "$PYTHON_BIN" tools/init_discovery.py prepare --raw-root raw --pdf-titles-json .checkpoints/init-pdf-titles.json --output-manifest .checkpoints/init-prepare.json
 ```
 
-- before running `prepare`, inspect each local PDF and write the recovery handoff to `.checkpoints/init-pdf-titles.json` as either `{ "raw/papers/foo.pdf": "Recovered Paper Title" }` or `{ "raw/papers/foo.pdf": { "title": "Recovered Paper Title", "arxiv_id": "2401.00001" } }` when a confident arXiv ID is already known
-- use `"$PYTHON_BIN" tools/prepare_paper_source.py --raw-root raw --source <local-path> [--title "<recovered-title>"] [--arxiv-id "<recovered-arxiv-id>"]` for local paper normalization
-- local PDF recovery order is strict: handed-off arXiv ID or filename/path arXiv ID -> agent-recovered title via Semantic Scholar -> fetched arXiv source -> synthetic `.tex`
-- when the agent supplied a PDF title, treat that title as authoritative for the prepared manifest; fetched/source titles are sanitized fallback metadata only and must not overwrite it
-- do not use PDF metadata or body text as arXiv-ID hints during prepare
-- metadata or filename titles may remain as provisional display labels only; they are not trusted identity or title-search inputs
-- keep notes/web on their original source paths; `/init` reads them directly during planning
-- set each local paper's `canonical_ingest_path` to a prepared `raw/tmp/` path when available; otherwise fall back to the original `raw/papers/...` path
-- record warnings for failed decode / title recovery / arXiv source fetch rather than aborting `/init`
-- see `references/prepare-and-discovery.md` for the prepare decision tree and source-preference rules
+- trước khi chạy `prepare`, kiểm tra từng PDF cục bộ và ghi lại chuyển giao khôi phục vào `.checkpoints/init-pdf-titles.json` dưới dạng `{ "raw/papers/foo.pdf": "Tiêu đề bài báo đã khôi phục" }` hoặc `{ "raw/papers/foo.pdf": { "title": "Tiêu đề bài báo đã khôi phục", "arxiv_id": "2401.00001" } }` khi đã biết ID arXiv đáng tin cậy
+- sử dụng `"$PYTHON_BIN" tools/prepare_paper_source.py --raw-root raw --source <đường-dẫn-cục-bộ> [--title "<tiêu-đề-đã-khôi-phục>"] [--arxiv-id "<arxiv-id-đã-khôi-phục>"]` để chuẩn hóa bài báo cục bộ
+- thứ tự khôi phục PDF cục bộ nghiêm ngặt: ID arXiv chuyển giao hoặc ID arXiv từ tên tệp/đường dẫn -> tiêu đề đã khôi phục bởi tác nhân qua Semantic Scholar -> nguồn arXiv đã lấy -> `.tex` tổng hợp
+- khi tác nhân cung cấp tiêu đề PDF, coi tiêu đề đó là có thẩm quyền cho manifest đã chuẩn bị; các tiêu đề từ nguồn/tải về chỉ là siêu dữ liệu dự phòng đã được làm sạch và không được ghi đè lên nó
+- không sử dụng siêu dữ liệu PDF hoặc văn bản nội dung làm gợi ý ID arXiv trong quá trình chuẩn bị
+- tiêu đề siêu dữ liệu hoặc tên tệp chỉ có thể giữ lại làm nhãn hiển thị tạm thời; chúng không được tin cậy làm đầu vào nhận dạng hoặc tìm kiếm tiêu đề
+- giữ nguyên notes/web trên đường dẫn nguồn gốc của chúng; `/init` đọc chúng trực tiếp trong quá trình lập kế hoạch
+- đặt `canonical_ingest_path` của mỗi bài báo cục bộ thành đường dẫn `raw/tmp/` đã chuẩn bị khi có sẵn; nếu không, quay lại đường dẫn gốc `raw/papers/...`
+- ghi lại cảnh báo cho các lỗi giải mã / khôi phục tiêu đề / lấy nguồn arXiv thay vì hủy bỏ `/init`
+- xem `references/prepare-and-discovery.md` cho cây quyết định chuẩn bị và quy tắc ưu tiên nguồn
 
-### Step 3: Plan discovery, trim the final set, and write the source manifest
+### Bước 3: Lập kế hoạch khám phá, cắt giảm tập hợp cuối cùng và viết manifest nguồn
 
 ```bash
-"$PYTHON_BIN" tools/init_discovery.py plan [--topic "<topic>"] --mode auto --raw-root raw --wiki-root wiki --prepared-manifest .checkpoints/init-prepare.json --allow-introduction <true|false> --output-plan .checkpoints/init-plan.json
+"$PYTHON_BIN" tools/init_discovery.py plan [--topic "<chủ-đề>"] --mode auto --raw-root raw --wiki-root wiki --prepared-manifest .checkpoints/init-prepare.json --allow-introduction <true|false> --output-plan .checkpoints/init-plan.json
 ```
 
-- `mode=seeded` when the prepare manifest contains at least one parseable local paper; otherwise `mode=bootstrap`
-- `plan` must read `.checkpoints/init-prepare.json` instead of rescanning `raw/`
-- planner policy is qualitative at the skill layer: favor relevance, freshness, connectivity, and survey coverage
-- in seeded mode with limited introduced capacity, avoid over-prioritizing older citation-heavy anchors
-- in bootstrap mode, one older canonical anchor may be useful when it improves coverage
-- when DeepXiv search is available, use returned `relevance_score` in tool scoring rather than merely noting it in prose
-- exact ranking weights, shortlist constants, and threshold math belong to `tools/init_discovery.py`; treat the tool as the implementation authority and do not restate or override its constants in LLM reasoning
-- read `.checkpoints/init-plan.json` and explicitly trim the over-picked `shortlist` to a final **8-10** papers total before `fetch`
-- emit an explicit final selection artifact before `fetch` with `shortlist_count`, `final_count`, and the exact final `candidate_id` list in shortlist order
-- if `final_count` falls outside **8-10**, stop and revise the final selection before `fetch`, unless `--no-introduction` is active or the user already supplied more than 10 parseable papers
-- if `--no-introduction` is present, only use this branch when the user explicitly requested local-only behavior; still run `fetch` with zero external IDs so it writes `.checkpoints/init-sources.json`
-- see `references/planner-policy.md` for planner behavior, trim expectations, and source-of-truth boundaries
+- `mode=seeded` khi manifest chuẩn bị chứa ít nhất một bài báo cục bộ có thể phân tích cú pháp; nếu không `mode=bootstrap`
+- `plan` phải đọc `.checkpoints/init-prepare.json` thay vì quét lại `raw/`
+- chính sách planner mang tính định tính ở lớp kỹ năng: ưu tiên mức độ liên quan, tính mới, khả năng kết nối và phạm vi khảo sát
+- trong chế độ seeded với khả năng giới thiệu hạn chế, tránh ưu tiên quá mức các bài báo cũ có nhiều trích dẫn
+- trong chế độ bootstrap, một bài báo neo kinh điển cũ có thể hữu ích khi nó cải thiện phạm vi
+- khi tìm kiếm DeepXiv khả dụng, sử dụng `relevance_score` trả về trong đánh giá công cụ thay vì chỉ ghi chú nó trong văn bản
+- trọng số xếp hạng chính xác, hằng số danh sách rút gọn và toán học ngưỡng thuộc về `tools/init_discovery.py`; coi công cụ là cơ quan thực thi và không tái khẳng định hoặc ghi đè các hằng số của nó trong lý luận LLM
+- đọc `.checkpoints/init-plan.json` và cắt giảm rõ ràng `shortlist` quá mức thành tổng cộng **8-10** bài báo trước khi `fetch`
+- tạo ra một tạo tác lựa chọn cuối cùng rõ ràng trước khi `fetch` với `shortlist_count`, `final_count` và danh sách `candidate_id` cuối cùng chính xác theo thứ tự shortlist
+- nếu `final_count` nằm ngoài **8-10**, dừng lại và sửa đổi lựa chọn cuối cùng trước khi `fetch`, trừ khi `--no-introduction` đang hoạt động hoặc người dùng đã cung cấp hơn 10 bài báo có thể phân tích cú pháp
+- nếu `--no-introduction` có mặt, chỉ sử dụng nhánh này khi người dùng yêu cầu rõ ràng hành vi chỉ cục bộ; vẫn chạy `fetch` với ID bên ngoài bằng không để nó viết `.checkpoints/init-sources.json`
+- xem `references/planner-policy.md` cho hành vi planner, kỳ vọng cắt giảm và ranh giới nguồn sự thật
 
-Then run:
+Sau đó chạy:
 
 ```bash
 "$PYTHON_BIN" tools/init_discovery.py fetch --raw-root raw --plan-json .checkpoints/init-plan.json --prepared-manifest .checkpoints/init-prepare.json --output-sources .checkpoints/init-sources.json --id <candidate-id> --id <candidate-id>
 ```
 
-- external papers downloaded by `/init` go to `raw/discovered/`, never `raw/papers/`
-- never fetch a paper that is already represented by a prepared local source from `raw/tmp/`
-- `.checkpoints/init-sources.json` is the single source of truth for downstream ingest order
+- các bài báo bên ngoài được tải xuống bởi `/init` đi vào `raw/discovered/`, không bao giờ `raw/papers/`
+- không bao giờ tải xuống một bài báo đã được đại diện bởi nguồn cục bộ đã chuẩn bị từ `raw/tmp/`
+- `.checkpoints/init-sources.json` là nguồn sự thật duy nhất cho thứ tự ingest hạ nguồn
 
-### Step 4: Create scaffold pages before paper ingest
+### Bước 4: Tạo các trang khung trước khi ingest bài báo
 
-Create one `wiki/Summary/{area}.md`, the needed `wiki/topics/{slug}.md`, and provisional `ideas/`, `concepts/`, and `claims/` from notes/web when warranted.
+Tạo một `wiki/Summary/{area}.md`, các `wiki/topics/{slug}.md` cần thiết và các `ideas/`, `concepts/` và `claims/` tạm thời từ notes/web khi được bảo đảm.
 
-Rules:
+Quy tắc:
 
-- notes/web are authoritative for user intent, not for literature confidence
-- every notes/web-derived page must include this exact line immediately after frontmatter:
+- notes/web có thẩm quyền về ý định của người dùng, không phải về độ tin cậy của tài liệu
+- mọi trang có nguồn gốc từ notes/web phải bao gồm dòng chính xác này ngay sau frontmatter:
 
 ```markdown
-Provisional note: seeded from raw/notes or raw/web during /init; pending validation from ingested papers.
+Ghi chú tạm thời: được khởi tạo từ raw/notes hoặc raw/web trong quá trình /init; chờ xác thực từ các bài báo đã ingest.
 ```
 
-- `topics/`: create when a direction is explicit or repeated
-- `ideas/`: create when the user states or strongly implies a research direction or hypothesis
-- `concepts/`: create only when the mechanism recurs across notes/web, or appears once in notes/web and once in the final paper set
-- `claims/`: create only from explicit assertive statements, never by inference
-- for notes/web-derived claims, use `status: proposed`, `confidence: 0.2`, `source_papers: []`, and `evidence: []`
-- `/prefill` is optional background seeding and is not part of `/init`
-- `/init` must not create `people/` pages directly and must not auto-create foundations
+- `topics/`: tạo khi một hướng được nêu rõ hoặc lặp lại
+- `ideas/`: tạo khi người dùng nêu hoặc ngụ ý mạnh mẽ một hướng hoặc giả thuyết nghiên cứu
+- `concepts/`: chỉ tạo khi cơ chế xuất hiện nhiều lần trong notes/web, hoặc xuất hiện một lần trong notes/web và một lần trong tập hợp bài báo cuối cùng
+- `claims/`: chỉ tạo từ các phát biểu khẳng định rõ ràng, không bao giờ bằng suy luận
+- đối với các khẳng định có nguồn gốc từ notes/web, sử dụng `status: proposed`, `confidence: 0.2`, `source_papers: []` và `evidence: []`
+- `/prefill` là seeding nền tảng tùy chọn và không phải là một phần của `/init`
+- `/init` không được trực tiếp tạo các trang `people/` và không được tự động tạo foundations
 
-### Step 5: Parallel paper ingest with worktree isolation
+### Bước 5: Ingest bài báo song song với cô lập worktree
 
-Paper sources for this step come strictly from `.checkpoints/init-sources.json`:
+Nguồn bài báo cho bước này đến nghiêm ngặt từ `.checkpoints/init-sources.json`:
 
-- `origin=user_local`: canonical prepared `.tex` under `raw/tmp/` when available, otherwise fallback `raw/papers/...`
-- `origin=introduced`: fetched dirs or PDFs under `raw/discovered/`
+- `origin=user_local`: `.tex` đã chuẩn bị chính tắc dưới `raw/tmp/` khi có sẵn, nếu không quay lại `raw/papers/...`
+- `origin=introduced`: các thư mục hoặc PDF đã lấy dưới `raw/discovered/`
 
-Parallel ingest contract:
+Hợp đồng ingest song song:
 
-- stash unrelated dirty files before fan-out, then record `stash_ref`, `base_branch`, and `base_commit` in checkpoint metadata
-- commit the freshly created scaffold and init manifests before fan-out so `BASE_COMMIT` actually contains the pages, manifests, and handoff metadata that subagents must branch from
-- verify `.gitattributes` contains `merge=union` for `wiki/log.md`, `wiki/graph/edges.jsonl`, `wiki/graph/citations.jsonl`, and `wiki/index.md` before creating worktrees
-- `/init` worktree mode must run from a named branch, not detached HEAD
-- create each worktree from `BASE_COMMIT`, not from the already checked-out `BASE_BRANCH`
-- subagent prompts must use **relative paths only**, and the subagent's shell working directory must be the worktree path (`$WT_PATH`), not the main repository root
-- execute `/ingest` for exactly one handed-off source path; do not bypass `/ingest`
-- in INIT MODE, consume the handed-off canonical path exactly as provided
-- skip `fetch_s2.py citations`
-- skip `fetch_s2.py references`
-- skip per-subagent `rebuild-index`
-- skip per-subagent `rebuild-context-brief`
-- skip per-subagent `rebuild-open-questions`
-- skip conflict-prone topic writes
-- commit the ingest result inside the worktree before exiting so fan-in merges a real paper-specific commit instead of an empty branch
-- see `references/parallel-ingest.md` for worktree commands, merge order, fan-in, and cleanup
+- lưu trữ các tệp bẩn không liên quan trước khi fan-out, sau đó ghi lại `stash_ref`, `base_branch` và `base_commit` trong siêu dữ liệu checkpoint
+- commit khung và các manifest init mới tạo trước khi fan-out để `BASE_COMMIT` thực sự chứa các trang, manifest và siêu dữ liệu chuyển giao mà các tiểu tác nhân phải phân nhánh từ
+- xác minh `.gitattributes` chứa `merge=union` cho `wiki/log.md`, `wiki/graph/edges.jsonl` và `wiki/index.md` trước khi tạo worktree
+- chế độ worktree `/init` phải chạy từ một nhánh có tên, không phải HEAD tách rời
+- tạo mỗi worktree từ `BASE_COMMIT`, không phải từ `BASE_BRANCH` đã checkout
+- các lời nhắc tiểu tác nhân phải sử dụng **chỉ đường dẫn tương đối**
+- thực thi `/ingest` cho chính xác một đường dẫn nguồn đã chuyển giao; không bỏ qua `/ingest`
+- trong CHẾ ĐỘ INIT, sử dụng đường dẫn chính tắc đã chuyển giao chính xác như được cung cấp
+- bỏ qua `fetch_s2.py citations`
+- bỏ qua `fetch_s2.py references`
+- bỏ qua `rebuild-index` cho mỗi tiểu tác nhân
+- bỏ qua `rebuild-context-brief` cho mỗi tiểu tác nhân
+- bỏ qua `rebuild-open-questions` cho mỗi tiểu tác nhân
+- bỏ qua các ghi chủ đề dễ gây xung đột
+- commit kết quả ingest bên trong worktree trước khi thoát để fan-in hợp nhất một commit cụ thể cho bài báo thay vì một nhánh trống
+- xem `references/parallel-ingest.md` cho các lệnh worktree, thứ tự hợp nhất, fan-in và dọn dẹp
 
-### Step 6: Fan-in, rebuild, and final report
+### Bước 6: Fan-in, xây dựng lại và báo cáo cuối cùng
 
-After all subagents complete:
+Sau khi tất cả các tiểu tác nhân hoàn thành:
 
-- merge worktree branches sequentially on `BASE_BRANCH`
-- resolve true concept / claim conflicts conservatively: merge, do not multiply near-duplicates
-- run:
+- hợp nhất các nhánh worktree tuần tự trên `BASE_BRANCH`
+- giải quyết các xung đột khái niệm / khẳng định một cách thận trọng: hợp nhất, không nhân bản các bản sao gần trùng lặp
+- chạy:
 
 ```bash
 "$PYTHON_BIN" tools/research_wiki.py dedup-edges wiki/
-"$PYTHON_BIN" tools/research_wiki.py dedup-citations wiki/
 "$PYTHON_BIN" tools/research_wiki.py rebuild-index wiki/
 "$PYTHON_BIN" tools/research_wiki.py rebuild-context-brief wiki/
 "$PYTHON_BIN" tools/research_wiki.py rebuild-open-questions wiki/
 "$PYTHON_BIN" tools/lint.py --wiki-dir wiki/ --fix
 ```
 
-Report separately:
+Báo cáo riêng biệt:
 
-- user-provided papers ingested through prepared `raw/tmp/` paths
-- user-provided papers that fell back to original `raw/papers/` paths
-- discovered papers from `raw/discovered/`
-- provisional pages seeded from notes/web
-- pages created by `/ingest`
-- pages updated by `/ingest`
-- any skipped or failed papers
+- các bài báo do người dùng cung cấp được ingest thông qua các đường dẫn `raw/tmp/` đã chuẩn bị
+- các bài báo do người dùng cung cấp quay lại đường dẫn gốc `raw/papers/`
+- các bài báo đã khám phá từ `raw/discovered/`
+- các trang tạm thời được khởi tạo từ notes/web
+- các trang được tạo bởi `/ingest`
+- các trang được cập nhật bởi `/ingest`
+- bất kỳ bài báo nào bị bỏ qua hoặc thất bại
 
-If `stash_ref` exists, pop it at the end. If stash pop fails, keep the checkpoint and report the failure.
+Nếu `stash_ref` tồn tại, khôi phục nó ở cuối. Nếu khôi phục stash thất bại, giữ checkpoint và báo cáo lỗi.
 
-## Constraints
+## Các Ràng Buộc
 
-- Do not infer `--no-introduction` from repository state alone. Use it only when the user explicitly asked to disable external discovery.
-- `raw/papers/`, `raw/notes/`, and `raw/web/` are user-owned inputs
-- `raw/tmp/` and `raw/discovered/` are generated handoff areas; direct local `/ingest` may also prepare reusable local sidecars under `raw/tmp/`
-- `/init` may write external papers only to `raw/discovered/`; `/init` and direct local `/ingest` may write generated prepared local sources to `raw/tmp/`
-- `/prefill` is optional background seeding, not part of `/init`
-- no skill other than `/prefill` may auto-create foundations
-- `/init` must not create `people/` pages directly
-- notes/web-derived pages are provisional and must carry the exact notice line above
-- paper evidence outranks notes/web for claim confidence and concept consolidation
-- all paper ingest must run through parallel `/ingest` subagents with worktree isolation
-- Step 5 must read paper inputs from `.checkpoints/init-sources.json`, not by ad hoc folder scanning
-- exact deterministic planner policy belongs in `tools/init_discovery.py`, not in duplicated skill constants
+- `raw/papers/`, `raw/notes/` và `raw/web/` là đầu vào thuộc sở hữu người dùng
+- `raw/tmp/` và `raw/discovered/` là khu vực chuyển giao được tạo; `/ingest` cục bộ trực tiếp cũng có thể chuẩn bị các tệp tạm thời cục bộ có thể tái sử dụng dưới `raw/tmp/`
+- `/init` chỉ có thể ghi các bài báo bên ngoài vào `raw/discovered/`; `/init` và `/ingest` cục bộ trực tiếp có thể ghi các nguồn cục bộ đã chuẩn bị được tạo vào `raw/tmp/`
+- `/prefill` là seeding nền tảng tùy chọn, không phải là một phần của `/init`
+- không kỹ năng nào khác ngoài `/prefill` có thể tự động tạo foundations
+- `/init` không được trực tiếp tạo các trang `people/`
+- các trang có nguồn gốc từ notes/web là tạm thời và phải mang dòng thông báo chính xác ở trên
+- bằng chứng bài báo vượt trội hơn notes/web về độ tin cậy của khẳng định và hợp nhất khái niệm
+- tất cả ingest bài báo phải chạy thông qua các tiểu tác nhân `/ingest` song song với cô lập worktree
+- Bước 5 phải đọc đầu vào bài báo từ `.checkpoints/init-sources.json`, không phải bằng cách quét thư mục đặc biệt
+- chính sách planner xác định chính xác thuộc về `tools/init_discovery.py`, không phải trong các hằng số kỹ năng trùng lặp
 
-## Error Handling
+## Xử Lý Lỗi
 
-- **No parseable paper in `raw/papers/`**: enter bootstrap mode
-- **`raw/notes/` and `raw/web/` empty**: skip provisional seeding, continue
-- **PDF decode fails during prepare**: keep the local source, record the warning in `.checkpoints/init-prepare.json`, and fall back to the original path if needed
-- **No confident PDF title is recovered**: omit `--title`, allow filename/path arXiv-ID recovery only, then fall back directly to synthetic `.tex`; any metadata-or-filename title is display-only
-- **Chinese content is detected in `raw/notes/` or `raw/web/`**: keep going, but preserve a planner warning that note/web extraction and ranking may be less reliable and treat rankings plus provisional pages as lower-confidence
-- **S2 or DeepXiv unavailable**: planner falls back to the remaining sources; preserve the warning in the checkpointed plan and note degraded discovery in the report
-- **External fetch fails for one paper**: keep the remaining final set and report the failed download
-- **Single paper ingest fails**: record it via checkpoint, skip it, continue the rest, and list it in the report
-- **Current checkout is detached HEAD**: stop before worktree fan-out and ask the user to switch to or create a named branch first
-- **stash pop fails**: keep checkpoint metadata and report the manual recovery step
+- **Không có bài báo nào có thể phân tích cú pháp trong `raw/papers/`**: vào chế độ bootstrap
+- **`raw/notes/` và `raw/web/` trống**: bỏ qua seeding tạm thời, tiếp tục
+- **Thất bại giải mã PDF trong quá trình chuẩn bị**: giữ lại nguồn cục bộ, ghi lại cảnh báo trong `.checkpoints/init-prepare.json` và quay lại đường dẫn gốc nếu cần
+- **Không khôi phục được tiêu đề PDF đáng tin cậy**: bỏ qua `--title`, chỉ cho phép khôi phục ID arXiv từ tên tệp/đường dẫn, sau đó quay lại trực tiếp `.tex` tổng hợp; bất kỳ tiêu đề từ siêu dữ liệu hoặc tên tệp chỉ là hiển thị
+- **Phát hiện nội dung tiếng Trung trong `raw/notes/` hoặc `raw/web/`**: tiếp tục, nhưng giữ lại cảnh báo planner rằng trích xuất và xếp hạng notes/web có thể kém tin cậy hơn và coi xếp hạng cộng với các trang tạm thời là độ tin cậy thấp hơn
+- **S2 hoặc DeepXiv không khả dụng**: planner quay lại các nguồn còn lại; giữ lại cảnh báo trong kế hoạch đã checkpoint và ghi chú khám phá suy giảm trong báo cáo
+- **Lấy bên ngoài thất bại cho một bài báo**: giữ lại tập hợp cuối cùng còn lại và báo cáo tải xuống thất bại
+- **Ingest một bài báo thất bại**: ghi lại nó qua checkpoint, bỏ qua nó, tiếp tục các bài còn lại và liệt kê nó trong báo cáo
+- **Checkout hiện tại là HEAD tách rời**: dừng lại trước khi fan-out worktree và yêu cầu người dùng chuyển sang hoặc tạo một nhánh có tên trước
+- **Khôi phục stash thất bại**: giữ lại siêu dữ liệu checkpoint và báo cáo bước khôi phục thủ công
 
-## Dependencies
+## Phụ Thuộc
 
-### Tools (via Bash)
+### Công cụ (qua Bash)
 
 - `"$PYTHON_BIN" tools/research_wiki.py init wiki/`
-- `"$PYTHON_BIN" tools/research_wiki.py checkpoint-set-meta wiki/ init-session <key> <value>`
+- `"$PYTHON_BIN" tools/research_wiki.py checkpoint-set-meta wiki/ init-session <khóa> <giá-trị>`
 - `"$PYTHON_BIN" tools/research_wiki.py checkpoint-save/load/clear wiki/ init-session ...`
 - `"$PYTHON_BIN" tools/research_wiki.py dedup-edges wiki/`
-- `"$PYTHON_BIN" tools/research_wiki.py dedup-citations wiki/`
 - `"$PYTHON_BIN" tools/research_wiki.py rebuild-index wiki/`
 - `"$PYTHON_BIN" tools/research_wiki.py rebuild-context-brief wiki/`
 - `"$PYTHON_BIN" tools/research_wiki.py rebuild-open-questions wiki/`
-- `"$PYTHON_BIN" tools/research_wiki.py log wiki/ "<message>"`
-- `"$PYTHON_BIN" tools/prepare_paper_source.py --raw-root raw --source <local-path> [--title "<recovered-title>"]`
+- `"$PYTHON_BIN" tools/research_wiki.py log wiki/ "<thông-điệp>"`
+- `"$PYTHON_BIN" tools/prepare_paper_source.py --raw-root raw --source <đường-dẫn-cục-bộ> [--title "<tiêu-đề-đã-khôi-phục>"]`
 - `"$PYTHON_BIN" tools/init_discovery.py prepare --raw-root raw --pdf-titles-json .checkpoints/init-pdf-titles.json --output-manifest .checkpoints/init-prepare.json`
-- `"$PYTHON_BIN" tools/init_discovery.py plan [--topic "<topic>"] --mode auto --raw-root raw --wiki-root wiki --prepared-manifest .checkpoints/init-prepare.json --allow-introduction <true|false> --output-plan .checkpoints/init-plan.json`
+- `"$PYTHON_BIN" tools/init_discovery.py plan [--topic "<chủ-đề>"] --mode auto --raw-root raw --wiki-root wiki --prepared-manifest .checkpoints/init-prepare.json --allow-introduction <true|false> --output-plan .checkpoints/init-plan.json`
 - `"$PYTHON_BIN" tools/init_discovery.py fetch --raw-root raw --plan-json .checkpoints/init-plan.json --prepared-manifest .checkpoints/init-prepare.json --output-sources .checkpoints/init-sources.json --id <candidate-id>`
 - `"$PYTHON_BIN" tools/lint.py --wiki-dir wiki/ --fix`
 
-### Skills
+### Kỹ Năng
 
-- `/ingest` — one paper per subagent, in INIT MODE
+- `/ingest` — một bài báo cho mỗi tiểu tác nhân, trong CHẾ ĐỘ INIT
 
-### External APIs used by `init_discovery.py`
+### API Ngoại Vi được sử dụng bởi `init_discovery.py`
 
 - Semantic Scholar
-- DeepXiv (optional)
-- arXiv download endpoints
+- DeepXiv (tùy chọn)
+- các điểm cuối tải xuống arXiv

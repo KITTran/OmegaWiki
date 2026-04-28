@@ -1,200 +1,200 @@
 ---
-description: Multi-source novelty verification — WebSearch + Semantic Scholar + wiki + Review LLM cross-verify — outputs novelty score and recommendations
-argument-hint: <idea-description-or-slug>
+description: Xác minh tính mới lạ từ nhiều nguồn — WebSearch + Semantic Scholar + wiki + Review LLM xác minh chéo — xuất ra điểm số mới lạ và khuyến nghị
+argument-hint: <mô-tả-ý-tưởng-hoặc-slug>
 ---
 
 # /novelty
 
-> Verify the novelty of a research idea or method using multiple sources. Searches WebSearch,
-> Semantic Scholar, existing wiki work, and arXiv recent preprints, then Review LLM cross-verifies.
-> Outputs a novelty score (1-5), closest prior work, differentiation points, and next-step recommendations.
-> Can be used standalone or called by /ideate Phase 4.
+> Xác minh tính mới lạ của một ý tưởng hoặc phương pháp nghiên cứu bằng nhiều nguồn. Tìm kiếm WebSearch,
+> Semantic Scholar, công trình wiki hiện có và các bản preprint arXiv gần đây, sau đó Review LLM xác minh chéo.
+> Xuất ra điểm số mới lạ (1-5), công trình trước đây gần nhất, điểm khác biệt và khuyến nghị bước tiếp theo.
+> Có thể được sử dụng độc lập hoặc được gọi bởi /ideate Giai đoạn 4.
 
-## Inputs
+## Đầu Vào
 
-- `target`: one of the following:
-  - free-text description of the idea (a paragraph or a few sentences)
-  - slug of an ideas/ page in the wiki (e.g. `sparse-lora-for-edge-devices`)
-  - paper title or arXiv URL (check novelty of that paper's method)
-- `--quick`: fast mode, skip Review LLM cross-verify (Step 3), search only
-- `--verbose`: output full search results, not just summaries
+- `target`: một trong các mục sau:
+  - mô tả văn bản tự do của ý tưởng (một đoạn hoặc vài câu)
+  - slug của trang ideas/ trong wiki (ví dụ: `sparse-lora-for-edge-devices`)
+  - tiêu đề bài báo hoặc URL arXiv (kiểm tra tính mới lạ của phương pháp của bài báo đó)
+- `--quick`: chế độ nhanh, bỏ qua xác minh chéo Review LLM (Bước 3), chỉ tìm kiếm
+- `--verbose`: xuất ra kết quả tìm kiếm đầy đủ, không chỉ tóm tắt
 
-## Outputs
+## Đầu Ra
 
-- **Novelty Report** (output to terminal, not written to wiki):
-  - Novelty Score (1-5)
-  - List of closest prior work (top 3-5)
-  - Differentiation points versus each prior work
-  - Review LLM cross-verify assessment (unless --quick)
-  - Recommended action: proceed / modify / abandon
-- This skill is a **read-only query** — it does not modify any wiki content
+- **Báo Cáo Tính Mới Lạ** (xuất ra terminal, không ghi vào wiki):
+  - Điểm Số Mới Lạ (1-5)
+  - Danh sách công trình trước đây gần nhất (top 3-5)
+  - Điểm khác biệt so với mỗi công trình trước đây
+  - Đánh giá xác minh chéo của Review LLM (trừ khi --quick)
+  - Hành động được khuyến nghị: tiếp tục / sửa đổi / từ bỏ
+- Kỹ năng này là **truy vấn chỉ đọc** — nó không sửa đổi bất kỳ nội dung wiki nào
 
-## Wiki Interaction
+## Tương Tác Wiki
 
-### Reads
-- `wiki/papers/*.md` — search existing papers for similar methods
-- `wiki/concepts/*.md` — check concept overlap
-- `wiki/ideas/*.md` — check for duplication with existing ideas (especially `failure_reason` of failed ideas)
-- `wiki/claims/*.md` — check the current status of claims the idea depends on
-- `wiki/graph/context_brief.md` — global context to assist search
+### Đọc
+- `wiki/papers/*.md` — tìm kiếm các bài báo hiện có cho các phương pháp tương tự
+- `wiki/concepts/*.md` — kiểm tra sự trùng lặp khái niệm
+- `wiki/ideas/*.md` — kiểm tra trùng lặp với các ý tưởng hiện có (đặc biệt là `failure_reason` của các ý tưởng thất bại)
+- `wiki/claims/*.md` — kiểm tra trạng thái hiện tại của các khẳng định mà ý tưởng phụ thuộc vào
+- `wiki/graph/context_brief.md` — ngữ cảnh toàn cục để hỗ trợ tìm kiếm
 
-### Writes
-- **None**. Novelty check is a pure query operation; it does not modify the wiki.
+### Ghi
+- **Không có**. Kiểm tra tính mới lạ là một hoạt động truy vấn thuần túy; nó không sửa đổi wiki.
 
-### Graph edges created
-- **None**.
+### Các cạnh đồ thị được tạo
+- **Không có**.
 
-## Workflow
+## Quy Trình Làm Việc
 
-**Precondition**: confirm working directory is the wiki project root (containing `wiki/`, `raw/`, `tools/`).
+**Điều kiện tiên quyết**: xác nhận thư mục làm việc là thư mục gốc dự án wiki (chứa `wiki/`, `raw/`, `tools/`).
 
-### Step 1: Extract Method Signature
+### Bước 1: Trích Xuất Chữ Ký Phương Pháp
 
-1. **If target is a slug**: read `wiki/ideas/{slug}.md`, extract title, Hypothesis, Approach sketch
-2. **If target is free text**: use directly
-3. **If target is an arXiv URL**: download the abstract, extract method description
-4. Extract the "method signature" from the target — the core elements of the method:
-   - **What**: what it does (task / goal)
-   - **How**: the method used (technical approach)
-   - **Why novel**: claimed innovation
-5. Generate 3-5 core keywords for subsequent searches
+1. **Nếu target là slug**: đọc `wiki/ideas/{slug}.md`, trích xuất tiêu đề, Hypothesis, Approach sketch
+2. **Nếu target là văn bản tự do**: sử dụng trực tiếp
+3. **Nếu target là URL arXiv**: tải xuống tóm tắt, trích xuất mô tả phương pháp
+4. Trích xuất "chữ ký phương pháp" từ target — các yếu tố cốt lõi của phương pháp:
+   - **Cái gì**: nó làm gì (nhiệm vụ / mục tiêu)
+   - **Như thế nào**: phương pháp được sử dụng (cách tiếp cận kỹ thuật)
+   - **Tại sao mới lạ**: đổi mới được tuyên bố
+5. Tạo 3-5 từ khóa cốt lõi cho các tìm kiếm tiếp theo
 
-### Step 2: Multi-Source Search
+### Bước 2: Tìm Kiếm Từ Nhiều Nguồn
 
-Execute the following searches in parallel (use Agent tool for concurrency):
+Thực hiện các tìm kiếm sau song song (sử dụng công cụ Agent để đồng thời):
 
-**Source A — Web Search (5+ queries):**
-1. Direct query: `"<method-name>" + "<task>"` — exact phrase search
-2. Component query: `<component-1> + <component-2> + <domain>` — component combination search
-3. Survey query: `"survey" OR "review" + <task-area> + 2024 2025`
-4. Competitor query: `<alternative-approach> + <same-task>`
-5. Recent query: `<method-keywords> + arXiv + 2025 2026`
+**Nguồn A — Tìm Kiếm Web (5+ truy vấn):**
+1. Truy vấn trực tiếp: `"<tên-phương-pháp>" + "<nhiệm-vụ>"` — tìm kiếm cụm từ chính xác
+2. Truy vấn thành phần: `<thành-phần-1> + <thành-phần-2> + <lĩnh-vực>` — tìm kiếm kết hợp thành phần
+3. Truy vấn khảo sát: `"survey" OR "review" + <khu-vực-nhiệm-vụ> + 2024 2025`
+4. Truy vấn đối thủ: `<cách-tiếp-cận-thay-thế> + <cùng-nhiệm-vụ>`
+5. Truy vấn gần đây: `<từ-khóa-phương-pháp> + arXiv + 2025 2026`
 
-**Source B — Semantic Scholar + DeepXiv:**
+**Nguồn B — Semantic Scholar + DeepXiv:**
 ```bash
-python3 tools/fetch_s2.py search "<method-keywords>" --limit 20
-python3 tools/fetch_deepxiv.py search "<method-keywords>" --mode hybrid --limit 20
+python3 tools/fetch_s2.py search "<từ-khóa-phương-pháp>" --limit 20
+python3 tools/fetch_deepxiv.py search "<từ-khóa-phương-pháp>" --mode hybrid --limit 20
 ```
-Merge results from both sources (deduplicate by arxiv_id). DeepXiv's hybrid semantic search finds semantically similar work that S2 keyword search may miss.
-- Fetch details and TLDR for top 5 results:
+Hợp nhất kết quả từ cả hai nguồn (loại bỏ trùng lặp theo arxiv_id). Tìm kiếm ngữ nghĩa hybrid của DeepXiv tìm thấy công trình tương tự về mặt ngữ nghĩa mà tìm kiếm từ khóa S2 có thể bỏ lỡ.
+- Lấy chi tiết và TLDR cho top 5 kết quả:
 ```bash
 python3 tools/fetch_s2.py paper <s2_id>
 python3 tools/fetch_deepxiv.py brief <arxiv_id>
 ```
-Use DeepXiv brief TLDRs to quickly judge method similarity.
-**If DeepXiv is unavailable**: fall back to S2 search only (original behavior).
+Sử dụng TLDR brief của DeepXiv để nhanh chóng đánh giá sự tương đồng phương pháp.
+**Nếu DeepXiv không khả dụng**: quay lại chỉ tìm kiếm S2 (hành vi gốc).
 
-**Source C — Wiki Internal Search:**
-1. Scan Key idea and Method sections of all pages in `wiki/papers/`
-2. Scan Definition and Variants sections of `wiki/concepts/`
-3. Scan all content in `wiki/ideas/`, with special attention to:
-   - ideas with status = failed and their failure_reason (anti-repetition)
-   - ideas with status = proposed/in_progress (avoid internal duplication)
-4. Read `wiki/graph/context_brief.md` for global perspective
+**Nguồn C — Tìm Kiếm Nội Bộ Wiki:**
+1. Quét các phần Key idea và Method của tất cả các trang trong `wiki/papers/`
+2. Quét các phần Definition và Variants của `wiki/concepts/`
+3. Quét tất cả nội dung trong `wiki/ideas/`, với sự chú ý đặc biệt đến:
+   - các ý tưởng có status = failed và failure_reason của chúng (chống lặp lại)
+   - các ý tưởng có status = proposed/in_progress (tránh trùng lặp nội bộ)
+4. Đọc `wiki/graph/context_brief.md` cho quan điểm toàn cục
 
-**Source D — Recent arXiv Preprints:**
-- Use WebSearch: `site:arxiv.org <method-keywords> 2025 2026`
+**Nguồn D — Các Bản Preprint arXiv Gần Đây:**
+- Sử dụng WebSearch: `site:arxiv.org <từ-khóa-phương-pháp> 2025 2026`
 
-### Step 3: Review LLM Cross-Verify
+### Bước 3: Xác Minh Chéo Review LLM
 
-(Skip if `--quick`)
+(Bỏ qua nếu `--quick`)
 
-Submit the following to Review LLM for independent assessment:
+Gửi nội dung sau đến Review LLM để đánh giá độc lập:
 
 ```
 mcp__llm-review__chat:
-  system: "You are a senior ML researcher assessing the novelty of a proposed method.
-           Be rigorous: if the method is essentially a recombination of known techniques
-           with minor changes, score it low. Only score 4-5 if there is a genuinely new
-           insight or formulation."
+  system: "Bạn là một nhà nghiên cứu ML cao cấp đánh giá tính mới lạ của một phương pháp được đề xuất.
+           Hãy nghiêm ngặt: nếu phương pháp về cơ bản là sự tái kết hợp các kỹ thuật đã biết
+           với những thay đổi nhỏ, hãy cho điểm thấp. Chỉ cho điểm 4-5 nếu có một cái nhìn sâu sắc
+           hoặc công thức thực sự mới."
   message: |
-    ## Proposed Method
-    {method signature from Step 1}
+    ## Phương Pháp Được Đề Xuất
+    {chữ ký phương pháp từ Bước 1}
 
-    ## Existing Similar Work Found
-    {top 5 similar works from Step 2, with title + one-line summary}
+    ## Công Trình Tương Tự Hiện Có Đã Tìm Thấy
+    {top 5 công trình tương tự từ Bước 2, với tiêu đề + tóm tắt một dòng}
 
-    ## Questions
-    1. Is this method genuinely novel, or a minor variation of existing work?
-    2. What is the closest existing work and what's the real difference?
-    3. Novelty score 1-5 with justification.
-    4. If score <= 2, what modification could increase novelty?
+    ## Câu Hỏi
+    1. Phương pháp này có thực sự mới lạ không, hay chỉ là một biến thể nhỏ của công trình hiện có?
+    2. Công trình hiện có gần nhất là gì và sự khác biệt thực sự là gì?
+    3. Điểm số mới lạ 1-5 với lý do.
+    4. Nếu điểm số <= 2, sửa đổi nào có thể tăng tính mới lạ?
 ```
 
-### Step 4: Generate Novelty Report
+### Bước 4: Tạo Báo Cáo Tính Mới Lạ
 
-Synthesize Step 2 search results and Step 3 Review LLM assessment into a structured report:
+Tổng hợp kết quả tìm kiếm Bước 2 và đánh giá Review LLM Bước 3 thành một báo cáo có cấu trúc:
 
 ```markdown
-# Novelty Report: {idea title}
+# Báo Cáo Tính Mới Lạ: {tiêu đề ý tưởng}
 
-## Score: {1-5}/5 — {label}
+## Điểm: {1-5}/5 — {nhãn}
 
-| Score | Label | Meaning |
+| Điểm | Nhãn | Ý Nghĩa |
 |-------|-------|---------|
-| 1 | Published | Highly similar published work exists |
-| 2 | Very Similar | Very similar method exists, only minor differences |
-| 3 | Incremental | Clear incremental contribution over existing work |
-| 4 | Novel Combination | Creatively combines existing techniques, producing new insight |
-| 5 | Fundamentally New | Proposes an entirely new paradigm or formulation |
+| 1 | Đã Xuất Bản | Công trình đã xuất bản rất tương tự tồn tại |
+| 2 | Rất Tương Tự | Phương pháp rất tương tự tồn tại, chỉ có sự khác biệt nhỏ |
+| 3 | Gia Tăng | Đóng góp gia tăng rõ ràng so với công trình hiện có |
+| 4 | Kết Hợp Mới Lạ | Kết hợp sáng tạo các kỹ thuật hiện có, tạo ra cái nhìn sâu sắc mới |
+| 5 | Hoàn Toàn Mới | Đề xuất một mô hình hoặc công thức hoàn toàn mới |
 
-## Closest Prior Work
+## Công Trình Trước Đây Gần Nhất
 
-1. **{title}** ({year}) — {one-sentence description of the similarity}
-   - Difference: {key distinction between this method and the prior work}
-   - Wiki link: [[slug]] (if it exists)
+1. **{tiêu đề}** ({năm}) — {mô tả một câu về sự tương đồng}
+   - Sự khác biệt: {sự phân biệt chính giữa phương pháp này và công trình trước đây}
+   - Liên kết wiki: [[slug]] (nếu tồn tại)
 2. ...
 
-## Review LLM Assessment
-{summary of Review LLM's independent judgment}
+## Đánh Giá Review LLM
+{tóm tắt đánh giá độc lập của Review LLM}
 
-## Anti-repetition Check
-- Failed ideas in wiki: {list relevant failed ideas with failure_reason}
-- In-progress ideas in wiki: {list potentially overlapping ideas}
+## Kiểm Tra Chống Lặp Lại
+- Các ý tưởng thất bại trong wiki: {liệt kê các ý tưởng thất bại liên quan với failure_reason}
+- Các ý tưởng đang tiến hành trong wiki: {liệt kê các ý tưởng có thể trùng lặp}
 
-## Recommendation
-- **{proceed / modify / abandon}**
-- Rationale: {one paragraph}
-- If modify: suggested differentiation directions: {specific suggestions}
+## Khuyến Nghị
+- **{tiếp tục / sửa đổi / từ bỏ}**
+- Lý do: {một đoạn}
+- Nếu sửa đổi: các hướng khác biệt được đề xuất: {gợi ý cụ thể}
 ```
 
-**Scoring rules (composite judgment):**
-- Take the lower of Claude's search-based score and Review LLM's score (conservative principle)
-- If wiki contains a failed idea whose failure_reason overlaps with this idea → lower score by 1
-- If wiki contains a highly overlapping in_progress idea → mark as abandon (internal duplication)
+**Quy tắc đánh giá (đánh giá tổng hợp):**
+- Lấy điểm thấp hơn giữa điểm dựa trên tìm kiếm của Claude và điểm của Review LLM (nguyên tắc thận trọng)
+- Nếu wiki chứa một ý tưởng thất bại có failure_reason trùng lặp với ý tưởng này → giảm điểm 1
+- Nếu wiki chứa một ý tưởng in_progress trùng lặp cao → đánh dấu là từ bỏ (trùng lặp nội bộ)
 
-## Constraints
+## Các Ràng Buộc
 
-- **Do not modify the wiki**: novelty check is a pure query; all results are output to terminal only
-- **Conservative scoring**: underestimate novelty rather than overestimate to avoid wasting effort on known work
-- **Must check failed ideas**: ideas with status=failed in wiki/ideas/ are important anti-repetition signals
-- **Search coverage**: at least 5 distinct WebSearch queries + Semantic Scholar + wiki internal search
-- **Review LLM independence**: do not include Claude's own novelty judgment when submitting to Review LLM; let Review LLM assess independently
-- **Cite real sources**: all prior work listed in the report must be real (returned by WebSearch/S2); do not fabricate
+- **Không sửa đổi wiki**: kiểm tra tính mới lạ là một truy vấn thuần túy; tất cả kết quả chỉ được xuất ra terminal
+- **Đánh giá thận trọng**: đánh giá thấp tính mới lạ hơn là đánh giá cao để tránh lãng phí công sức vào công trình đã biết
+- **Phải kiểm tra các ý tưởng thất bại**: các ý tưởng có status=failed trong wiki/ideas/ là tín hiệu chống lặp lại quan trọng
+- **Phạm vi tìm kiếm**: ít nhất 5 truy vấn WebSearch riêng biệt + Semantic Scholar + tìm kiếm nội bộ wiki
+- **Tính độc lập của Review LLM**: không bao gồm đánh giá tính mới lạ của chính Claude khi gửi đến Review LLM; để Review LLM đánh giá độc lập
+- **Trích dẫn nguồn thực**: tất cả công trình trước đây được liệt kê trong báo cáo phải là thực (được trả về bởi WebSearch/S2); không bịa đặt
 
-## Error Handling
+## Xử Lý Lỗi
 
-- **WebSearch unavailable**: skip Sources A and D, rely only on S2 + wiki search; note limited coverage in report
-- **Semantic Scholar API unavailable**: skip S2 portion, use DeepXiv + WebSearch as compensation
-- **DeepXiv API unavailable**: skip DeepXiv portion, rely on S2 + WebSearch (fall back to original behavior)
-- **Review LLM unavailable**: skip Step 3; annotate report with "Review LLM cross-verify unavailable, single-model assessment only"
-- **Wiki empty**: proceed with external searches normally; annotate wiki internal search section with "wiki empty"
-- **idea slug not found**: prompt user to check the slug, list available slugs in wiki/ideas/
+- **WebSearch không khả dụng**: bỏ qua Nguồn A và D, chỉ dựa vào S2 + tìm kiếm wiki; ghi chú phạm vi hạn chế trong báo cáo
+- **API Semantic Scholar không khả dụng**: bỏ qua phần S2, sử dụng DeepXiv + WebSearch để bù đắp
+- **API DeepXiv không khả dụng**: bỏ qua phần DeepXiv, dựa vào S2 + WebSearch (quay lại hành vi gốc)
+- **Review LLM không khả dụng**: bỏ qua Bước 3; chú thích báo cáo với "Xác minh chéo Review LLM không khả dụng, chỉ đánh giá một mô hình"
+- **Wiki trống**: tiếp tục với các tìm kiếm bên ngoài bình thường; chú thích phần tìm kiếm nội bộ wiki với "wiki trống"
+- **Không tìm thấy slug ý tưởng**: nhắc người dùng kiểm tra slug, liệt kê các slug có sẵn trong wiki/ideas/
 
-## Dependencies
+## Phụ Thuộc
 
-### Tools（via Bash）
-- `python3 tools/fetch_s2.py search "<query>" --limit 20` — Semantic Scholar keyword search
-- `python3 tools/fetch_s2.py paper <s2_id>` — fetch paper details
-- `python3 tools/fetch_deepxiv.py search "<query>" --mode hybrid --limit 20` — DeepXiv semantic search
-- `python3 tools/fetch_deepxiv.py brief <arxiv_id>` — fetch paper TLDR for similarity judgment
+### Công cụ (qua Bash)
+- `python3 tools/fetch_s2.py search "<truy-vấn>" --limit 20` — tìm kiếm từ khóa Semantic Scholar
+- `python3 tools/fetch_s2.py paper <s2_id>` — lấy chi tiết bài báo
+- `python3 tools/fetch_deepxiv.py search "<truy-vấn>" --mode hybrid --limit 20` — tìm kiếm ngữ nghĩa DeepXiv
+- `python3 tools/fetch_deepxiv.py brief <arxiv_id>` — lấy TLDR bài báo để đánh giá sự tương đồng
 
-### MCP Servers
-- `mcp__llm-review__chat` — Review LLM cross-verify (Step 3)
+### Máy Chủ MCP
+- `mcp__llm-review__chat` — xác minh chéo Review LLM (Bước 3)
 
-### Claude Code Native
-- `WebSearch` — multi-query web search (Step 2 Sources A + D)
-- `Agent` tool — parallel execution of multi-source search (Step 2)
+### Claude Code Gốc
+- `WebSearch` — tìm kiếm web nhiều truy vấn (Bước 2 Nguồn A + D)
+- Công cụ `Agent` — thực thi song song tìm kiếm từ nhiều nguồn (Bước 2)
 
-### Shared References
-- `.claude/skills/shared-references/cross-model-review.md` (created in Phase 2, Review LLM independence principle)
+### Tài Liệu Tham Khảo Chung
+- `.claude/skills/shared-references/cross-model-review.md` (được tạo trong Giai đoạn 2, nguyên tắc độc lập Review LLM)

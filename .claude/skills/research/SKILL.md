@@ -1,106 +1,109 @@
 ---
-description: End-to-end research orchestrator — idea discovery → experiment design → execution → verdict → paper writing, with human gates and session-resumable state
-argument-hint: <research-direction-or-brief> [--auto] [--start-from stage1|stage2|stage3|stage3-collect|stage3-check|stage4|stage5] [--skip-paper] [--venue ICLR|NeurIPS|ICML|ACL|CVPR]
+description: Điều phối nghiên cứu đầu-cuối — khám phá ý tưởng → thiết kế thí nghiệm → thực thi → phán quyết → viết bài báo, với các cổng kiểm soát của con người và trạng thái có thể tiếp tục phiên
+argument-hint: <hướng-nghiên-cứu-hoặc-tóm-tắt> [--auto] [--start-from stage1|stage2|stage3|stage3-collect|stage3-check|stage4|stage5] [--skip-paper] [--venue ICLR|NeurIPS|ICML|ACL|CVPR]
 ---
 
 # /research
 
-> End-to-end research orchestrator that composes all skills into a complete research workflow.
-> Stage 0 (Bootstrap) + 5 Stages + 2 Human Gates, covering the full pipeline from empty wiki to paper submission.
-> **Zero-friction entry**: if the wiki is empty, Bootstrap is triggered automatically (search + auto-ingest 5 papers); no need to run /init manually.
-> Every Gate and Stage saves progress to `wiki/outputs/pipeline-progress.md`, supporting cross-session recovery.
+> Điều phối nghiên cứu đầu-cuối kết hợp tất cả các kỹ năng thành một quy trình nghiên cứu hoàn chỉnh.
+> Giai đoạn 0 (Khởi tạo) + 5 Giai đoạn + 2 Cổng Kiểm soát của Con người, bao phủ toàn bộ quy trình từ wiki trống đến nộp bài báo.
+> **Điểm nhập không ma sát**: nếu wiki trống, Giai đoạn Khởi tạo được kích hoạt tự động (tìm kiếm + tự động ingest 5 bài báo); không cần chạy /init thủ công.
+> Mỗi Cổng và Giai đoạn lưu tiến trình vào `wiki/outputs/pipeline-progress.md`, hỗ trợ khôi phục giữa các phiên.
 >
-> **Stage 3 is non-blocking**: experiments are deployed and control returns immediately (`--auto` mode automatically sets up a CronCreate to monitor every 30 minutes).
-> When all experiments finish, Stage 4 is triggered automatically. Use `/exp-status` at any time to check progress.
+> **Giai đoạn 3 không chặn**: các thí nghiệm được triển khai và điều khiển trả về ngay lập tức (`--auto` tự động thiết lập CronCreate để giám sát mỗi 30 phút).
+> Khi tất cả các thí nghiệm hoàn thành, Giai đoạn 4 được kích hoạt tự động. Sử dụng `/exp-status` bất kỳ lúc nào để kiểm tra tiến trình.
 >
-> `--auto` mode skips manual confirmation (automatically selects the top-1 idea). `--skip-paper` runs the research without writing a paper.
+> `--auto` bỏ qua xác nhận thủ công (tự động chọn ý tưởng hàng đầu). `--skip-paper` chạy nghiên cứu mà không viết bài báo.
 
-## Inputs
+## Đầu Vào
 
-- `direction`: research direction description or path to a `RESEARCH_BRIEF.md` file
-  - Text form: one-sentence description of the research direction (e.g. "sparse LoRA for edge devices")
-  - File form: structured RESEARCH_BRIEF.md (containing domain, constraints, target venues)
-- `--auto` (optional): fully automatic mode; Gate 1 auto-selects top-1 idea, Gate 2 auto-continues, Stage 3b auto-creates CronCreate
-- `--start-from <stage>` (optional): resume execution from the specified stage
-  - Valid values: `stage1`, `stage2`, `stage3`, `stage3-collect`, `stage3-check`, `stage4`, `stage5`
-  - `stage3-collect`: skip deploy, go directly to Stage 3c (collect results from already-deployed experiments)
-  - `stage3-check`: check experiment status only (equivalent to `/exp-status --pipeline {slug}`), do not continue execution
-  - Requires `wiki/outputs/pipeline-progress.md` to exist
-- `--skip-paper` (optional): run research only (Stages 1-4), skip paper writing (Stage 5), but still run /exp-eval (Stage 4)
-- `--venue` (optional): target conference (ICLR / NeurIPS / ICML / ACL / CVPR), passed to /paper-plan
+- `direction`: mô tả hướng nghiên cứu hoặc đường dẫn đến tệp `RESEARCH_BRIEF.md`
+  - Dạng văn bản: mô tả một câu về hướng nghiên cứu (ví dụ: "sparse LoRA cho thiết bị biên")
+  - Dạng tệp: RESEARCH_BRIEF.md có cấu trúc (chứa domain, ràng buộc, hội nghị mục tiêu)
+- `--auto` *(tùy chọn)*: chế độ hoàn toàn tự động; Cổng 1 tự động chọn ý tưởng hàng đầu, Cổng 2 tự động tiếp tục, Giai đoạn 3b tự động tạo CronCreate
+- `--start-from <stage>` *(tùy chọn)*: tiếp tục thực thi từ giai đoạn được chỉ định
+  - Giá trị hợp lệ: `stage1`, `stage2`, `stage3`, `stage3-collect`, `stage3-check`, `stage4`, `stage5`
+  - `stage3-collect`: bỏ qua triển khai, chuyển thẳng đến Giai đoạn 3c (thu thập kết quả từ các thí nghiệm đã triển khai)
+  - `stage3-check`: chỉ kiểm tra trạng thái thí nghiệm (tương đương với `/exp-status --pipeline {slug}`), không tiếp tục thực thi
+  - Yêu cầu `wiki/outputs/pipeline-progress.md` phải tồn tại
+- `--skip-paper` *(tùy chọn)*: chỉ chạy nghiên cứu (Giai đoạn 1-4), bỏ qua viết bài báo (Giai đoạn 5), nhưng vẫn chạy /exp-eval (Giai đoạn 4)
+- `--venue` *(tùy chọn)*: hội nghị mục tiêu (ICLR / NeurIPS / ICML / ACL / CVPR), chuyển đến /paper-plan
 
-## Outputs
+## Đầu Ra
 
-- **Wiki updates** (delegated to sub-skills): ideas/, experiments/, claims/, outputs/, graph/
-- **wiki/outputs/pipeline-progress.md** — pipeline progress snapshot (for recovery)
-- **wiki/outputs/PIPELINE_REPORT.md** — full pipeline report
-- **paper/ directory** (if not --skip-paper) — submittable paper
-- **wiki/log.md** — log appended after each stage
+- **Cập nhật wiki** (ủy quyền cho các kỹ năng con): ideas/, experiments/, claims/, outputs/, graph/
+- **wiki/outputs/pipeline-progress.md** — ảnh chụp tiến trình pipeline (để khôi phục)
+- **wiki/outputs/PIPELINE_REPORT.md** — báo cáo pipeline đầy đủ
+- **thư mục paper/** (nếu không có --skip-paper) — bài báo có thể nộp
+- **wiki/log.md** — nhật ký được thêm sau mỗi giai đoạn
 
-## Wiki Interaction
+## Tương Tác Wiki
 
-### Reads
-- `wiki/graph/context_brief.md` — global context (passed to sub-skills)
-- `wiki/graph/open_questions.md` — knowledge gaps (passed to /ideate)
-- `wiki/ideas/*.md` — Gate 1 selection, Stage 4 verdict
-- `wiki/experiments/*.md` — Stage 3-4 status checks
-- `wiki/claims/*.md` — Stage 4 verdict, Stage 5 paper planning
-- `wiki/outputs/pipeline-progress.md` — --start-from state recovery
-- `wiki/papers/*.md` — Stage 5 paper writing context
+### Đọc
 
-### Writes
-- `wiki/outputs/pipeline-progress.md` — save progress at each Gate (wiki entity writes are delegated to sub-skills)
-- `wiki/outputs/PIPELINE_REPORT.md` — final report
-- `wiki/log.md` — append log entries
-- All other wiki entity writes are delegated to sub-skills (do not directly write to ideas/experiments/claims/)
+- `wiki/graph/context_brief.md` — ngữ cảnh toàn cục (chuyển đến các kỹ năng con)
+- `wiki/graph/open_questions.md` — lỗ hổng kiến thức (chuyển đến /ideate)
+- `wiki/ideas/*.md` — Lựa chọn Cổng 1, phán quyết Giai đoạn 4
+- `wiki/experiments/*.md` — Kiểm tra trạng thái Giai đoạn 3-4
+- `wiki/claims/*.md` — Phán quyết Giai đoạn 4, lập kế hoạch bài báo Giai đoạn 5
+- `wiki/outputs/pipeline-progress.md` — khôi phục trạng thái --start-from
+- `wiki/papers/*.md` — ngữ cảnh viết bài báo Giai đoạn 5
 
-### Graph edges created
-- None directly — all graph edges are delegated to sub-skills (/ideate, /exp-design, /exp-eval each create their own edges)
+### Ghi
 
-## Workflow
+- `wiki/outputs/pipeline-progress.md` — lưu tiến trình tại mỗi Cổng (các ghi thực thể wiki được ủy quyền cho các kỹ năng con)
+- `wiki/outputs/PIPELINE_REPORT.md` — báo cáo cuối cùng
+- `wiki/log.md` — thêm mục nhật ký
+- Tất cả các ghi thực thể wiki khác được ủy quyền cho các kỹ năng con (không ghi trực tiếp vào ideas/experiments/claims/)
 
-**Precondition**:
-1. Confirm working directory is the wiki project root (containing `wiki/`, `raw/`, `tools/`)
-2. If `--start-from` is specified, read `wiki/outputs/pipeline-progress.md` to restore state
+### Các cạnh đồ thị được tạo
 
-### Step 0: Initialize
+- Không trực tiếp — tất cả các cạnh đồ thị được ủy quyền cho các kỹ năng con (/ideate, /exp-design, /exp-eval mỗi kỹ năng tạo cạnh riêng)
 
-1. **Parse input**:
-   - If file path: read RESEARCH_BRIEF.md, extract direction, domain, constraints, target_venue
-   - If text: use as direction; leave domain/constraints blank
-   - Generate slug: `python3 tools/research_wiki.py slug "{direction}"`
+## Quy Trình Làm Việc
 
-2. **Auto-recovery detection** (when `--start-from` is not specified):
-   - If `wiki/outputs/pipeline-progress.md` exists and `status == running`:
-     - Read direction, current_stage, started, slug
-     - Use AskUserQuestion to prompt the user:
+**Điều kiện tiên quyết**:
+1. Xác nhận thư mục làm việc là thư mục gốc dự án wiki (chứa `wiki/`, `raw/`, `tools/`)
+2. Nếu `--start-from` được chỉ định, đọc `wiki/outputs/pipeline-progress.md` để khôi phục trạng thái
+
+### Bước 0: Khởi Tạo
+
+1. **Phân tích đầu vào**:
+   - Nếu là đường dẫn tệp: đọc RESEARCH_BRIEF.md, trích xuất direction, domain, ràng buộc, target_venue
+   - Nếu là văn bản: sử dụng làm direction; để trống domain/ràng buộc
+   - Tạo slug: `python3 tools/research_wiki.py slug "{direction}"`
+
+2. **Phát hiện tự động khôi phục** (khi `--start-from` không được chỉ định):
+   - Nếu `wiki/outputs/pipeline-progress.md` tồn tại và `status == running`:
+     - Đọc direction, current_stage, started, slug
+     - Sử dụng AskUserQuestion để nhắc người dùng:
        ```
-       Unfinished pipeline detected:
-       Direction: {direction}
-       Current stage: {current_stage}
-       Started: {started}
+       Phát hiện pipeline chưa hoàn thành:
+       Hướng: {direction}
+       Giai đoạn hiện tại: {current_stage}
+       Bắt đầu: {started}
 
-       [1] Resume from {current_stage} (recommended)
-       [2] Start a new pipeline (will overwrite old progress)
-       [3] View experiment status first (/exp-status --pipeline {slug})
+       [1] Tiếp tục từ {current_stage} (đề xuất)
+       [2] Bắt đầu pipeline mới (sẽ ghi đè tiến trình cũ)
+       [3] Xem trạng thái thí nghiệm trước (/exp-status --pipeline {slug})
        ```
-     - If --auto or user selects [1]: auto-set `--start-from {current_stage}`, continue execution
-     - If user selects [2]: continue creating new pipeline (overwrite old progress file)
-     - If user selects [3]: call `/exp-status --pipeline {slug}` then exit without continuing
+     - Nếu --auto hoặc người dùng chọn [1]: tự động đặt `--start-from {current_stage}`, tiếp tục thực thi
+     - Nếu người dùng chọn [2]: tiếp tục tạo pipeline mới (ghi đè tệp tiến trình cũ)
+     - Nếu người dùng chọn [3]: gọi `/exp-status --pipeline {slug}` sau đó thoát mà không tiếp tục
 
-3. **Check recovery** (when `--start-from` is specified):
-   - If `wiki/outputs/pipeline-progress.md` exists:
-     - Read progress file, restore idea_slug, experiment_slugs, stage3a_deployed, claim_slugs, monitoring_cron_id
-     - Jump to specified stage
-   - If progress file does not exist: report error and exit; prompt user to run the full pipeline first
-   - **`--start-from stage3-check`**: equivalent to calling `/exp-status --pipeline {slug}`; display status then exit
-   - **`--start-from stage3-collect`**: skip Stage 3a+3b; go directly to Stage 3c (collect already-deployed experiments)
+3. **Kiểm tra khôi phục** (khi `--start-from` được chỉ định):
+   - Nếu `wiki/outputs/pipeline-progress.md` tồn tại:
+     - Đọc tệp tiến trình, khôi phục idea_slug, experiment_slugs, stage3a_deployed, claim_slugs, monitoring_cron_id
+     - Chuyển đến giai đoạn được chỉ định
+   - Nếu tệp tiến trình không tồn tại: báo lỗi và thoát; nhắc người dùng chạy pipeline đầy đủ trước
+   - **`--start-from stage3-check`**: tương đương với gọi `/exp-status --pipeline {slug}`; hiển thị trạng thái sau đó thoát
+   - **`--start-from stage3-collect`**: bỏ qua Giai đoạn 3a+3b; chuyển thẳng đến Giai đoạn 3c (thu thập các thí nghiệm đã triển khai)
 
-3. **Create progress file** `wiki/outputs/pipeline-progress.md`:
+3. **Tạo tệp tiến trình** `wiki/outputs/pipeline-progress.md`:
    ```yaml
    ---
    slug: "{pipeline-slug}"
-   direction: "{research direction}"
+   direction: "{hướng nghiên cứu}"
    status: running
    current_stage: stage1
    started: YYYY-MM-DD
@@ -113,146 +116,146 @@ argument-hint: <research-direction-or-brief> [--auto] [--start-from stage1|stage
    claim_slugs: []
    iteration_count: 0
    ---
-   ## Stage Log
-   - Stage 0 (Bootstrap): skipped
-   - Stage 1: pending
-   - Gate 1: pending
-   - Stage 2: pending
-   - Stage 3a (Deploy): pending
-   - Stage 3b (Await): pending
-   - Stage 3c (Collect): pending
-   - Stage 4: pending
-   - Gate 2: pending
-   - Stage 5: pending
+   ## Nhật Ký Giai Đoạn
+   - Giai đoạn 0 (Khởi tạo): bỏ qua
+   - Giai đoạn 1: đang chờ
+   - Cổng 1: đang chờ
+   - Giai đoạn 2: đang chờ
+   - Giai đoạn 3a (Triển khai): đang chờ
+   - Giai đoạn 3b (Chờ): đang chờ
+   - Giai đoạn 3c (Thu thập): đang chờ
+   - Giai đoạn 4: đang chờ
+   - Cổng 2: đang chờ
+   - Giai đoạn 5: đang chờ
    ```
 
-4. **Append log**:
+4. **Thêm nhật ký**:
    ```bash
    python3 tools/research_wiki.py log wiki/ \
-     "research | started | direction: {direction} | mode: {auto|interactive}"
+     "research | bắt đầu | hướng: {direction} | chế độ: {auto|interactive}"
    ```
 
-5. **Snapshot wiki state** (for Growth Report in Step Final):
+5. **Chụp trạng thái wiki** (cho Báo cáo Tăng trưởng trong Bước Cuối):
    ```bash
    python3 tools/research_wiki.py maturity wiki/ --json
    ```
-   Save returned JSON to memory variable `maturity_before`.
+   Lưu JSON trả về vào biến bộ nhớ `maturity_before`.
 
-### Stage 0: Bootstrap (triggered automatically when wiki is empty)
+### Giai đoạn 0: Khởi Tạo (được kích hoạt tự động khi wiki trống)
 
-**Trigger condition**: run `python3 tools/research_wiki.py maturity wiki/ --json`. If `level == "cold"` and `papers < 3`: enter Bootstrap automatically. Otherwise skip and proceed to Stage 1.
+**Điều kiện kích hoạt**: chạy `python3 tools/research_wiki.py maturity wiki/ --json`. Nếu `level == "cold"` và `papers < 3`: vào Khởi Tạo tự động. Ngược lại, bỏ qua và chuyển đến Giai đoạn 1.
 
-1. **Initialize wiki structure** (if not yet initialized):
+1. **Khởi tạo cấu trúc wiki** (nếu chưa được khởi tạo):
    ```bash
    python3 tools/research_wiki.py init wiki/
    ```
 
-2. **Search for relevant papers** (use Agent tool with 3 parallel searches):
+2. **Tìm kiếm các bài báo liên quan** (sử dụng công cụ Agent với 3 tìm kiếm song song):
    - DeepXiv: `python3 tools/fetch_deepxiv.py search "{direction}" --mode hybrid --limit 20`
    - Semantic Scholar: `python3 tools/fetch_s2.py search "{direction}" --limit 20`
-   - arXiv: `python3 tools/fetch_arxiv.py` (using direction keywords)
-   - If DeepXiv is unavailable: skip; use only S2 + arXiv
+   - arXiv: `python3 tools/fetch_arxiv.py` (sử dụng từ khóa direction)
+   - Nếu DeepXiv không khả dụng: bỏ qua; chỉ sử dụng S2 + arXiv
 
-3. **Merge, rank, and select top 5**:
-   - Deduplicate by arxiv_id
-   - Ranking priority: DeepXiv relevance score > S2 citation count > recency
-   - Select top 5 (5 = minimum threshold for cold→warm)
+3. **Hợp nhất, xếp hạng và chọn top 5**:
+   - Loại bỏ trùng lặp theo arxiv_id
+   - Ưu tiên xếp hạng: điểm liên quan DeepXiv > số trích dẫn S2 > mới nhất
+   - Chọn top 5 (5 = ngưỡng tối thiểu cho cold→warm)
 
-4. **Auto-ingest each paper**:
+4. **Tự động ingest từng bài báo**:
    ```
    Skill: ingest
    Args: "{arxiv_url_or_path}"
    ```
-   Output progress after each ingest: `[{i}/5] Ingested: {paper_title}`
+   Xuất tiến trình sau mỗi ingest: `[{i}/5] Đã ingest: {paper_title}`
 
-5. **Rebuild derived data**:
+5. **Xây dựng lại dữ liệu phái sinh**:
    ```bash
    python3 tools/research_wiki.py rebuild-context-brief wiki/
    python3 tools/research_wiki.py rebuild-open-questions wiki/
    ```
 
-6. **Bootstrap report**:
+6. **Báo cáo Khởi Tạo**:
    ```bash
    python3 tools/research_wiki.py maturity wiki/ --json
    ```
-   Output to terminal:
+   Xuất ra terminal:
    ```
-   Bootstrap complete:
-   Papers: {N} | Claims: {M} | Concepts: {K} | Edges: {E}
-   Maturity: cold → {new_level}
-   Proceeding to Stage 1: Idea Discovery...
+   Hoàn thành Khởi Tạo:
+   Bài báo: {N} | Khẳng định: {M} | Khái niệm: {K} | Cạnh: {E}
+   Độ trưởng thành: cold → {new_level}
+   Chuyển sang Giai đoạn 1: Khám phá Ý tưởng...
    ```
 
-7. **Log + update progress**:
+7. **Nhật ký + cập nhật tiến trình**:
    ```bash
    python3 tools/research_wiki.py log wiki/ \
-     "research | stage0-bootstrap | auto-ingested {N} papers | maturity: {level}"
+     "research | stage0-khoi-tao | tự động ingest {N} bài báo | độ trưởng thành: {level}"
    python3 tools/research_wiki.py set-meta \
      wiki/outputs/pipeline-progress.md current_stage stage1
    ```
 
-### Stage 1: Idea Discovery
+### Giai đoạn 1: Khám Phá Ý Tưởng
 
-Call `/ideate`:
+Gọi `/ideate`:
 
 ```
 Skill: ideate
 Args: "{direction}" --domain {domain}
 ```
 
-**After completion**:
-1. Read the generated ideas, sorted by priority
-2. Update pipeline-progress: Stage 1 → completed, record generated idea slugs
-3. Append log
+**Sau khi hoàn thành**:
+1. Đọc các ý tưởng được tạo, sắp xếp theo mức độ ưu tiên
+2. Cập nhật pipeline-progress: Giai đoạn 1 → hoàn thành, ghi lại các slug ý tưởng được tạo
+3. Thêm nhật ký
 
-### Gate 1: Select Idea
+### Cổng 1: Chọn Ý Tưởng
 
-**If `--auto` mode**:
-- Automatically select the highest-priority (top-1) idea
-- Output selection result to terminal without waiting for confirmation
+**Nếu chế độ `--auto`**:
+- Tự động chọn ý tưởng có mức độ ưu tiên cao nhất (top-1)
+- Xuất kết quả lựa chọn ra terminal mà không chờ xác nhận
 
-**If interactive mode**:
-- List all generated ideas (slug, title, priority, novelty score)
-- Use AskUserQuestion to prompt user to select one idea (or enter "stop" to halt)
-- If user selects stop: save progress, terminate pipeline
+**Nếu chế độ tương tác**:
+- Liệt kê tất cả các ý tưởng được tạo (slug, tiêu đề, mức độ ưu tiên, điểm tính mới)
+- Sử dụng AskUserQuestion để nhắc người dùng chọn một ý tưởng (hoặc nhập "stop" để dừng)
+- Nếu người dùng chọn stop: lưu tiến trình, kết thúc pipeline
 
-**Save progress**:
-- Update pipeline-progress: Gate 1 → passed, record idea_slug
-- Update selected idea status: proposed → in_progress
+**Lưu tiến trình**:
+- Cập nhật pipeline-progress: Cổng 1 → đã qua, ghi lại idea_slug
+- Cập nhật trạng thái ý tưởng được chọn: proposed → in_progress
 
-### Stage 2: Experiment Design
+### Giai đoạn 2: Thiết Kế Thí Nghiệm
 
-Call `/exp-design`:
+Gọi `/exp-design`:
 
 ```
 Skill: exp-design
 Args: "{idea_slug}" --review
 ```
 
-**After completion**:
-1. Read generated experiment slugs (pages in wiki/experiments/ where linked_idea == idea_slug)
-2. Update pipeline-progress: Stage 2 → completed, record experiment_slugs
+**Sau khi hoàn thành**:
+1. Đọc các slug thí nghiệm được tạo (các trang trong wiki/experiments/ có linked_idea == idea_slug)
+2. Cập nhật pipeline-progress: Giai đoạn 2 → hoàn thành, ghi lại experiment_slugs
 
-### Stage 3: Experiment Execution (non-blocking)
+### Giai đoạn 3: Thực Thi Thí Nghiệm (không chặn)
 
-Stage 3 is divided into three sub-stages, allowing experiments to run asynchronously in the background without blocking the session.
+Giai đoạn 3 được chia thành ba tiểu giai đoạn, cho phép các thí nghiệm chạy không đồng bộ ở chế độ nền mà không chặn phiên.
 
-#### Stage 3a: Deploy All
+#### Giai đoạn 3a: Triển Khai Tất Cả
 
-Deploy each experiment in run order (baseline → validation → ablation → robustness) by calling `/exp-run {experiment_slug}` (default deploy mode, Phase 1+2):
+Triển khai từng thí nghiệm theo thứ tự chạy (baseline → validation → ablation → robustness) bằng cách gọi `/exp-run {experiment_slug}` (chế độ triển khai mặc định, Giai đoạn 1+2):
 
 ```
 Skill: exp-run
 Args: "{experiment_slug}"
 ```
 
-(Default deploy mode, Phase 1+2: returns immediately after deployment, does not wait for experiment to finish)
+(Chế độ triển khai mặc định, Giai đoạn 1+2: trả về ngay sau khi triển khai, không chờ thí nghiệm hoàn thành)
 
-**After each deployment**:
-- Record deployment result (success/failure) in memory
-- If deploy fails: record to pipeline-progress with a warning (baseline deploy failure gets a stronger warning), but **continue deploying remaining experiments** (do not abort)
+**Sau mỗi triển khai**:
+- Ghi lại kết quả triển khai (thành công/thất bại) trong bộ nhớ
+- Nếu triển khai thất bại: ghi vào pipeline-progress với cảnh báo (thất bại triển khai baseline nhận cảnh báo mạnh hơn), nhưng **tiếp tục triển khai các thí nghiệm còn lại** (không hủy bỏ)
 
-**After all deployments complete**, update pipeline-progress.md:
+**Sau khi tất cả các triển khai hoàn thành**, cập nhật pipeline-progress.md:
 ```bash
 python3 tools/research_wiki.py set-meta \
   wiki/outputs/pipeline-progress.md current_stage stage3-await
@@ -260,289 +263,293 @@ python3 tools/research_wiki.py set-meta \
   wiki/outputs/pipeline-progress.md stage3a_deployed \
   "[{experiment_slug_1}, {experiment_slug_2}, ...]"
 ```
-Append log:
+Thêm nhật ký:
 ```bash
 python3 tools/research_wiki.py log wiki/ \
-  "research | stage3a | deployed {N} experiments | pipeline: {slug}"
+  "research | stage3a | đã triển khai {N} thí nghiệm | pipeline: {slug}"
 ```
 
-#### Stage 3b: Await (non-blocking)
+#### Giai đoạn 3b: Chờ (không chặn)
 
-After all experiments are deployed, compute ETA, save progress, and end the current session.
+Sau khi tất cả các thí nghiệm được triển khai, tính toán ETA, lưu tiến trình và kết thúc phiên hiện tại.
 
-1. Update pipeline-progress:
+1. Cập nhật pipeline-progress:
    ```bash
    python3 tools/research_wiki.py set-meta \
      wiki/outputs/pipeline-progress.md current_stage stage3-await
    ```
-2. **Compute estimated completion time for each experiment**:
-   For each deployed experiment, read `started` and `estimated_hours` from frontmatter:
+2. **Tính toán thời gian hoàn thành ước tính cho từng thí nghiệm**:
+   Đối với mỗi thí nghiệm đã triển khai, đọc `started` và `estimated_hours` từ frontmatter:
    - `eta = started + estimated_hours`
-   - `recommended_return = max(all etas) + 30-minute buffer, rounded up to nearest hour or half-hour`
-3. Append log:
+   - `recommended_return = max(all etas) + bộ đệm 30 phút, làm tròn lên đến giờ hoặc nửa giờ gần nhất`
+3. Thêm nhật ký:
    ```bash
    python3 tools/research_wiki.py log wiki/ \
-     "research | stage3b | awaiting {N} experiments | latest eta: {YYYY-MM-DD HH:MM} | pipeline: {slug}"
+     "research | stage3b | đang chờ {N} thí nghiệm | eta mới nhất: {YYYY-MM-DD HH:MM} | pipeline: {slug}"
    ```
-4. Output instructions then **end current session**:
+4. Xuất hướng dẫn sau đó **kết thúc phiên hiện tại**:
    ```
-   Stage 3a complete: {N} experiments all deployed:
+   Hoàn thành Giai đoạn 3a: {N} thí nghiệm đã triển khai:
 
-   Experiment                      Environment     Est. Duration   Est. Completion
-   ──────────────────────────────  ──────────────  ─────────────   ───────────────
-   exp-foo-baseline                local           ~8h             Tomorrow 09:30
-   exp-foo-validation              remote (gpu1)   ~6h             Today 23:00
-   exp-foo-ablation                local           ~4h             Today 21:00
+   Thí nghiệm                      Môi trường     Thời gian ước tính   Hoàn thành ước tính
+   ──────────────────────────────  ──────────────  ───────────────────  ────────────────────
+   exp-foo-baseline                local           ~8h                 Ngày mai 09:30
+   exp-foo-validation              remote (gpu1)   ~6h                 Hôm nay 23:00
+   exp-foo-ablation                local           ~4h                 Hôm nay 21:00
 
-   Latest completion: Tomorrow 09:30 (exp-foo-baseline)
-   Recommended time to return: Tomorrow 10:00+
+   Hoàn thành mới nhất: Ngày mai 09:30 (exp-foo-baseline)
+   Thời gian đề xuất quay lại: Ngày mai 10:00+
 
-     /exp-status                              ← confirm all experiments complete
-     /research --start-from stage3-collect    ← collect results and continue
+     /exp-status                              ← xác nhận tất cả thí nghiệm đã hoàn thành
+     /research --start-from stage3-collect    ← thu thập kết quả và tiếp tục
 
-   Progress saved to wiki/outputs/pipeline-progress.md; current session can be closed.
+   Tiến trình được lưu vào wiki/outputs/pipeline-progress.md; phiên hiện tại có thể đóng.
    ```
 
-#### Stage 3c: Collect (triggered after experiments complete)
+#### Giai đoạn 3c: Thu Thập (được kích hoạt sau khi các thí nghiệm hoàn thành)
 
-**Trigger**: user manually runs `/research --start-from stage3-collect`
+**Kích hoạt**: người dùng chạy thủ công `/research --start-from stage3-collect`
 
-For each deployed experiment (read from `stage3a_deployed` list):
+Đối với mỗi thí nghiệm đã triển khai (đọc từ danh sách `stage3a_deployed`):
 ```
 Skill: exp-run
 Args: "{experiment_slug} --collect"
 ```
 
-(Collect mode, Phase 3+4: check completion status and collect results)
+(Chế độ thu thập, Giai đoạn 3+4: kiểm tra trạng thái hoàn thành và thu thập kết quả)
 
-**Decision after each collect**:
-- If outcome == failed and this is the baseline experiment → **terminate pipeline**, report baseline cannot be reproduced
-- If outcome == failed and this is a validation experiment → record failure, continue collecting remaining experiments, proceed to Stage 4 evaluation
-- If outcome == inconclusive → record and continue
+**Quyết định sau mỗi thu thập**:
+- Nếu outcome == failed và đây là thí nghiệm baseline → **kết thúc pipeline**, báo cáo baseline không thể tái tạo
+- Nếu outcome == failed và đây là thí nghiệm validation → ghi lại thất bại, tiếp tục thu thập các thí nghiệm còn lại, tiến hành đánh giá Giai đoạn 4
+- Nếu outcome == inconclusive → ghi lại và tiếp tục
 
-**After all collects complete**:
-- Update pipeline-progress: Stage 3 → completed
+**Sau khi tất cả các thu thập hoàn thành**:
+- Cập nhật pipeline-progress: Giai đoạn 3 → hoàn thành
   ```bash
   python3 tools/research_wiki.py set-meta \
     wiki/outputs/pipeline-progress.md current_stage stage4
   ```
-- Append log:
+- Thêm nhật ký:
   ```bash
   python3 tools/research_wiki.py log wiki/ \
-    "research | stage3c | collected {N} experiments | pipeline: {slug}"
+    "research | stage3c | đã thu thập {N} thí nghiệm | pipeline: {slug}"
   ```
-- Proceed to Stage 4
+- Chuyển sang Giai đoạn 4
 
-### Stage 4: Verdict & Iteration
+### Giai đoạn 4: Phán Quyết & Lặp Lại
 
-Call `/exp-eval` for each completed experiment:
+Gọi `/exp-eval` cho mỗi thí nghiệm đã hoàn thành:
 
 ```
 Skill: exp-eval
 Args: "{experiment_slug}" --auto
 ```
 
-**Evaluate whether claims are sufficient**:
-1. Read the latest status of all target claims
-2. Determine whether iteration is needed:
-   - **Claims sufficient** (primary claim confidence >= 0.7 and status is supported or weakly_supported) → proceed to Gate 2
-   - **Claims insufficient** (confidence < 0.4 or status is challenged) → enter iteration
+**Đánh giá xem các khẳng định có đủ không**:
+1. Đọc trạng thái mới nhất của tất cả các khẳng định mục tiêu
+2. Xác định xem có cần lặp lại không:
+   - **Khẳng định đủ** (độ tin cậy khẳng định chính >= 0.7 và trạng thái là supported hoặc weakly_supported) → tiến hành Cổng 2
+   - **Khẳng định không đủ** (độ tin cậy < 0.4 hoặc trạng thái là challenged) → vào vòng lặp
 
-**Iteration path** (when claims are insufficient, up to 1 retry):
-1. Analyze the cause of failure
-2. Call `/refine` to improve the experiment plan:
+**Đường lặp lại** (khi khẳng định không đủ, tối đa 1 lần thử lại):
+1. Phân tích nguyên nhân thất bại
+2. Gọi `/refine` để cải thiện kế hoạch thí nghiệm:
    ```
    Skill: refine
    Args: "{experiment_plan_slug}" --max-rounds 2 --focus evidence
    ```
-3. Re-run Stage 3 → Stage 4 for new/modified experiments
-4. Maximum 2 iterations (prevents infinite loops); each stage has at most 1 auto-retry
+3. Chạy lại Giai đoạn 3 → Giai đoạn 4 cho các thí nghiệm mới/sửa đổi
+4. Tối đa 2 lần lặp lại (ngăn chặn vòng lặp vô hạn); mỗi giai đoạn có tối đa 1 lần thử lại tự động
 
-**After completion**:
-- Update pipeline-progress: Stage 4 → completed, record claim_slugs
+**Sau khi hoàn thành**:
+- Cập nhật pipeline-progress: Giai đoạn 4 → hoàn thành, ghi lại claim_slugs
 
-### Gate 2: Confirm Paper Ready
+### Cổng 2: Xác Nhận Bài Báo Sẵn Sàng
 
-**If `--skip-paper`**: skip Gate 2 and Stage 5, generate final report directly
+**Nếu `--skip-paper`**: bỏ qua Cổng 2 và Giai đoạn 5, tạo báo cáo cuối cùng trực tiếp
 
-**If `--auto` mode**: automatically continue, enter Stage 5
+**Nếu chế độ `--auto`**: tự động tiếp tục, vào Giai đoạn 5
 
-**If interactive mode**:
-- Display claim status summary:
+**Nếu chế độ tương tác**:
+- Hiển thị tóm tắt trạng thái khẳng định:
   ```
-  Claim: {slug} | Status: {status} | Confidence: {confidence}
-  Evidence: {count} sources ({strong}/{moderate}/{weak})
+  Khẳng định: {slug} | Trạng thái: {status} | Độ tin cậy: {confidence}
+  Bằng chứng: {count} nguồn ({strong}/{moderate}/{weak})
   ```
-- Use AskUserQuestion to prompt user: ready for paper / need more experiments / stop here
-- If "need more experiments": return to Stage 2 for replanning
-- If "stop here": save progress, generate final report (without paper)
+- Sử dụng AskUserQuestion để nhắc người dùng: sẵn sàng cho bài báo / cần thêm thí nghiệm / dừng tại đây
+- Nếu "cần thêm thí nghiệm": quay lại Giai đoạn 2 để lập kế hoạch lại
+- Nếu "dừng tại đây": lưu tiến trình, tạo báo cáo cuối cùng (không có bài báo)
 
-**Save progress**:
-- Update pipeline-progress: Gate 2 → passed
+**Lưu tiến trình**:
+- Cập nhật pipeline-progress: Cổng 2 → đã qua
 
-### Stage 5: Paper Writing
+### Giai đoạn 5: Viết Bài Báo
 
-Call sub-skills in sequence: /paper-plan → /paper-draft → /refine → /paper-compile
+Gọi các kỹ năng con theo thứ tự: /paper-plan → /paper-draft → /refine → /paper-compile
 
-**5a. Call /paper-plan**:
+**5a. Gọi /paper-plan**:
 ```
 Skill: paper-plan
 Args: "{claim_slugs}" --venue {venue}
 ```
 
-**5b. Call /paper-draft**:
+**5b. Gọi /paper-draft**:
 ```
 Skill: paper-draft
 Args: "wiki/outputs/PAPER_PLAN.md" --review
 ```
 
-**5c. Call /refine on paper**:
+**5c. Gọi /refine cho bài báo**:
 ```
 Skill: refine
 Args: "paper/main.tex" --max-rounds 3 --target-score 8 --focus writing
 ```
 
-**5d. Call /paper-compile**:
+**5d. Gọi /paper-compile**:
 ```
 Skill: paper-compile
 Args: "paper/"
 ```
 
-**After completion**:
-- Update pipeline-progress: Stage 5 → completed, status: completed
+**Sau khi hoàn thành**:
+- Cập nhật pipeline-progress: Giai đoạn 5 → hoàn thành, status: completed
 
-### Step Final: Pipeline Report
+### Bước Cuối: Báo Cáo Pipeline
 
-Generate `wiki/outputs/PIPELINE_REPORT.md`:
+Tạo `wiki/outputs/PIPELINE_REPORT.md`:
 
 ```markdown
-# Research Pipeline Report
+# Báo Cáo Pipeline Nghiên Cứu
 
-## Stage Summary
-| Stage | Status | Duration |
+## Tóm Tắt Giai Đoạn
+| Giai đoạn | Trạng thái | Thời gian |
 |-------|--------|----------|
-| Stage 0: Bootstrap | completed/skipped | ... |
-| Stage 1: Idea Discovery | completed | ... |
-| Gate 1: Idea Selection | passed | ... |
-| Stage 2: Experiment Design | completed | ... |
-| Stage 3a: Deploy Experiments | completed | ... |
-| Stage 3b: Await (async) | completed | ... |
-| Stage 3c: Collect Results | completed | ... |
-| Stage 4: Verdict | completed | ... |
-| Gate 2: Paper Ready | passed | ... |
-| Stage 5: Paper Writing | completed | ... |
+| Giai đoạn 0: Khởi tạo | hoàn thành/bỏ qua | ... |
+| Giai đoạn 1: Khám phá Ý tưởng | hoàn thành | ... |
+| Cổng 1: Lựa chọn Ý tưởng | đã qua | ... |
+| Giai đoạn 2: Thiết kế Thí nghiệm | hoàn thành | ... |
+| Giai đoạn 3a: Triển khai Thí nghiệm | hoàn thành | ... |
+| Giai đoạn 3b: Chờ (bất đồng bộ) | hoàn thành | ... |
+| Giai đoạn 3c: Thu thập Kết quả | hoàn thành | ... |
+| Giai đoạn 4: Phán quyết | hoàn thành | ... |
+| Cổng 2: Bài báo sẵn sàng | đã qua | ... |
+| Giai đoạn 5: Viết Bài báo | hoàn thành | ... |
 
-## Selected Idea
-- **Idea**: [[{idea_slug}]] — {idea title}
-- **Priority**: {N}
-- **Novelty score**: {score}
+## Ý Tưởng Được Chọn
+- **Ý tưởng**: [[{idea_slug}]] — {tiêu đề ý tưởng}
+- **Mức độ ưu tiên**: {N}
+- **Điểm tính mới**: {score}
 
-## Claims Trail
-| Claim | Initial Status | Final Status | Confidence (proposed → supported) |
-|-------|---------------|-------------|-----------------------------------|
+## Theo Dõi Khẳng Định
+| Khẳng định | Trạng thái Ban đầu | Trạng thái Cuối cùng | Độ tin cậy (đề xuất → hỗ trợ) |
+|-------|-------------------|---------------------|-----------------------------------|
 | [[{slug}]] | proposed | supported | 0.3 → 0.8 |
 
-## Experiment Results
-| Experiment | Outcome | Key Result |
+## Kết Quả Thí Nghiệm
+| Thí nghiệm | Kết quả | Kết quả Chính |
 |-----------|---------|------------|
 | [[{slug}]] | succeeded | {result} |
 
-## Iteration History
-- Total iterations: {N}
-- Reason for iteration: {claims insufficient / ...}
+## Lịch Sử Lặp Lại
+- Tổng số lần lặp lại: {N}
+- Lý do lặp lại: {khẳng định không đủ / ...}
 
-## Deliverables
-- Ideas: +{N} created
-- Experiments: +{N} created, {N} completed
-- Claims: {N} updated
-- Graph edges: +{N}
-- Paper: paper/main.pdf (if applicable)
+## Sản Phẩm
+- Ý tưởng: +{N} được tạo
+- Thí nghiệm: +{N} được tạo, {N} hoàn thành
+- Khẳng định: {N} được cập nhật
+- Cạnh đồ thị: +{N}
+- Bài báo: paper/main.pdf (nếu có)
 
-## Wiki Growth (pipeline total)
-| Metric | Before | After | Delta |
+## Tăng Trưởng Wiki (tổng pipeline)
+| Chỉ số | Trước | Sau | Chênh lệch |
 |--------|--------|-------|-------|
-| Papers | {N} | {N} | +{N} |
-| Claims | {N} | {N} | +{N} |
-| Ideas | {N} | {N} | +{N} |
-| Experiments | {N} | {N} | +{N} |
-| Edges | {N} | {N} | +{N} |
-| Maturity | {level} | {level} | {status} |
-| Coverage | {%} | {%} | +{%} |
-(Data from comparing `maturity_before` from Step 0 against a fresh call to `maturity --json` here. Only rows with delta != 0 are shown.)
+| Bài báo | {N} | {N} | +{N} |
+| Khẳng định | {N} | {N} | +{N} |
+| Ý tưởng | {N} | {N} | +{N} |
+| Thí nghiệm | {N} | {N} | +{N} |
+| Cạnh | {N} | {N} | +{N} |
+| Độ trưởng thành | {level} | {level} | {status} |
+| Độ phủ | {%} | {%} | +{%} |
+(Dữ liệu từ so sánh `maturity_before` từ Bước 0 với lệnh gọi mới `maturity --json` tại đây. Chỉ hiển thị các hàng có chênh lệch != 0.)
 
-## Next Steps
-- {recommendations based on remaining gaps or unresolved issues}
+## Bước Tiếp Theo
+- {khuyến nghị dựa trên các lỗ hổng hoặc vấn đề chưa giải quyết còn lại}
 ```
 
-Append log:
+Thêm nhật ký:
 ```bash
 python3 tools/research_wiki.py log wiki/ \
-  "research | completed | idea: {slug} | claims: {N} updated | paper: {yes/no}"
+  "research | hoàn thành | ý tưởng: {slug} | khẳng định: {N} cập nhật | bài báo: {có/không}"
 ```
 
-Update pipeline-progress: status: completed
+Cập nhật pipeline-progress: status: completed
 
-## Constraints
+## Các Ràng Buộc
 
-- **Orchestrator does not directly modify wiki entities or embed sub-skill logic**: all wiki modifications are delegated to sub-skills; the pipeline only coordinates by calling them via the Skill tool
-- **Gates and Stages must save progress**: every Gate and Stage must save pipeline-progress.md when completed or entering await
-- **Stage 3a deploy failures do not abort**: record a warning and continue deploying; do not terminate early (baseline collect failure is what triggers termination)
-- **Baseline collect failure terminates**: in Stage 3c, if baseline outcome == failed, terminate the pipeline
-- **Stage 3b ends the session**: after Stage 3b completes, the current session ends; do not continue waiting for experiments
-- **Maximum 2 iterations**: Stage 4 iterates at most 2 times to prevent infinite loops
-- **--auto does not skip computation**: auto mode skips human confirmation but skips no computation steps
-- **--skip-paper still runs Stage 4 /exp-eval**: claim updates must be completed even when not writing a paper
-- **Pass sub-skill parameters through**: correctly pass domain, --venue, and other parameters to sub-skills
-- **Log every Stage**: append a log.md audit entry after each Stage completes
-- **Do not re-run completed stages**: --start-from skips already-completed stages
-- **Progress file at wiki/outputs/pipeline-progress.md**: consistent location for easy discovery and recovery
-- **Auto-recovery first**: if no --start-from is given and an unfinished pipeline exists, default to prompting the user to resume rather than starting fresh
+- **Điều phối viên không trực tiếp sửa đổi thực thể wiki hoặc nhúng logic kỹ năng con**: tất cả các sửa đổi wiki được ủy quyền cho các kỹ năng con; pipeline chỉ điều phối bằng cách gọi chúng thông qua công cụ Skill
+- **Cổng và Giai đoạn phải lưu tiến trình**: mọi Cổng và Giai đoạn phải lưu pipeline-progress.md khi hoàn thành hoặc vào chế độ chờ
+- **Thất bại triển khai Giai đoạn 3a không hủy bỏ**: ghi cảnh báo và tiếp tục triển khai; không kết thúc sớm (thất bại thu thập baseline mới kích hoạt kết thúc)
+- **Thất bại thu thập baseline kết thúc**: trong Giai đoạn 3c, nếu baseline outcome == failed, kết thúc pipeline
+- **Giai đoạn 3b kết thúc phiên**: sau khi Giai đoạn 3b hoàn thành, phiên hiện tại kết thúc; không tiếp tục chờ các thí nghiệm
+- **Tối đa 2 lần lặp lại**: Giai đoạn 4 lặp lại tối đa 2 lần để ngăn chặn vòng lặp vô hạn
+- **--auto không bỏ qua tính toán**: chế độ auto bỏ qua xác nhận của con người nhưng không bỏ qua bước tính toán nào
+- **--skip-paper vẫn chạy Giai đoạn 4 /exp-eval**: cập nhật khẳng định phải được hoàn thành ngay cả khi không viết bài báo
+- **Chuyển tiếp tham số kỹ năng con**: chuyển chính xác domain, --venue và các tham số khác đến các kỹ năng con
+- **Nhật ký mọi Giai đoạn**: thêm mục kiểm toán log.md sau khi mỗi Giai đoạn hoàn thành
+- **Không chạy lại các giai đoạn đã hoàn thành**: --start-from bỏ qua các giai đoạn đã hoàn thành
+- **Tệp tiến trình tại wiki/outputs/pipeline-progress.md**: vị trí nhất quán để dễ dàng phát hiện và khôi phục
+- **Ưu tiên tự động khôi phục**: nếu không có --start-from và tồn tại pipeline chưa hoàn thành, mặc định nhắc người dùng tiếp tục thay vì bắt đầu mới
 
-## Error Handling
+## Xử Lý Lỗi
 
-- **pipeline-progress missing but --start-from specified**: report error; prompt user to run the full pipeline first
-- **pipeline-progress corrupted or malformed**: attempt to infer progress from current wiki state (read ideas/experiments/claims statuses), recover to the nearest Gate
-- **Sub-skill call fails**: record error to pipeline-progress, report the failed stage, suggest --start-from to resume
-- **All ideas generation fails**: terminate pipeline; suggest the user adjust the research direction
-- **All experiment deploys fail**: terminate pipeline (Stage 3a); generate failure report; suggest checking GPU/SSH configuration
-- **Stage 3c baseline collect fails**: terminate pipeline; report baseline cannot be reproduced; suggest re-running /exp-design
-- **All experiment collects fail (non-baseline)**: proceed to Stage 4 evaluation (treat failures as evidence)
-- **Gate user selects stop**: save progress to pipeline-progress; generate partial report
-- **RESEARCH_BRIEF.md malformed**: fall back to plain-text direction; ignore structured fields
-- **Wiki empty (no papers/concepts)**: auto-trigger Stage 0 Bootstrap (search + auto-ingest 5 papers)
-- **Claims still insufficient after iteration**: annotate report with "claims insufficient after max iterations"; let user decide whether to continue
-- **User selects view status (auto-recovery detection [3])**: call `/exp-status --pipeline {slug}` then exit without starting a new pipeline
+- **pipeline-progress thiếu nhưng --start-from được chỉ định**: báo lỗi; nhắc người dùng chạy pipeline đầy đủ trước
+- **pipeline-progress bị hỏng hoặc định dạng sai**: cố gắng suy luận tiến trình từ trạng thái wiki hiện tại (đọc trạng thái ideas/experiments/claims), khôi phục đến Cổng gần nhất
+- **Gọi kỹ năng con thất bại**: ghi lỗi vào pipeline-progress, báo cáo giai đoạn thất bại, đề xuất --start-from để tiếp tục
+- **Tạo ý tưởng thất bại**: kết thúc pipeline; đề xuất người dùng điều chỉnh hướng nghiên cứu
+- **Tất cả triển khai thí nghiệm thất bại**: kết thúc pipeline (Giai đoạn 3a); tạo báo cáo thất bại; đề xuất kiểm tra cấu hình GPU/SSH
+- **Thu thập baseline Giai đoạn 3c thất bại**: kết thúc pipeline; báo cáo baseline không thể tái tạo; đề xuất chạy lại /exp-design
+- **Tất cả thu thập thí nghiệm thất bại (không phải baseline)**: tiến hành đánh giá Giai đoạn 4 (xem thất bại như bằng chứng)
+- **Người dùng chọn dừng tại Cổng**: lưu tiến trình vào pipeline-progress; tạo báo cáo một phần
+- **RESEARCH_BRIEF.md định dạng sai**: quay lại hướng văn bản thuần túy; bỏ qua các trường có cấu trúc
+- **Wiki trống (không có bài báo/khái niệm)**: tự động kích hoạt Giai đoạn 0 Khởi tạo (tìm kiếm + tự động ingest 5 bài báo)
+- **Khẳng định vẫn không đủ sau lần lặp lại**: chú thích báo cáo với "khẳng định không đủ sau số lần lặp lại tối đa"; để người dùng quyết định có tiếp tục không
+- **Người dùng chọn xem trạng thái (tự động phát hiện khôi phục [3])**: gọi `/exp-status --pipeline {slug}` sau đó thoát mà không bắt đầu pipeline mới
 
-## Dependencies
+## Phụ Thuộc
 
-### Skills（via Skill tool）
-- `/ingest` — Stage 0 Bootstrap auto-ingest
-- `/ideate` — Stage 1 idea discovery
-- `/exp-design` — Stage 2 experiment design
-- `/exp-run` — Stage 3a (deploy mode) and Stage 3c (--collect mode)
-- `/exp-status` — user manually checks experiment progress; `--auto-advance` can automatically trigger Stage 4 when all complete
-- `/exp-eval` — Stage 4 verdict
-- `/refine` — Stage 4 iteration + Stage 5 paper improvement
-- `/paper-plan` — Stage 5 paper planning
-- `/paper-draft` — Stage 5 paper writing
-- `/paper-compile` — Stage 5 paper compilation
+### Kỹ Năng (thông qua công cụ Skill)
 
-### Tools（via Bash）
-- `python3 tools/research_wiki.py slug "{title}"` — generate pipeline slug
-- `python3 tools/research_wiki.py set-meta <path> <field> <value>` — update pipeline-progress fields
-- `python3 tools/research_wiki.py log wiki/ "<message>"` — append log entry
-- `python3 tools/research_wiki.py maturity wiki/ --json` — check wiki maturity (Stage 0 trigger + Growth Report)
-- `python3 tools/research_wiki.py init wiki/` — initialize wiki structure (Stage 0)
-- `python3 tools/fetch_deepxiv.py search "{query}" --mode hybrid --limit 20` — DeepXiv semantic search (Stage 0)
-- `python3 tools/fetch_s2.py search "{query}" --limit 20` — Semantic Scholar search (Stage 0)
-- `python3 tools/fetch_arxiv.py` — arXiv RSS search (Stage 0)
+- `/ingest` — Tự động ingest Giai đoạn 0 Khởi tạo
+- `/ideate` — Khám phá ý tưởng Giai đoạn 1
+- `/exp-design` — Thiết kế thí nghiệm Giai đoạn 2
+- `/exp-run` — Giai đoạn 3a (chế độ triển khai) và Giai đoạn 3c (chế độ --collect)
+- `/exp-status` — Người dùng kiểm tra tiến trình thí nghiệm thủ công; `--auto-advance` có thể tự động kích hoạt Giai đoạn 4 khi tất cả hoàn thành
+- `/exp-eval` — Phán quyết Giai đoạn 4
+- `/refine` — Lặp lại Giai đoạn 4 + cải thiện bài báo Giai đoạn 5
+- `/paper-plan` — Lập kế hoạch bài báo Giai đoạn 5
+- `/paper-draft` — Viết bài báo Giai đoạn 5
+- `/paper-compile` — Biên dịch bài báo Giai đoạn 5
 
-### MCP Servers
-- None directly — all Review LLM interactions are used indirectly via sub-skills
+### Công cụ (thông qua Bash)
 
-### Claude Code Native
-- `Read` — read pipeline-progress, wiki pages, RESEARCH_BRIEF
-- `Write` — write pipeline-progress, PIPELINE_REPORT
-- `Glob` — find experiments, ideas, claims
-- `Skill` — call sub-skills (core capability)
-- `AskUserQuestion` — user interaction at Gates and auto-recovery detection
+- `python3 tools/research_wiki.py slug "{title}"` — tạo slug pipeline
+- `python3 tools/research_wiki.py set-meta <path> <field> <value>` — cập nhật trường pipeline-progress
+- `python3 tools/research_wiki.py log wiki/ "<message>"` — thêm mục nhật ký
+- `python3 tools/research_wiki.py maturity wiki/ --json` — kiểm tra độ trưởng thành wiki (kích hoạt Giai đoạn 0 + Báo cáo Tăng trưởng)
+- `python3 tools/research_wiki.py init wiki/` — khởi tạo cấu trúc wiki (Giai đoạn 0)
+- `python3 tools/fetch_deepxiv.py search "{query}" --mode hybrid --limit 20` — Tìm kiếm ngữ nghĩa DeepXiv (Giai đoạn 0)
+- `python3 tools/fetch_s2.py search "{query}" --limit 20` — Tìm kiếm Semantic Scholar (Giai đoạn 0)
+- `python3 tools/fetch_arxiv.py` — Tìm kiếm RSS arXiv (Giai đoạn 0)
+
+### Máy Chủ MCP
+
+- Không trực tiếp — tất cả tương tác Review LLM được sử dụng gián tiếp thông qua các kỹ năng con
+
+### Claude Code Gốc
+
+- `Read` — đọc pipeline-progress, trang wiki, RESEARCH_BRIEF
+- `Write` — ghi pipeline-progress, PIPELINE_REPORT
+- `Glob` — tìm thí nghiệm, ý tưởng, khẳng định
+- `Skill` — gọi các kỹ năng con (khả năng cốt lõi)
+- `AskUserQuestion` — tương tác người dùng tại Cổng và phát hiện tự động khôi phục

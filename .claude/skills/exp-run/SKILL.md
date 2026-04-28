@@ -1,150 +1,153 @@
 ---
-description: Full experiment execution pipeline — prepare code → deploy → monitor → collect results, supporting three run modes
-argument-hint: <experiment-slug> [--review] [--collect] [--full] [--env local|remote]
+description: Quy trình thực thi thí nghiệm đầy đủ — chuẩn bị mã → triển khai → giám sát → thu thập kết quả, hỗ trợ ba chế độ chạy
+argument-hint: "<slug-thí-nghiệm> [--review] [--collect] [--full] [--env local|remote]"
 ---
 
 # /exp-run
 
-> Execute an experiment that has been planned in wiki/experiments/.
-> **Three run modes** for different scenarios:
-> - **Default (deploy)**: Phase 1-2 only — deploy and return immediately. Best for experiments that take hours or days.
-> - **`--collect`**: Phase 3-4 only — check whether a deployed experiment has finished; collect results if so (`--check` is an alias).
-> - **`--full`**: All four phases end-to-end. Best for short local experiments that finish in minutes.
+> Thực thi một thí nghiệm đã được lên kế hoạch trong wiki/experiments/.
+> **Ba chế độ chạy** cho các tình huống khác nhau:
+> - **Mặc định (triển khai)**: Chỉ Giai đoạn 1-2 — triển khai và trả về ngay. Phù hợp nhất cho các thí nghiệm kéo dài hàng giờ hoặc ngày.
+> - **`--collect`**: Chỉ Giai đoạn 3-4 — kiểm tra xem thí nghiệm đã triển khai có hoàn thành chưa; thu thập kết quả nếu có (`--check` là bí danh).
+> - **`--full`**: Cả bốn giai đoạn từ đầu đến cuối. Phù hợp nhất cho các thí nghiệm cục bộ ngắn kết thúc trong vài phút.
 >
-> Recommended flow: `/exp-run <slug>` to deploy → `/exp-status` to monitor → `/exp-run <slug> --collect` to collect.
+> Quy trình đề xuất: `/exp-run <slug>` để triển khai → `/exp-status` để giám sát → `/exp-run <slug> --collect` để thu thập.
 
-## Inputs
+## Đầu Vào
 
-- `experiment`: slug from wiki/experiments/
-  - deploy mode: status must be `planned`
-  - --collect mode: status must be `running`
-  - --full mode: status must be `planned`
-- `--review` (optional): enable Review LLM code review for experiment code in Phase 1 (valid in deploy / full mode)
-- `--collect` (optional): collect mode — check if the experiment has finished and collect results; `--check` is an alias
-- `--full` (optional): full mode — execute all 4 phases (best for quick local experiments)
-- `--env local|remote` (optional, default `local`): deployment environment
-  - `local`: run directly on local GPU
-  - `remote`: deploy to remote machine via SSH (requires `config/server.yaml`)
+- `experiment`: slug từ wiki/experiments/
+  - chế độ triển khai: trạng thái phải là `planned`
+  - chế độ --collect: trạng thái phải là `running`
+  - chế độ --full: trạng thái phải là `planned`
+- `--review` *(tùy chọn)*: kích hoạt đánh giá mã Review LLM cho mã thí nghiệm trong Giai đoạn 1 (hợp lệ trong chế độ triển khai / full)
+- `--collect` *(tùy chọn)*: chế độ thu thập — kiểm tra xem thí nghiệm đã hoàn thành chưa và thu thập kết quả; `--check` là bí danh
+- `--full` *(tùy chọn)*: chế độ đầy đủ — thực thi cả 4 giai đoạn (phù hợp nhất cho các thí nghiệm cục bộ nhanh)
+- `--env local|remote` *(tùy chọn, mặc định `local`)*: môi trường triển khai
+  - `local`: chạy trực tiếp trên GPU cục bộ
+  - `remote`: triển khai đến máy từ xa qua SSH (yêu cầu `config/server.yaml`)
 
-## Outputs
+## Đầu Ra
 
-- **deploy mode**:
-  - Experiment code: `experiments/code/{slug}/` (generated in Phase 1)
-  - `wiki/experiments/{slug}.md` — status: planned → running
-  - **DEPLOY_REPORT** (printed to terminal) — deployment confirmation, session info, next steps
-  - `wiki/log.md` — appended deploy log
-- **collect mode** (experiment has finished):
-  - `wiki/experiments/{slug}.md` — status: running → completed; outcome/key_result/date_completed filled in
-  - **RUN_REPORT** (printed to terminal) — result summary, metrics comparison, next step suggestions
-  - `wiki/log.md` — appended collect log
-- **collect mode** (experiment still running):
-  - Progress report printed to terminal only; wiki is not modified
-- **full mode**: all outputs from both deploy and collect
+- **chế độ triển khai**:
+  - Mã thí nghiệm: `experiments/code/{slug}/` (được tạo trong Giai đoạn 1)
+  - `wiki/experiments/{slug}.md` — trạng thái: planned → running
+  - **DEPLOY_REPORT** *(in ra terminal)* — xác nhận triển khai, thông tin phiên, bước tiếp theo
+  - `wiki/log.md` — thêm nhật ký triển khai
+- **chế độ thu thập** (thí nghiệm đã hoàn thành):
+  - `wiki/experiments/{slug}.md` — trạng thái: running → completed; outcome/key_result/date_completed được điền
+  - **RUN_REPORT** *(in ra terminal)* — tóm tắt kết quả, so sánh chỉ số, gợi ý bước tiếp theo
+  - `wiki/log.md` — thêm nhật ký thu thập
+- **chế độ thu thập** (thí nghiệm vẫn đang chạy):
+  - Báo cáo tiến độ chỉ in ra terminal; wiki không được sửa đổi
+- **chế độ đầy đủ**: tất cả đầu ra từ cả triển khai và thu thập
 
-## Wiki Interaction
+## Tương Tác Wiki
 
-### Reads
-- `wiki/experiments/{slug}.md` — experiment config: setup, metrics, baseline, hypothesis, target_claim
-- `wiki/claims/{target-claim}.md` — target claim context (understand experiment purpose)
-- `wiki/ideas/{linked-idea}.md` — linked idea's approach sketch (guide code implementation)
-- `wiki/papers/*.md` — related papers' method details and hyperparameters (implementation reference)
-- `wiki/experiments/*.md` — other experiments on the same claim (reference setup, avoid known mistakes)
+### Đọc
 
-### Writes
-- `experiments/code/{slug}/` — experiment code directory (Phase 1, deploy / full mode)
-  - `experiments/code/{slug}/train.py` — main training/inference script
-  - `experiments/code/{slug}/config.yaml` — hyperparameter config file
-  - `experiments/code/{slug}/run.sh` — launch wrapper script (includes CUDA_VISIBLE_DEVICES etc.)
-  - `experiments/code/{slug}/requirements.txt` — dependencies (if different from main project)
-- `wiki/experiments/{slug}.md` — update status, outcome, key_result, date_completed, run_log, remote block
-- `wiki/log.md` — append operation log
+- `wiki/experiments/{slug}.md` — cấu hình thí nghiệm: setup, metrics, baseline, hypothesis, target_claim
+- `wiki/claims/{target-claim}.md` — ngữ cảnh khẳng định mục tiêu (hiểu mục đích thí nghiệm)
+- `wiki/ideas/{linked-idea}.md` — bản phác thảo cách tiếp cận của ý tưởng liên kết (hướng dẫn triển khai mã)
+- `wiki/papers/*.md` — chi tiết phương pháp và siêu tham số của các bài báo liên quan (tham khảo triển khai)
+- `wiki/experiments/*.md` — các thí nghiệm khác trên cùng khẳng định (tham khảo thiết lập, tránh các lỗi đã biết)
 
-### Graph edges created
-- **None**. The tested_by edges between experiments and claims are created by /exp-design.
+### Ghi
 
-## Workflow
+- `experiments/code/{slug}/` — thư mục mã thí nghiệm (Giai đoạn 1, chế độ triển khai / đầy đủ)
+  - `experiments/code/{slug}/train.py` — tập lệnh huấn luyện/dự đoán chính
+  - `experiments/code/{slug}/config.yaml` — tệp cấu hình siêu tham số
+  - `experiments/code/{slug}/run.sh` — tập lệnh wrapper khởi chạy (bao gồm CUDA_VISIBLE_DEVICES, v.v.)
+  - `experiments/code/{slug}/requirements.txt` — các phụ thuộc (nếu khác với dự án chính)
+- `wiki/experiments/{slug}.md` — cập nhật trạng thái, outcome, key_result, date_completed, run_log, khối remote
+- `wiki/log.md` — thêm nhật ký hoạt động
 
-**Precondition**: confirm working directory is the wiki project root (directory containing `wiki/`, `raw/`, `tools/`).
+### Các cạnh đồ thị được tạo
+
+- **Không có**. Các cạnh tested_by giữa thí nghiệm và khẳng định được tạo bởi /exp-design.
+
+## Quy Trình Làm Việc
+
+**Điều kiện tiên quyết**: xác nhận thư mục làm việc là thư mục gốc dự án wiki (thư mục chứa `wiki/`, `raw/`, `tools/`).
 
 ---
 
-### Deploy Mode (default, status == planned)
+### Chế Độ Triển Khai (mặc định, trạng thái == planned)
 
-**Phase 1: Prepare**
+**Giai đoạn 1: Chuẩn Bị**
 
-1. **Read experiment page**:
-   - `wiki/experiments/{slug}.md`: extract setup (model, dataset, hardware, framework), metrics, baseline, hypothesis
-   - Verify status == `planned`
-   - If status is `running`, prompt user to use `--collect` mode
-   - If status is `completed`/`abandoned`, refuse to execute
+1. **Đọc trang thí nghiệm**:
+   - `wiki/experiments/{slug}.md`: trích xuất setup (model, dataset, hardware, framework), metrics, baseline, hypothesis
+   - Xác minh trạng thái == `planned`
+   - Nếu trạng thái là `running`, nhắc người dùng sử dụng chế độ `--collect`
+   - Nếu trạng thái là `completed`/`abandoned`, từ chối thực thi
 
-2. **Load implementation context**:
-   - Read linked idea's approach sketch (implementation guide)
-   - Read related papers' method descriptions (algorithm details)
-   - Read other experiments on the same claim (reference code structure)
+2. **Tải ngữ cảnh triển khai**:
+   - Đọc bản phác thảo cách tiếp cận của ý tưởng liên kết (hướng dẫn triển khai)
+   - Đọc mô tả phương pháp của các bài báo liên quan (chi tiết thuật toán)
+   - Đọc các thí nghiệm khác trên cùng khẳng định (tham khảo cấu trúc mã)
 
-3. **Write experiment code** to `experiments/code/{slug}/`:
-   - `train.py`: generate training/evaluation script based on setup config, including:
-     - Argument parsing (argparse, all hyperparameters configurable)
-     - Data loading (support setup.dataset)
-     - Model initialization (support setup.model and baseline model)
-     - Training/inference loop
-     - Metric computation (matching metrics list)
-     - Result saving (JSON format, path: `results/{slug}/seed_{N}.json`)
-     - Random seed control (multi-seed runs)
-     - Checkpoint save/restore (`checkpoints/{slug}/`)
-   - `config.yaml`: all hyperparameters (learning_rate, batch_size, epochs, seeds, etc.)
-   - `run.sh`: complete launch command wrapper (includes CUDA_VISIBLE_DEVICES, logging, conda activation)
-   - `requirements.txt`: experiment-specific dependencies (if different from main project requirements)
+3. **Viết mã thí nghiệm** vào `experiments/code/{slug}/`:
+   - `train.py`: tạo tập lệnh huấn luyện/đánh giá dựa trên cấu hình setup, bao gồm:
+     - Phân tích đối số (argparse, tất cả siêu tham số có thể cấu hình)
+     - Tải dữ liệu (hỗ trợ setup.dataset)
+     - Khởi tạo mô hình (hỗ trợ setup.model và mô hình baseline)
+     - Vòng lặp huấn luyện/dự đoán
+     - Tính toán chỉ số (khớp với danh sách metrics)
+     - Lưu kết quả (định dạng JSON, đường dẫn: `results/{slug}/seed_{N}.json`)
+     - Kiểm soát seed ngẫu nhiên (chạy nhiều seed)
+     - Lưu/khôi phục checkpoint (`checkpoints/{slug}/`)
+   - `config.yaml`: tất cả siêu tham số (learning_rate, batch_size, epochs, seeds, v.v.)
+   - `run.sh`: lệnh wrapper khởi chạy hoàn chỉnh (bao gồm CUDA_VISIBLE_DEVICES, ghi nhật ký, kích hoạt conda)
+   - `requirements.txt`: các phụ thuộc cụ thể cho thí nghiệm (nếu khác với yêu cầu của dự án chính)
 
-4. **Optional Review LLM code review** (`--review`):
+4. **Đánh giá mã Review LLM tùy chọn** (`--review`):
    ```
    mcp__llm-review__chat:
-     system: "You are a senior ML engineer reviewing experiment code.
-              Focus on: correctness of the training loop, proper evaluation protocol,
-              fair baseline comparison, reproducibility (seeds, determinism),
-              proper metric computation, and common pitfalls (data leakage,
-              wrong split, gradient accumulation bugs)."
+     system: "Bạn là một kỹ sư ML cao cấp đang đánh giá mã thí nghiệm.
+              Tập trung vào: tính đúng đắn của vòng lặp huấn luyện, giao thức đánh giá đúng đắn,
+              so sánh baseline công bằng, tính tái lập (seed, tính xác định),
+              tính toán chỉ số đúng đắn, và các lỗi phổ biến (rò rỉ dữ liệu,
+              phân chia sai, lỗi tích lũy gradient)."
      message: |
-       ## Experiment
-       {experiment title and hypothesis}
+       ## Thí Nghiệm
+       {tiêu đề thí nghiệm và giả thuyết}
 
-       ## Code
-       {generated code}
+       ## Mã
+       {mã được tạo}
 
-       ## Expected Behavior
-       {setup details from wiki page}
+       ## Hành Vi Mong Đợi
+       {chi tiết thiết lập từ trang wiki}
 
-       Review for correctness and potential issues.
+       Đánh giá tính đúng đắn và các vấn đề tiềm ẩn.
    ```
-   Fix code based on Review LLM feedback.
+   Sửa mã dựa trên phản hồi của Review LLM.
 
-5. **Sanity check (small-scale validation)**:
-   - Run at minimal scale (1 epoch / 100 steps / small subset)
-   - Verify: no code crash, data loads correctly, GPU available, loss decreases
-   - If sanity fails → fix code, retry once; if still failing, report error and stop
+5. **Kiểm tra tính hợp lý (xác thực quy mô nhỏ)**:
+   - Chạy ở quy mô tối thiểu (1 epoch / 100 bước / tập con nhỏ)
+   - Xác minh: không crash mã, dữ liệu tải đúng, GPU khả dụng, loss giảm
+   - Nếu kiểm tra tính hợp lý thất bại → sửa mã, thử lại một lần; nếu vẫn thất bại, báo lỗi và dừng
 
-**Phase 2: Deploy**
+**Giai đoạn 2: Triển Khai**
 
-#### Local mode (`--env local` or default)
+#### Chế độ cục bộ (`--env local` hoặc mặc định)
 
-1. **Check GPU**: `nvidia-smi` to confirm GPU available and sufficient VRAM
-2. **Launch**:
+1. **Kiểm tra GPU**: `nvidia-smi` để xác nhận GPU khả dụng và đủ VRAM
+2. **Khởi chạy**:
    ```bash
    screen -dmS exp-{slug} bash -c \
      "cd $(pwd) && bash experiments/code/{slug}/run.sh 2>&1 | tee logs/exp-{slug}.log"
    ```
-3. Update `wiki/experiments/{slug}.md`:
-   - status: `running`
+3. Cập nhật `wiki/experiments/{slug}.md`:
+   - trạng thái: `running`
    - run_log: `logs/exp-{slug}.log`
-4. **Estimate runtime** and write to frontmatter:
-   Estimate based on `setup.hardware` (GPU model/count), `setup.model` (parameter count), `setup.dataset` (scale):
+4. **Ước tính thời gian chạy** và ghi vào frontmatter:
+   Ước tính dựa trên `setup.hardware` (mô hình/count GPU), `setup.model` (số lượng tham số), `setup.dataset` (quy mô):
 
-   | Typical scenario | Estimated range |
+   | Tình huống điển hình | Phạm vi ước tính |
    |-----------------|-----------------|
-   | Single GPU + small dataset (CIFAR / small NLP benchmark) | 0.5 – 3h |
-   | Single A100 + medium dataset (ImageNet / GLUE) | 4 – 12h |
-   | Multi-GPU or large model fine-tuning (≥7B) | 8 – 48h |
+   | Single GPU + tập dữ liệu nhỏ (CIFAR / benchmark NLP nhỏ) | 0.5 – 3h |
+   | Single A100 + tập dữ liệu trung bình (ImageNet / GLUE) | 4 – 12h |
+   | Multi-GPU hoặc fine-tuning mô hình lớn (≥7B) | 8 – 48h |
 
    ```bash
    python3 tools/research_wiki.py set-meta \
@@ -152,37 +155,37 @@ argument-hint: <experiment-slug> [--review] [--collect] [--full] [--env local|re
    python3 tools/research_wiki.py set-meta \
      wiki/experiments/{slug}.md estimated_hours {N}
    ```
-5. Append log:
+5. Thêm nhật ký:
    ```bash
    python3 tools/research_wiki.py log wiki/ \
-     "exp-run | deployed {slug} | env: local | session: exp-{slug} | eta: {N}h"
+     "exp-run | triển khai {slug} | env: local | phiên: exp-{slug} | eta: {N}h"
    ```
 
-#### Remote mode (`--env remote`)
+#### Chế độ từ xa (`--env remote`)
 
-**Prerequisite**: user has configured `config/server.yaml`.
+**Điều kiện tiên quyết**: người dùng đã cấu hình `config/server.yaml`.
 
-1. **Confirm connectivity**: `python3 tools/remote.py status`
-   - If unreachable → report error and suggest checking config/server.yaml
-2. **Find free GPU**: `python3 tools/remote.py gpu-status`
-   - If no free GPU → report each GPU's usage, suggest waiting
-3. **Sync code**: `python3 tools/remote.py sync-code`
-4. **Install dependencies** (first time or if requirements changed): `python3 tools/remote.py setup-env`
-5. **Launch remote experiment**:
+1. **Xác nhận kết nối**: `python3 tools/remote.py status`
+   - Nếu không thể kết nối → báo lỗi và đề xuất kiểm tra config/server.yaml
+2. **Tìm GPU trống**: `python3 tools/remote.py gpu-status`
+   - Nếu không có GPU trống → báo cáo tình trạng sử dụng của từng GPU, đề xuất chờ đợi
+3. **Đồng bộ mã**: `python3 tools/remote.py sync-code`
+4. **Cài đặt phụ thuộc** (lần đầu hoặc nếu requirements thay đổi): `python3 tools/remote.py setup-env`
+5. **Khởi chạy thí nghiệm từ xa**:
    ```bash
    python3 tools/remote.py launch \
      --name "exp-{slug}" \
      --cmd "bash experiments/code/{slug}/run.sh" \
      --gpu {gpu_index}
    ```
-6. Update `wiki/experiments/{slug}.md` frontmatter — all of these fields already exist (empty) because `/exp-design` wrote the full CLAUDE.md template:
+6. Cập nhật `wiki/experiments/{slug}.md` frontmatter — tất cả các trường này đã tồn tại (trống) vì `/exp-design` đã viết mẫu CLAUDE.md đầy đủ:
    ```bash
-   # Top-level scalar fields — use set-meta
+   # Các trường vô hướng cấp cao — sử dụng set-meta
    python3 tools/research_wiki.py set-meta wiki/experiments/{slug}.md status running
    python3 tools/research_wiki.py set-meta wiki/experiments/{slug}.md run_log "logs/exp-{slug}.log"
    ```
 
-   The nested `remote:` block cannot be updated via `set-meta` (it only handles top-level scalar fields). Use the `Edit` tool directly to replace the five empty sub-field values in place. The pre-existing block in the file looks like:
+   Khối `remote:` lồng nhau không thể cập nhật qua `set-meta` (chỉ xử lý các trường vô hướng cấp cao). Sử dụng công cụ `Edit` trực tiếp để thay thế năm giá trị trường con trống tại chỗ. Khối đã tồn tại trong tệp trông như sau:
    ```yaml
    remote:
      server: ""
@@ -191,91 +194,91 @@ argument-hint: <experiment-slug> [--review] [--collect] [--full] [--env local|re
      started: ""
      completed: ""
    ```
-   Use five Edit calls (one per sub-field) to set `server`, `gpu`, `session`, `started`. Leave `completed: ""` — Phase 4 fills that. If you find the `remote:` block missing from the file, that means `/exp-design` did not write the full CLAUDE.md template; stop and report the bug rather than trying to append the block here (appending would drift the file away from the canonical order and break future edits).
+   Sử dụng năm lệnh Edit (một cho mỗi trường con) để đặt `server`, `gpu`, `session`, `started`. Để `completed: ""` — Giai đoạn 4 sẽ điền trường này. Nếu bạn thấy khối `remote:` bị thiếu trong tệp, điều đó có nghĩa là `/exp-design` không viết mẫu CLAUDE.md đầy đủ; dừng lại và báo cáo lỗi thay vì cố gắng thêm khối tại đây (việc thêm sẽ làm lệch tệp khỏi thứ tự chính tắc và phá vỡ các chỉnh sửa trong tương lai).
 
-7. **Estimate runtime** and write to frontmatter (same estimation logic as local mode):
+7. **Ước tính thời gian chạy** và ghi vào frontmatter (cùng logic ước tính như chế độ cục bộ):
    ```bash
    python3 tools/research_wiki.py set-meta \
      wiki/experiments/{slug}.md started "{YYYY-MM-DDTHH:MM}"
    python3 tools/research_wiki.py set-meta \
      wiki/experiments/{slug}.md estimated_hours {N}
    ```
-8. Append log:
+8. Thêm nhật ký:
    ```bash
    python3 tools/research_wiki.py log wiki/ \
-     "exp-run | deployed {slug} | env: remote | server: {host} | gpu: {gpu} | eta: {N}h"
+     "exp-run | triển khai {slug} | env: remote | máy chủ: {host} | gpu: {gpu} | eta: {N}h"
    ```
 
-**Print DEPLOY_REPORT to terminal**:
+**In DEPLOY_REPORT ra terminal**:
 
 ```markdown
-# Deploy Report: {experiment title}
+# Báo Cáo Triển Khai: {tiêu đề thí nghiệm}
 
-### Status: DEPLOYED ✅
+### Trạng Thái: ĐÃ TRIỂN KHAI ✅
 
-- Session: exp-{slug}
-- Environment: local | remote ({host} GPU {gpu})
-- Log file: logs/exp-{slug}.log
-- Code: experiments/code/{slug}/
-- Estimated: ~{N}h (expected completion: {YYYY-MM-DD HH:MM})
+- Phiên: exp-{slug}
+- Môi trường: local | remote ({host} GPU {gpu})
+- Tệp nhật ký: logs/exp-{slug}.log
+- Mã: experiments/code/{slug}/
+- Ước tính: ~{N}h (dự kiến hoàn thành: {YYYY-MM-DD HH:MM})
 
-### Next Steps
+### Bước Tiếp Theo
 
-1. Monitor progress: `/exp-status`
-2. Check this experiment: `/exp-run {slug} --collect`
-3. In /research pipeline: progress saved to wiki/outputs/pipeline-progress.md
+1. Giám sát tiến độ: `/exp-status`
+2. Kiểm tra thí nghiệm này: `/exp-run {slug} --collect`
+3. Trong quy trình /research: tiến độ được lưu vào wiki/outputs/pipeline-progress.md
 
-### Quick Commands
+### Lệnh Nhanh
 ```bash
-# Local: check if still running
+# Cục bộ: kiểm tra xem vẫn đang chạy không
 screen -ls | grep exp-{slug}
 
-# Local: tail log
+# Cục bộ: theo dõi nhật ký
 tail -f logs/exp-{slug}.log
 ```
 ```
 
 ---
 
-### Collect Mode (`--collect` or `--check`, status == running)
+### Chế Độ Thu Thập (`--collect` hoặc `--check`, trạng thái == running)
 
-**Phase 3: Monitor / Check Run Status**
+**Giai đoạn 3: Giám Sát / Kiểm Tra Trạng Thái Chạy**
 
-1. **Read deployment info**: from `wiki/experiments/{slug}.md` frontmatter, get environment (local or remote) and session name.
+1. **Đọc thông tin triển khai**: từ `wiki/experiments/{slug}.md` frontmatter, lấy môi trường (cục bộ hoặc từ xa) và tên phiên.
 
-2. **Check whether the process is still alive**:
-   - **Local**: `screen -ls | grep exp-{slug}`
-   - **Remote**: `python3 tools/remote.py check --name "exp-{slug}"`, parse `alive` field
+2. **Kiểm tra xem tiến trình còn sống không**:
+   - **Cục bộ**: `screen -ls | grep exp-{slug}`
+   - **Từ xa**: `python3 tools/remote.py check --name "exp-{slug}"`, phân tích trường `alive`
 
-3. **If experiment is still running (alive == true)**:
-   - Fetch recent logs:
-     - Local: `tail -30 logs/exp-{slug}.log`
-     - Remote: `python3 tools/remote.py tail-log --name "exp-{slug}" --lines 30`
-   - **Anomaly detection**:
-     - NaN loss: detect `loss: nan`
+3. **Nếu thí nghiệm vẫn đang chạy (alive == true)**:
+   - Lấy nhật ký gần đây:
+     - Cục bộ: `tail -30 logs/exp-{slug}.log`
+     - Từ xa: `python3 tools/remote.py tail-log --name "exp-{slug}" --lines 30`
+   - **Phát hiện bất thường**:
+     - NaN loss: phát hiện `loss: nan`
      - OOM: `CUDA out of memory`
-     - Traceback: Python exception stacktrace
+     - Traceback: ngăn xếp ngoại lệ Python
      - Inf loss: `loss: inf`
-   - **Automatic fix attempt** (if anomaly detected, at most 1 attempt):
-     - NaN/exploding → resume from latest checkpoint, reduce learning rate
-     - OOM → reduce batch size, restart
-   - **Print progress report** (do not modify wiki, report only):
+   - **Cố gắng sửa tự động** (nếu phát hiện bất thường, tối đa 1 lần):
+     - NaN/nổ → khôi phục từ checkpoint mới nhất, giảm learning rate
+     - OOM → giảm batch size, khởi động lại
+   - **In báo cáo tiến độ** (không sửa đổi wiki, chỉ báo cáo):
      ```
-     Experiment {slug}: RUNNING
-     Progress: step {N} / epoch {E}
-     Latest metric: {metric} = {value}
-     Anomalies: {none | NaN detected | ...}
-     Estimated remaining: ~{N} hours
-     Run `/exp-status` to monitor all running experiments.
+     Thí nghiệm {slug}: ĐANG CHẠY
+     Tiến độ: bước {N} / epoch {E}
+     Chỉ số mới nhất: {metric} = {value}
+     Bất thường: {không có | phát hiện NaN | ...}
+     Ước tính còn lại: ~{N} giờ
+     Chạy `/exp-status` để giám sát tất cả các thí nghiệm đang chạy.
      ```
-   - **Return** (do not execute Phase 4)
+   - **Trả về** (không thực thi Giai đoạn 4)
 
-4. **If experiment has finished (alive == false / session gone)**:
-   - Continue to Phase 4
+4. **Nếu thí nghiệm đã hoàn thành (alive == false / phiên đã kết thúc)**:
+   - Tiếp tục Giai đoạn 4
 
-**Phase 4: Collect Results**
+**Giai đoạn 4: Thu Thập Kết Quả**
 
-1. **Pull remote results** (remote mode only):
+1. **Kéo kết quả từ xa** (chỉ chế độ từ xa):
    ```bash
    python3 tools/remote.py pull-results \
      --remote-path "results/{slug}/" \
@@ -286,119 +289,92 @@ tail -f logs/exp-{slug}.log
      --local-path "./logs/"
    ```
 
-2. **Check result files exist**: `results/{slug}/seed_*.json`
+2. **Kiểm tra tệp kết quả tồn tại**: `results/{slug}/seed_*.json`
 
-3. **Parse results**:
-   - Read result files (JSON)
-   - Compute mean ± std per metric (across seeds)
-   - Compare with baseline, compute improvement delta
+3. **Phân tích kết quả**:
+   - Đọc tệp kết quả (JSON)
+   - Tính trung bình ± độ lệch chuẩn cho mỗi chỉ số (trên các seed)
+   - So sánh với baseline, tính toán delta cải thiện
 
-4. **Update experiment page** `wiki/experiments/{slug}.md`:
-   - status: `completed`
+4. **Cập nhật trang thí nghiệm** `wiki/experiments/{slug}.md`:
+   - trạng thái: `completed`
    - outcome: `succeeded` / `failed` / `inconclusive`
-     - succeeded: all success criteria met
-     - failed: core metrics did not reach target
-     - inconclusive: mixed results or excessive variance
-   - key_result: one-sentence summary of the core finding
-   - date_completed: today's date
-   - Fill `## Results` section: complete results table
-   - Fill `## Analysis` section: preliminary analysis
-   - If remote mode: update `remote.completed` timestamp
+     - succeeded: tất cả tiêu chí thành công được đáp ứng
+     - failed: các chỉ số cốt lõi không đạt mục tiêu
+     - inconclusive: kết quả hỗn hợp hoặc phương sai quá lớn
+   - key_result: tóm tắt một câu về phát hiện cốt lõi
+   - date_completed: ngày hôm nay
+   - Điền phần `## Kết Quả`: bảng kết quả đầy đủ
+   - Điền phần `## Phân Tích`: phân tích sơ bộ
+   - Nếu chế độ từ xa: cập nhật dấu thời gian `remote.completed`
 
-5. **Append log**:
+5. **Thêm nhật ký**:
    ```bash
    python3 tools/research_wiki.py log wiki/ \
-     "exp-run | completed {slug} | outcome: {outcome} | key: {key_result}"
+     "exp-run | hoàn thành {slug} | kết quả: {outcome} | điểm chính: {key_result}"
    ```
 
-6. **Print RUN_REPORT to terminal**:
+6. **In RUN_REPORT ra terminal**:
    ```markdown
-   # Run Report: {experiment title}
+   # Báo Cáo Chạy: {tiêu đề thí nghiệm}
 
-   ## Outcome: {succeeded / failed / inconclusive}
+   ## Kết Quả: {succeeded / failed / inconclusive}
 
-   ## Results
-   | Metric | Baseline | Ours (mean±std) | Δ |
+   ## Kết Quả
+   | Chỉ số | Baseline | Của chúng tôi (trung bình±độ lệch) | Δ |
    |--------|----------|-----------------|---|
    | {metric} | {baseline-value} | {mean}±{std} | +{delta} |
 
-   ## Key Finding
+   ## Phát Hiện Chính
    {key_result}
 
-   ## Next Steps
-   - Run `/exp-eval {slug}` to update claims in wiki
-   - {if succeeded: proceed to next experiment in plan}
-   - {if failed: analyze failure, consider /exp-design revision}
+   ## Bước Tiếp Theo
+   - Chạy `/exp-eval {slug}` để cập nhật khẳng định trong wiki
+   - {nếu succeeded: tiến hành thí nghiệm tiếp theo trong kế hoạch}
+   - {nếu failed: phân tích thất bại, cân nhắc sửa đổi /exp-design}
    ```
 
 ---
 
-### Full Mode (`--full`, status == planned)
+### Chế Độ Đầy Đủ (`--full`, trạng thái == planned)
 
-Execute all 4 phases in sequence (Phase 1 → Phase 2 → Phase 3 → Phase 4) without returning.
+Thực thi cả 4 giai đoạn theo trình tự (Giai đoạn 1 → Giai đoạn 2 → Giai đoạn 3 → Giai đoạn 4) mà không trả về.
 
-Use case: quick local CPU/GPU experiments that finish in minutes (sanity checks, toy dataset validation, etc.).
+Trường hợp sử dụng: các thí nghiệm cục bộ nhanh trên CPU/GPU kết thúc trong vài phút (kiểm tra tính hợp lý, xác thực tập dữ liệu đồ chơi, v.v.).
 
-In Phase 3, instead of checking "is it still running", wait for the screen session to actually exit before executing Phase 4:
+Trong Giai đoạn 3, thay vì kiểm tra "có còn đang chạy không", chờ phiên screen thực sự kết thúc trước khi thực thi Giai đoạn 4:
 ```bash
-# Wait for session to end (polling)
+# Chờ phiên kết thúc (kiểm tra định kỳ)
 while screen -ls | grep -q "exp-{slug}"; do
   sleep 30
 done
-# Session gone, proceed to Phase 4
+# Phiên đã kết thúc, tiến hành Giai đoạn 4
 ```
 
 ---
 
-## Constraints
+## Các Ràng Buộc
 
-- **Deploy mode only accepts planned experiments**: if status is running, prompt to use --collect; if completed, refuse
-- **Collect mode only accepts running experiments**: if status is planned, prompt to deploy first; if completed, note it is already done
-- **Collect mode: do not write wiki when alive**: only report progress, do not modify any wiki files
-- **Code goes in experiments/code/{slug}/**: do not write to project root or any other location
-- **Do not update claims**: experiment results are written only to experiments/ pages; claim updates are handled by /exp-eval
-- **Sanity check must pass**: Phase 1 sanity failure blocks deployment (unless user explicitly overrides)
-- **Results must be saved**: all experiment results saved as JSON in `results/{slug}/seed_{N}.json`
-- **Multi-seed results use mean**: report mean ± std, not single-run results
-- **Graph edges are not created here**: tested_by edges were created by /exp-design
-- **Automatic fix attempts are limited to 1**: prevents infinite restart loops
+- **Chế độ triển khai chỉ chấp nhận các thí nghiệm planned**: nếu trạng thái là running, nhắc sử dụng --collect; nếu completed, từ chối
+- **Chế độ thu thập chỉ chấp nhận các thí nghiệm running**: nếu trạng thái là planned, nhắc triển khai trước; nếu completed, ghi chú đã hoàn thành
+- **Chế độ thu thập: không ghi wiki khi còn sống**: chỉ báo cáo tiến độ, không sửa đổi bất kỳ tệp wiki nào
+- **Mã nằm trong experiments/code/{slug}/**: không ghi vào thư mục gốc dự án hoặc bất kỳ vị trí nào khác
+- **Không cập nhật khẳng định**: kết quả thí nghiệm chỉ được ghi vào các trang experiments/; cập nhật khẳng định được xử lý bởi /exp-eval
+- **Kiểm tra tính hợp lý phải vượt qua**: thất bại kiểm tra tính hợp lý trong Giai đoạn 1 chặn triển khai (trừ khi người dùng ghi đè rõ ràng)
+- **Kết quả phải được lưu**: tất cả kết quả thí nghiệm được lưu dưới dạng JSON trong `results/{slug}/seed_{N}.json`
+- **Kết quả nhiều seed sử dụng trung bình**: báo cáo trung bình ± độ lệch chuẩn, không phải kết quả chạy đơn lẻ
+- **Các cạnh đồ thị không được tạo tại đây**: các cạnh tested_by được tạo bởi /exp-design
+- **Cố gắng sửa tự động giới hạn ở 1 lần**: ngăn chặn vòng lặp khởi động lại vô hạn
 
-## Error Handling
+## Xử Lý Lỗi
 
-- **Experiment not found**: prompt user to check slug, list candidates in wiki/experiments/ (status=planned or running)
-- **Deploy mode but status == running**: prompt "already running — use `/exp-run {slug} --collect` to check status"
-- **Collect mode but status == completed**: prompt "already completed — run `/exp-eval {slug}` directly"
-- **GPU unavailable**: report error, suggest using --env remote or waiting for GPU to free up
-- **Review LLM unavailable** (--review mode): skip code review, note "unreviewed" in DEPLOY_REPORT
-- **Sanity check fails**: report detailed error, attempt one automatic fix, if still failing stop and suggest manual debugging
-- **Remote connection fails**: report SSH error, suggest checking connection config and config/server.yaml
-- **Result files missing** (collect mode): report which seeds are missing results; summarize available results normally; if successful seeds < 2, mark inconclusive
-- **Experiment crashed** (traceback detected in collect mode): include crash info and suggested fix directions in report
-- **--full mode wait timeout**: if screen session persists beyond 2× the estimated time, warn user but do not force-terminate
-
-## Dependencies
-
-### Skills（via Skill tool）
-- No direct sub-skill calls
-
-### Tools（via Bash）
-- `python3 tools/research_wiki.py log wiki/ "<message>"` — append log
-- `python3 tools/remote.py <command>` — remote operations (status, gpu-status, sync-code, setup-env, launch, check, tail-log, pull-results)
-- `nvidia-smi` — local GPU status
-- `screen` — local background process management
-
-### Configuration
-- `config/server.yaml` — remote server config (required only with `--env remote`)
-
-### MCP Servers
-- `mcp__llm-review__chat` — Phase 1 code review (optional, when `--review` is used)
-
-### Claude Code Native
-- `Read` — read wiki pages and log files
-- `Write` — write experiment code to `experiments/code/{slug}/`
-- `Bash` — execute deployment commands, monitor processes
-
-### Called by
-- `/research` Stage 3a (deploy mode) and Stage 3c (collect mode)
-- `/exp-status --collect-ready` (collect mode)
-- User directly
+- **Không tìm thấy thí nghiệm**: nhắc người dùng kiểm tra slug, liệt kê các ứng viên trong wiki/experiments/ (trạng thái=planned hoặc running)
+- **Chế độ triển khai nhưng trạng thái == running**: nhắc "đã đang chạy — sử dụng `/exp-run {slug} --collect` để kiểm tra trạng thái"
+- **Chế độ thu thập nhưng trạng thái == completed**: nhắc "đã hoàn thành — chạy `/exp-eval {slug}` trực tiếp"
+- **GPU không khả dụng**: báo lỗi, đề xuất sử dụng --env remote hoặc chờ GPU trống
+- **Review LLM không khả dụng** (chế độ --review): bỏ qua đánh giá mã, ghi chú "chưa được đánh giá" trong DEPLOY_REPORT
+- **Kiểm tra tính hợp lý thất bại**: báo lỗi chi tiết, cố gắng sửa tự động một lần, nếu vẫn thất bại dừng lại và đề xuất gỡ lỗi thủ công
+- **Kết nối từ xa thất bại**: báo lỗi SSH, đề xuất kiểm tra cấu hình kết nối và config/server.yaml
+- **Thiếu tệp kết quả** (chế độ thu thập): báo cáo seed nào thiếu kết quả; tóm tắt kết quả có sẵn bình thường; nếu seed thành công < 2, đánh dấu inconclusive
+- **Thí nghiệm bị crash** (phát hiện traceback trong chế độ thu thập): bao gồm thông tin crash và hướng sửa đề xuất trong báo cáo
+- **Chế độ --full chờ quá thời gian**: nếu phiên screen tồn tại quá 2× thời gian ước tính, cảnh báo người dùng nhưng không ép kết thúc

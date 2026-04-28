@@ -1,92 +1,92 @@
-# Reviewer Independence Principle
+# Nguyên Tắc Độc Lập Của Người Đánh Giá
 
-> Referenced by: `/review`, `/novelty`, `/ideate`, `/exp-eval`, `/exp-design`, `/paper-plan`, `/paper-draft`, `/rebuttal`, `/refine`
-
----
-
-## Core Rule
-
-When using a Review LLM (any external model) as a reviewer or cross-verifier, **never share the primary model's own judgment, scores, or conclusions** with the reviewer before they form their independent assessment.
-
-The reviewer must receive:
-- The **artifact** being reviewed (idea, method, paper draft, experiment results)
-- The **relevant context** (wiki pages, prior work, constraints)
-- The **review criteria** (what to evaluate, at what difficulty level)
-
-The reviewer must **NOT** receive:
-- Claude's own score or rating of the artifact
-- Claude's assessment of strengths/weaknesses
-- Claude's recommendation (proceed/modify/abandon)
-- Any framing that anchors the reviewer toward a particular conclusion
+> Được tham chiếu bởi: `/review`, `/novelty`, `/ideate`, `/exp-eval`, `/exp-design`, `/paper-plan`, `/paper-draft`, `/rebuttal`, `/refine`
 
 ---
 
-## Why This Matters
+## Quy Tắc Cốt Lõi
 
-1. **Anchoring bias**: If the Review LLM sees "Claude rated this 7/10", its review will cluster around 7. Independent assessment catches blind spots that anchored assessment misses.
-2. **Confirmation bias**: If Claude says "the main weakness is X", the Review LLM will focus on X and miss weakness Y. Unprimed reviewers explore the full space.
-3. **Diversity of perspective**: The entire value of cross-model review is that different models have different biases. Sharing judgments before review collapses this diversity.
+Khi sử dụng Review LLM (bất kỳ mô hình bên ngoài nào) làm người đánh giá hoặc người xác minh chéo, **không bao giờ chia sẻ đánh giá, điểm số hoặc kết luận của mô hình chính** với người đánh giá trước khi họ hình thành đánh giá độc lập của mình.
 
----
+Người đánh giá phải nhận:
+- **Tạo tác** đang được đánh giá (ý tưởng, phương pháp, bản thảo bài báo, kết quả thí nghiệm)
+- **Ngữ cảnh liên quan** (các trang wiki, công trình trước đây, ràng buộc)
+- **Tiêu chí đánh giá** (đánh giá cái gì, ở mức độ khó nào)
 
-## How to Apply
-
-### In `/review` (adversarial critique)
-- Step 2: Send artifact + context + review prompt to the Review LLM. Do NOT include any pre-assessment.
-- Step 3 (multi-turn): Claude may respond to the Review LLM's critique with rebuttals, but these are responses to its points, not pre-formed judgments.
-
-### In `/novelty` (cross-verification)
-- Step 3: Send method signature + existing similar works to the Review LLM. Do NOT include Claude's novelty score from Step 2.
-
-### In `/ideate` (dual-model brainstorm)
-- Phase 2: The Review LLM generates ideas from the same landscape context as Claude, but does NOT see Claude's idea list. Merge happens after both complete independently.
-
-### In `/exp-eval` (impartial verdict)
-- Step 2: Send experiment results + claim + context to the Review LLM. Do NOT include Claude's interpretation of the results.
+Người đánh giá **KHÔNG** được nhận:
+- Điểm số hoặc xếp hạng của chính Claude về tạo tác
+- Đánh giá của Claude về điểm mạnh/điểm yếu
+- Khuyến nghị của Claude (tiếp tục/sửa đổi/từ bỏ)
+- Bất kỳ cách đóng khung nào neo người đánh giá về một kết luận cụ thể
 
 ---
 
-## Composing Independent Assessments
+## Tại Sao Điều Này Quan Trọng
 
-After both models have independently assessed:
-
-1. **If scores agree** (within 1 point): Use the average. High confidence.
-2. **If scores disagree** (2+ points apart): Flag the disagreement explicitly. Investigate which model missed what. Report both scores with reasoning.
-3. **Conservative default**: When combining novelty or quality scores, take the **lower** score. Better to underestimate than to overcommit to a flawed idea.
-4. **Never average away a critical finding**: If one model finds a fatal flaw (e.g., the method is already published), that finding stands regardless of the other model's score.
+1. **Thiên kiến neo**: Nếu Review LLM thấy "Claude đánh giá 7/10", đánh giá của nó sẽ tập trung quanh 7. Đánh giá độc lập phát hiện các điểm mù mà đánh giá bị neo bỏ lỡ.
+2. **Thiên kiến xác nhận**: Nếu Claude nói "điểm yếu chính là X", Review LLM sẽ tập trung vào X và bỏ lỡ điểm yếu Y. Người đánh giá không bị định hướng khám phá toàn bộ không gian.
+3. **Đa dạng quan điểm**: Toàn bộ giá trị của đánh giá chéo giữa các mô hình là các mô hình khác nhau có thiên kiến khác nhau. Chia sẻ đánh giá trước khi đánh giá làm sụp đổ sự đa dạng này.
 
 ---
 
-## Review LLM Availability Check
+## Cách Áp Dụng
 
-Before calling `mcp__llm-review__chat`, every skill must check availability and handle gracefully.
+### Trong `/review` (phê bình đối kháng)
+- Bước 2: Gửi tạo tác + ngữ cảnh + lời nhắc đánh giá đến Review LLM. KHÔNG bao gồm bất kỳ đánh giá trước nào.
+- Bước 3 (nhiều vòng): Claude có thể phản hồi lại phê bình của Review LLM bằng các phản biện, nhưng đây là phản hồi cho các điểm của nó, không phải đánh giá được hình thành trước.
 
-### Detection
+### Trong `/novelty` (xác minh chéo)
+- Bước 3: Gửi chữ ký phương pháp + các công trình tương tự hiện có đến Review LLM. KHÔNG bao gồm điểm số mới lạ của Claude từ Bước 2.
 
-A call to `mcp__llm-review__chat` will fail if:
-- The MCP server is not configured (missing `.mcp.json` or `enableAllProjectMcpServers` not set)
-- `LLM_API_KEY` or `LLM_BASE_URL` is not set in `.env`
-- The API endpoint is unreachable
+### Trong `/ideate` (động não hai mô hình)
+- Giai đoạn 2: Review LLM tạo ra các ý tưởng từ cùng ngữ cảnh cảnh quan như Claude, nhưng KHÔNG thấy danh sách ý tưởng của Claude. Việc hợp nhất xảy ra sau khi cả hai hoàn thành độc lập.
 
-### Fallback Protocol
+### Trong `/exp-eval` (phán quyết công bằng)
+- Bước 2: Gửi kết quả thí nghiệm + khẳng định + ngữ cảnh đến Review LLM. KHÔNG bao gồm giải thích của Claude về kết quả.
 
-When the review MCP server is **unavailable**:
+---
 
-1. **Do NOT silently skip the review step.** Inform the user:
-   > "Cross-model review is not configured. This skill works best with an independent review LLM. Would you like to set it up now, or proceed with Claude-only analysis?"
+## Kết Hợp Các Đánh Giá Độc Lập
 
-2. **If the user wants to configure**, guide them interactively:
-   - Ask which OpenAI-compatible API provider they have (DeepSeek, OpenAI, Qwen, OpenRouter, etc.)
-   - Help them edit `.env` to set `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`
-   - Tell them to restart Claude Code so the MCP server picks up the new config
-   - Reference `.env.example` for the full provider table
+Sau khi cả hai mô hình đã đánh giá độc lập:
 
-3. **If the user wants to proceed without review**, continue with Claude-only mode:
-   - Skip the `mcp__llm-review__chat` call
-   - Perform the review/critique step using Claude itself (self-review)
-   - Clearly mark the output as `[Claude self-review — no independent second opinion]`
-   - The rest of the skill workflow proceeds normally
+1. **Nếu điểm số đồng ý** (trong phạm vi 1 điểm): Sử dụng trung bình. Độ tin cậy cao.
+2. **Nếu điểm số không đồng ý** (cách nhau 2+ điểm): Gắn cờ sự bất đồng một cách rõ ràng. Điều tra xem mô hình nào đã bỏ lỡ điều gì. Báo cáo cả hai điểm số với lý do.
+3. **Mặc định thận trọng**: Khi kết hợp điểm số mới lạ hoặc chất lượng, lấy điểm số **thấp hơn**. Tốt hơn là đánh giá thấp hơn là cam kết quá mức với một ý tưởng có lỗi.
+4. **Không bao giờ tính trung bình để loại bỏ một phát hiện quan trọng**: Nếu một mô hình tìm thấy một lỗi nghiêm trọng (ví dụ: phương pháp đã được xuất bản), phát hiện đó vẫn đứng bất kể điểm số của mô hình khác.
 
-### When Review LLM IS Available
+---
 
-Proceed with the standard cross-model review protocol as defined above. The `mcp__llm-review__chat` tool is provided by the `llm-review` MCP server (configured in `.mcp.json`), which works with any OpenAI-compatible API.
+## Kiểm Tra Tính Khả Dụng Của Review LLM
+
+Trước khi gọi `mcp__llm-review__chat`, mọi kỹ năng phải kiểm tra tính khả dụng và xử lý một cách khéo léo.
+
+### Phát Hiện
+
+Một cuộc gọi đến `mcp__llm-review__chat` sẽ thất bại nếu:
+- Máy chủ MCP không được cấu hình (thiếu `.mcp.json` hoặc `enableAllProjectMcpServers` không được đặt)
+- `LLM_API_KEY` hoặc `LLM_BASE_URL` không được đặt trong `.env`
+- Điểm cuối API không thể truy cập được
+
+### Giao Thức Dự Phòng
+
+Khi máy chủ MCP đánh giá **không khả dụng**:
+
+1. **KHÔNG âm thầm bỏ qua bước đánh giá.** Thông báo cho người dùng:
+   > "Đánh giá chéo giữa các mô hình chưa được cấu hình. Kỹ năng này hoạt động tốt nhất với một Review LLM độc lập. Bạn có muốn thiết lập ngay bây giờ hay tiếp tục với phân tích chỉ bằng Claude?"
+
+2. **Nếu người dùng muốn cấu hình**, hướng dẫn họ một cách tương tác:
+   - Hỏi họ có nhà cung cấp API tương thích OpenAI nào (DeepSeek, OpenAI, Qwen, OpenRouter, v.v.)
+   - Giúp họ chỉnh sửa `.env` để đặt `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`
+   - Yêu cầu họ khởi động lại Claude Code để máy chủ MCP nhận cấu hình mới
+   - Tham chiếu `.env.example` cho bảng nhà cung cấp đầy đủ
+
+3. **Nếu người dùng muốn tiếp tục mà không cần đánh giá**, tiếp tục với chế độ chỉ Claude:
+   - Bỏ qua cuộc gọi `mcp__llm-review__chat`
+   - Thực hiện bước đánh giá/phê bình bằng chính Claude (tự đánh giá)
+   - Đánh dấu rõ ràng đầu ra là `[Tự đánh giá của Claude — không có ý kiến thứ hai độc lập]`
+   - Phần còn lại của quy trình kỹ năng tiếp tục bình thường
+
+### Khi Review LLM Khả Dụng
+
+Tiến hành với giao thức đánh giá chéo giữa các mô hình tiêu chuẩn như được định nghĩa ở trên. Công cụ `mcp__llm-review__chat` được cung cấp bởi máy chủ MCP `llm-review` (được cấu hình trong `.mcp.json`), hoạt động với bất kỳ API tương thích OpenAI nào.

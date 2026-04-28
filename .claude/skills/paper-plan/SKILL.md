@@ -1,402 +1,410 @@
 ---
-description: Compile a paper outline from the claim graph — evidence map → narrative structure → section plan + figure plan + citation plan, Review LLM review mandatory
-argument-hint: <claim-slugs...> --venue <ICLR|NeurIPS|ICML|ACL|CVPR|IEEE> [--title <working-title>]
+description: Biên soạn đề cương bài báo từ đồ thị khẳng định — bản đồ bằng chứng → cấu trúc tường thuật → kế hoạch phần + kế hoạch hình ảnh + kế hoạch trích dẫn, đánh giá Review LLM là bắt buộc
+argument-hint: "<slug-khẳng-định...> --venue <ICLR|NeurIPS|ICML|ACL|CVPR|IEEE> [--title <tiêu-đề-làm-việc>]"
 ---
 
 # /paper-plan
 
-> Compile a paper outline from the wiki's claim graph.
-> Input target claims (status: supported or weakly_supported), specify the target venue,
-> compile an evidence map from the wiki → determine narrative structure → generate a section outline + figure plan + citation plan.
-> Review LLM review is a mandatory step (acting as area chair to assess outline persuasiveness).
-> Output PAPER_PLAN.md to wiki/outputs/.
+> Biên soạn đề cương bài báo từ đồ thị khẳng định của wiki.
+> Nhập các khẳng định mục tiêu (trạng thái: supported hoặc weakly_supported), chỉ định hội nghị mục tiêu,
+> biên soạn bản đồ bằng chứng từ wiki → xác định cấu trúc tường thuật → tạo đề cương phần + kế hoạch hình ảnh + kế hoạch trích dẫn.
+> Đánh giá Review LLM là bước bắt buộc (đóng vai trò chủ tịch khu vực để đánh giá tính thuyết phục của đề cương).
+> Xuất PAPER_PLAN.md ra wiki/outputs/.
 >
-> Key distinction: the outline is claim-graph-driven — each section exists because it supports a claim,
-> not because paper convention requires that section.
+> Điểm khác biệt chính: đề cương được điều khiển bởi đồ thị khẳng định — mỗi phần tồn tại vì nó hỗ trợ một khẳng định,
+> không phải vì quy ước bài báo yêu cầu phần đó.
 
-## Inputs
+## Đầu Vào
 
-- `claims`: list of target claim slugs (space-separated)
-  - each claim should have status `supported` or `weakly_supported`
-  - if `proposed` or `challenged` claims are included, warn but continue
-- `--venue` (required): target venue, determines page limit and format requirements
-  - supported: `ICLR` / `NeurIPS` / `ICML` / `ACL` / `CVPR` / `IEEE`
-- `--title` (optional): working title; if omitted, generated from target claims
+- `claims`: danh sách các slug khẳng định mục tiêu (phân tách bằng khoảng trắng)
+  - mỗi khẳng định nên có trạng thái `supported` hoặc `weakly_supported`
+  - nếu bao gồm các khẳng định `proposed` hoặc `challenged`, cảnh báo nhưng vẫn tiếp tục
+- `--venue` *(bắt buộc)*: hội nghị mục tiêu, xác định giới hạn trang và yêu cầu định dạng
+  - hỗ trợ: `ICLR` / `NeurIPS` / `ICML` / `ACL` / `CVPR` / `IEEE`
+- `--title` *(tùy chọn)*: tiêu đề làm việc; nếu bỏ qua, sẽ được tạo từ các khẳng định mục tiêu
 
-## Outputs
+## Đầu Ra
 
-- `wiki/outputs/paper-plan-{slug}-{date}.md` — complete paper plan (PAPER_PLAN.md)
-- `wiki/graph/edges.jsonl` — new derived_from edges (plan → source claims/papers)
-- `wiki/graph/context_brief.md` — rebuilt
-- `wiki/log.md` — appended log entry
-- **PAPER_PLAN_REPORT** (printed to terminal) — plan summary
+- `wiki/outputs/paper-plan-{slug}-{date}.md` — kế hoạch bài báo hoàn chỉnh (PAPER_PLAN.md)
+- `wiki/graph/edges.jsonl` — các cạnh derived_from mới (kế hoạch → các khẳng định/bài báo nguồn)
+- `wiki/graph/context_brief.md` — xây dựng lại
+- `wiki/log.md` — thêm mục nhật ký
+- **PAPER_PLAN_REPORT** *(in ra terminal)* — tóm tắt kế hoạch
 
-## Wiki Interaction
+## Tương Tác Wiki
 
-### Reads
-- `wiki/claims/*.md` — status, confidence, evidence list, conditions of target claims
-- `wiki/experiments/*.md` — supporting experiments for claims (results, metrics, key_result)
-- `wiki/papers/*.md` — evidence source papers (Method, Results, Related)
-- `wiki/concepts/*.md` — technical concepts involved (supports Method section writing)
-- `wiki/topics/*.md` — research direction context (supports Introduction positioning)
-- `wiki/ideas/*.md` — motivation and hypothesis of original ideas
-- `wiki/graph/context_brief.md` — global context
-- `wiki/graph/open_questions.md` — knowledge gaps (annotate paper limitations)
-- `wiki/graph/edges.jsonl` — relationship graph (build narrative logic chain)
-- `.claude/skills/shared-references/academic-writing.md` — writing principles
-- `.claude/skills/shared-references/citation-verification.md` — citation discipline
+### Đọc
 
-### Writes
-- `wiki/outputs/paper-plan-{slug}-{date}.md` — paper plan file
-- `wiki/graph/edges.jsonl` — derived_from edges
-- `wiki/graph/context_brief.md` — rebuilt
-- `wiki/log.md` — appended operation log
+- `wiki/claims/*.md` — trạng thái, độ tin cậy, danh sách bằng chứng, điều kiện của các khẳng định mục tiêu
+- `wiki/experiments/*.md` — các thí nghiệm hỗ trợ cho khẳng định (kết quả, chỉ số, key_result)
+- `wiki/papers/*.md` — các bài báo nguồn bằng chứng (Phương pháp, Kết quả, Liên quan)
+- `wiki/concepts/*.md` — các khái niệm kỹ thuật liên quan (hỗ trợ viết phần Phương pháp)
+- `wiki/topics/*.md` — ngữ cảnh hướng nghiên cứu (hỗ trợ định vị Giới thiệu)
+- `wiki/ideas/*.md` — động lực và giả thuyết của các ý tưởng gốc
+- `wiki/graph/context_brief.md` — ngữ cảnh toàn cục
+- `wiki/graph/open_questions.md` — các khoảng trống kiến thức (chú thích hạn chế của bài báo)
+- `wiki/graph/edges.jsonl` — đồ thị mối quan hệ (xây dựng chuỗi logic tường thuật)
+- `.claude/skills/shared-references/academic-writing.md` — nguyên tắc viết
+- `.claude/skills/shared-references/citation-verification.md` — kỷ luật trích dẫn
 
-### Graph edges created
-- `derived_from`: paper-plan → claims (which claims the plan is derived from)
-- `derived_from`: paper-plan → papers (which papers the plan cites)
+### Ghi
 
-## Workflow
+- `wiki/outputs/paper-plan-{slug}-{date}.md` — tệp kế hoạch bài báo
+- `wiki/graph/edges.jsonl` — các cạnh derived_from
+- `wiki/graph/context_brief.md` — xây dựng lại
+- `wiki/log.md` — thêm nhật ký hoạt động
 
-**Precondition**: confirm the working directory is the wiki project root (the directory containing `wiki/`, `raw/`, `tools/`).
+### Các cạnh đồ thị được tạo
 
-### Step 1: Load Claim Graph
+- `derived_from`: paper-plan → khẳng định (các khẳng định mà kế hoạch được xây dựng từ)
+- `derived_from`: paper-plan → bài báo (các bài báo mà kế hoạch trích dẫn)
 
-1. Read `wiki/claims/{slug}.md` for all target claims
-2. For each claim, collect its evidence list:
-   - each evidence item's source (paper slug or experiment slug)
-   - evidence type (supports / contradicts / tested_by / invalidates)
-   - evidence strength (weak / moderate / strong)
-3. For each evidence source, read the corresponding wiki page:
-   - `wiki/experiments/{source}.md` → key_result, metrics, outcome
-   - `wiki/papers/{source}.md` → Method, Results
-4. Load relevant edges from `wiki/graph/edges.jsonl` to build relationships between claims
-5. Read `wiki/graph/context_brief.md` for global context
-6. Read `wiki/graph/open_questions.md` to annotate known limitations
+## Quy Trình Làm Việc
 
-**Validation**:
-- If any target claim has status `proposed`: warn "claim is unvalidated; paper may lack evidence support"
-- If any target claim has confidence < 0.5: warn "claim confidence is low; consider running more experiments first"
-- If no experiment evidence supports any claim: error "at least one experimental result is required to plan a paper"
+**Điều kiện tiên quyết**: xác nhận thư mục làm việc là thư mục gốc dự án wiki (thư mục chứa `wiki/`, `raw/`, `tools/`).
 
-### Step 2: Compile Evidence Map from Wiki
+### Bước 1: Tải Đồ Thị Khẳng Định
 
-Generate a structured matrix mapping claims → evidence → sections:
+1. Đọc `wiki/claims/{slug}.md` cho tất cả các khẳng định mục tiêu
+2. Đối với mỗi khẳng định, thu thập danh sách bằng chứng của nó:
+   - nguồn của mỗi mục bằng chứng (slug bài báo hoặc slug thí nghiệm)
+   - loại bằng chứng (supports / contradicts / tested_by / invalidates)
+   - độ mạnh bằng chứng (weak / moderate / strong)
+3. Đối với mỗi nguồn bằng chứng, đọc trang wiki tương ứng:
+   - `wiki/experiments/{source}.md` → key_result, chỉ số, outcome
+   - `wiki/papers/{source}.md` → Phương pháp, Kết quả
+4. Tải các cạnh liên quan từ `wiki/graph/edges.jsonl` để xây dựng mối quan hệ giữa các khẳng định
+5. Đọc `wiki/graph/context_brief.md` để có ngữ cảnh toàn cục
+6. Đọc `wiki/graph/open_questions.md` để chú thích các hạn chế đã biết
+
+**Xác thực**:
+- Nếu bất kỳ khẳng định mục tiêu nào có trạng thái `proposed`: cảnh báo "khẳng định chưa được xác thực; bài báo có thể thiếu hỗ trợ bằng chứng"
+- Nếu bất kỳ khẳng định mục tiêu nào có độ tin cậy < 0.5: cảnh báo "độ tin cậy của khẳng định thấp; cân nhắc chạy thêm thí nghiệm trước"
+- Nếu không có bằng chứng thí nghiệm hỗ trợ bất kỳ khẳng định nào: lỗi "cần ít nhất một kết quả thí nghiệm để lên kế hoạch bài báo"
+
+### Bước 2: Biên Soạn Bản Đồ Bằng Chứng Từ Wiki
+
+Tạo ma trận có cấu trúc ánh xạ khẳng định → bằng chứng → phần:
 
 ```markdown
-| Claim | Status | Confidence | Evidence Sources | Strength | Paper Section |
+| Khẳng định | Trạng thái | Độ tin cậy | Nguồn bằng chứng | Độ mạnh | Phần bài báo |
 |-------|--------|-----------|-----------------|----------|---------------|
-| [[primary-claim]] | supported | 0.85 | exp-main, paper-A | strong | Method + Exp 5.2 |
-| [[supporting-claim-1]] | supported | 0.75 | exp-ablation-1 | moderate | Exp 5.3 (Ablation) |
-| [[supporting-claim-2]] | weakly_supported | 0.55 | exp-scaling | weak | Exp 5.4 (Scaling) |
+| [[primary-claim]] | supported | 0.85 | exp-main, paper-A | strong | Phương pháp + Thí nghiệm 5.2 |
+| [[supporting-claim-1]] | supported | 0.75 | exp-ablation-1 | moderate | Thí nghiệm 5.3 (Ablation) |
+| [[supporting-claim-2]] | weakly_supported | 0.55 | exp-scaling | weak | Thí nghiệm 5.4 (Scaling) |
 ```
 
-Map claims to paper structure along each dimension:
-- **Target claim** → core contribution, drives Abstract + Introduction + Method
-- **Decomposition claims** → factor contributions, drives Ablation subsections
-- **Contextual claims** → background knowledge, drives Related Work + Introduction
+Ánh xạ khẳng định đến cấu trúc bài báo theo từng chiều:
+- **Khẳng định mục tiêu** → đóng góp cốt lõi, điều khiển Tóm tắt + Giới thiệu + Phương pháp
+- **Khẳng định phân rã** → đóng góp yếu tố, điều khiển các tiểu mục Ablation
+- **Khẳng định ngữ cảnh** → kiến thức nền, điều khiển Công trình liên quan + Giới thiệu
 
-### Step 3: Determine Narrative Structure
+### Bước 3: Xác Định Cấu Trúc Tường Thuật
 
-Follow the hourglass principle in `shared-references/academic-writing.md`:
+Tuân theo nguyên tắc đồng hồ cát trong `shared-references/academic-writing.md`:
 
-1. **Identify the paper's core storyline**:
-   - Gap (extracted from ideas/ motivation or gap_map)
-   - Solution (extracted from target claim's approach)
-   - Evidence (extracted from experiments' results)
-   - Impact (inferred from claim confidence + scope)
+1. **Xác định cốt truyện chính của bài báo**:
+   - Khoảng trống (trích xuất từ động lực của ý tưởng hoặc gap_map)
+   - Giải pháp (trích xuất từ cách tiếp cận của khẳng định mục tiêu)
+   - Bằng chứng (trích xuất từ kết quả của thí nghiệm)
+   - Tác động (suy ra từ độ tin cậy và phạm vi của khẳng định)
 
-2. **Determine the narrative angle**:
-   - What problem does the paper solve? (problem-driven vs. method-driven vs. data-driven)
-   - Who is the primary audience? (theory / systems / applications)
-   - How does it differentiate from the 3 most relevant recent papers?
+2. **Xác định góc độ tường thuật**:
+   - Bài báo giải quyết vấn đề gì? (hướng vấn đề / hướng phương pháp / hướng dữ liệu)
+   - Đối tượng độc giả chính là ai? (lý thuyết / hệ thống / ứng dụng)
+   - Nó khác biệt như thế nào so với 3 bài báo gần đây nhất?
 
-3. **Establish section → claim mapping**:
-   Every section must support at least one claim. A section with no claim support is filler and should be removed.
+3. **Thiết lập ánh xạ phần → khẳng định**:
+   Mỗi phần phải hỗ trợ ít nhất một khẳng định. Một phần không hỗ trợ khẳng định nào là phần thừa và nên được loại bỏ.
 
-### Step 4: Generate Section Outline
+### Bước 4: Tạo Đề Cương Phần
 
-Generate the outline according to venue format requirements; each section includes:
+Tạo đề cương theo yêu cầu định dạng của hội nghị; mỗi phần bao gồm:
 
 ```markdown
-## 1. Introduction (1.5 pages)
+## 1. Giới thiệu (1.5 trang)
 
-### Claims addressed
-- Gap claim: {existing approaches lack X because Y}
-- Contribution claim: [[primary-claim]]
+### Các khẳng định được giải quyết
+- Khẳng định khoảng trống: {các phương pháp hiện có thiếu X vì Y}
+- Khẳng định đóng góp: [[primary-claim]]
 
-### Paragraph plan
-1. Broad context: {field importance, recent progress}
-2. Specific problem: {what's missing, why it matters}
-3. Our approach: "In this work, we propose..." + contributions list
-4. Results preview: {headline numbers}
-5. Paper structure: "The rest of this paper..."
+### Kế hoạch đoạn văn
+1. Ngữ cảnh rộng: {tầm quan trọng của lĩnh vực, tiến bộ gần đây}
+2. Vấn đề cụ thể: {điều gì còn thiếu, tại sao nó quan trọng}
+3. Cách tiếp cận của chúng tôi: "Trong công trình này, chúng tôi đề xuất..." + danh sách đóng góp
+4. Xem trước kết quả: {các con số nổi bật}
+5. Cấu trúc bài báo: "Phần còn lại của bài báo này..."
 
-### Key citations
-- [[paper-A]] — establishes the problem
-- [[paper-B]] — closest prior work (we improve upon)
-- [[paper-C]] — our baseline
-
----
-
-## 2. Related Work (1 page)
-
-### Groupings
-- Direction A: {papers, our position}
-- Direction B: {papers, our position}
-- Direction C: {papers, our position}
-
-### Claims addressed
-- Contextual claims distinguishing from prior work
+### Trích dẫn chính
+- [[paper-A]] — thiết lập vấn đề
+- [[paper-B]] — công trình gần nhất (chúng tôi cải tiến từ)
+- [[paper-C]] — baseline của chúng tôi
 
 ---
 
-## 3. Method (2-3 pages)
+## 2. Công trình liên quan (1 trang)
 
-### Claims addressed
-- [[primary-claim]]: section 3.1-3.2
-- [[supporting-claim-1]]: section 3.3
+### Các nhóm
+- Hướng A: {các bài báo, vị trí của chúng tôi}
+- Hướng B: {các bài báo, vị trí của chúng tôi}
+- Hướng C: {các bài báo, vị trí của chúng tôi}
 
-### Subsection plan
-- 3.1 Problem formulation: notation, objective
-- 3.2 Core approach: intuition → formalism
-- 3.3 Component X: design decision + justification
-- 3.4 Training/inference details
-
-### Figures
-- Figure 1: Overall architecture (mandatory)
-- Figure 2: Component X detail (if complex)
+### Các khẳng định được giải quyết
+- Các khẳng định ngữ cảnh phân biệt với công trình trước
 
 ---
 
-## 4. Experiments (2-3 pages)
+## 3. Phương pháp (2-3 trang)
 
-### Claims addressed
-- [[primary-claim]]: section 4.2 (main results)
-- [[supporting-claim-1]]: section 4.3 (ablation)
-- [[supporting-claim-2]]: section 4.4 (scaling)
+### Các khẳng định được giải quyết
+- [[primary-claim]]: phần 3.1-3.2
+- [[supporting-claim-1]]: phần 3.3
 
-### Subsection plan
-- 4.1 Setup: datasets, baselines, metrics, implementation details
-- 4.2 Main results: Table 1 (main comparison), [[exp-main]]
-- 4.3 Ablation study: Table 2 (component analysis), [[exp-ablation-*]]
-- 4.4 Analysis: scaling, robustness, qualitative examples
+### Kế hoạch tiểu mục
+- 3.1 Công thức vấn đề: ký hiệu, mục tiêu
+- 3.2 Cách tiếp cận cốt lõi: trực giác → hình thức
+- 3.3 Thành phần X: quyết định thiết kế + lý giải
+- 3.4 Chi tiết huấn luyện/dự đoán
 
-### Figures/Tables
-- Table 1: Main comparison vs baselines
-- Table 2: Ablation results
-- Figure 3: Scaling curves / qualitative examples
+### Hình ảnh
+- Hình 1: Kiến trúc tổng thể (bắt buộc)
+- Hình 2: Chi tiết Thành phần X (nếu phức tạp)
 
 ---
 
-## 5. Conclusion (0.5 page)
+## 4. Thí nghiệm (2-3 trang)
 
-### Key takeaway
-- {one sentence the reader should remember}
+### Các khẳng định được giải quyết
+- [[primary-claim]]: phần 4.2 (kết quả chính)
+- [[supporting-claim-1]]: phần 4.3 (ablation)
+- [[supporting-claim-2]]: phần 4.4 (scaling)
 
-### Limitations
-- {from gap_map or claim conditions}
+### Kế hoạch tiểu mục
+- 4.1 Thiết lập: tập dữ liệu, baseline, chỉ số, chi tiết triển khai
+- 4.2 Kết quả chính: Bảng 1 (so sánh chính), [[exp-main]]
+- 4.3 Nghiên cứu ablation: Bảng 2 (phân tích thành phần), [[exp-ablation-*]]
+- 4.4 Phân tích: scaling, độ bền, ví dụ định tính
 
-### Future work
-- {from gap_map open questions}
+### Hình ảnh/Bảng
+- Bảng 1: So sánh chính với baseline
+- Bảng 2: Kết quả ablation
+- Hình 3: Đường cong scaling / ví dụ định tính
+
+---
+
+## 5. Kết luận (0.5 trang)
+
+### Điểm chính
+- {một câu mà người đọc nên nhớ}
+
+### Hạn chế
+- {từ gap_map hoặc điều kiện khẳng định}
+
+### Hướng nghiên cứu tương lai
+- {từ các câu hỏi mở trong gap_map}
 ```
 
-**Page budget**: allocated by `--venue` (refer to the venue table in academic-writing.md); total section pages <= venue main-body limit.
+**Ngân sách trang**: được phân bổ theo `--venue` (tham khảo bảng hội nghị trong academic-writing.md); tổng số trang phần ≤ giới hạn phần chính của hội nghị.
 
-### Step 5: Figure Plan
+### Bước 5: Kế Hoạch Hình Ảnh
 
-Design each planned figure/table:
+Thiết kế từng hình ảnh/bảng đã lên kế hoạch:
 
 ```markdown
-## Figure Plan
+## Kế Hoạch Hình Ảnh
 
-### Figure 1: System Architecture
-- Type: diagram
-- Source: Method section description
-- Style: block diagram with labeled components
-- Size: full width (1 column = text width)
+### Hình 1: Kiến Trúc Hệ Thống
+- Loại: sơ đồ
+- Nguồn: mô tả phần Phương pháp
+- Phong cách: sơ đồ khối với các thành phần được gắn nhãn
+- Kích thước: chiều rộng đầy đủ (1 cột = chiều rộng văn bản)
 
-### Table 1: Main Results
-- Type: comparison table
-- Source: [[exp-main]] key_result + baselines
-- Columns: Method | Metric-1 | Metric-2 | ...
-- Rows: baselines + ours (ours in bold)
-- Notes: best bold, second underline, ↑/↓ arrows for direction
+### Bảng 1: Kết Quả Chính
+- Loại: bảng so sánh
+- Nguồn: key_result của [[exp-main]] + baseline
+- Cột: Phương pháp | Chỉ số-1 | Chỉ số-2 | ...
+- Hàng: baseline + của chúng tôi (in đậm)
+- Ghi chú: in đậm kết quả tốt nhất, gạch chân kết quả thứ hai, mũi tên ↑/↓ cho hướng
 
-### Figure 3: Scaling Analysis
-- Type: line plot
-- Source: [[exp-scaling]] results
-- X-axis: scale dimension (model size / data size)
-- Y-axis: performance metric
-- Lines: ours vs baseline, with error bands
+### Hình 3: Phân Tích Scaling
+- Loại: biểu đồ đường
+- Nguồn: kết quả của [[exp-scaling]]
+- Trục X: chiều scaling (kích thước mô hình / kích thước dữ liệu)
+- Trục Y: chỉ số hiệu suất
+- Đường: của chúng tôi vs baseline, với dải lỗi
 ```
 
-### Step 6: Citation Plan
+### Bước 6: Kế Hoạch Trích Dẫn
 
-Following `shared-references/citation-verification.md`:
+Tuân theo `shared-references/citation-verification.md`:
 
-1. List all wiki papers referenced via `[[slug]]` in the outline
-2. For each paper, pre-fetch BibTeX:
-   - DBLP first, then CrossRef, then S2
-   - Success: record BibTeX key + source
-   - Failure: mark `[UNCONFIRMED]`
-3. Generate citation coverage report:
+1. Liệt kê tất cả các bài báo wiki được tham chiếu qua `[[slug]]` trong đề cương
+2. Đối với mỗi bài báo, lấy trước BibTeX:
+   - DBLP trước, sau đó CrossRef, sau đó S2
+   - Thành công: ghi lại khóa BibTeX + nguồn
+   - Thất bại: đánh dấu `[UNCONFIRMED]`
+3. Tạo báo cáo độ phủ trích dẫn:
    ```
-   Citations: 15 total, 12 verified (DBLP: 8, CrossRef: 3, S2: 1), 3 [UNCONFIRMED]
+   Trích dẫn: tổng cộng 15, đã xác minh 12 (DBLP: 8, CrossRef: 3, S2: 1), 3 [UNCONFIRMED]
    ```
-4. For [UNCONFIRMED] entries, provide suggested URLs for manual verification
+4. Đối với các mục [UNCONFIRMED], cung cấp URL đề xuất để xác minh thủ công
 
-### Step 7: Review LLM Review (mandatory)
+### Bước 7: Đánh Giá Review LLM (bắt buộc)
 
 ```
 mcp__llm-review__chat:
-  system: "You are an area chair at {venue} reviewing a paper outline.
-           Assess: Is the narrative convincing? Does every section serve a clear purpose?
-           Are the experiments sufficient to support the claims?
-           Is the related work coverage adequate?
-           Are there obvious gaps that reviewers will attack?
-           Provide specific suggestions for strengthening the outline."
+  system: "Bạn là chủ tịch khu vực tại {venue} đang đánh giá đề cương bài báo.
+           Đánh giá: Cấu trúc tường thuật có thuyết phục không? Mỗi phần có phục vụ mục đích rõ ràng không?
+           Các thí nghiệm có đủ để hỗ trợ các khẳng định không?
+           Độ phủ công trình liên quan có đầy đủ không?
+           Có những khoảng trống rõ ràng nào mà người đánh giá sẽ tấn công không?
+           Cung cấp gợi ý cụ thể để củng cố đề cương."
   message: |
-    ## Paper Outline
-    {complete outline from Step 4}
+    ## Đề Cương Bài Báo
+    {đề cương hoàn chỉnh từ Bước 4}
 
-    ## Evidence Map
-    {evidence map from Step 2}
+    ## Bản Đồ Bằng Chứng
+    {bản đồ bằng chứng từ Bước 2}
 
-    ## Figure/Table Plan
-    {plan from Step 5}
+    ## Kế Hoạch Hình Ảnh/Bảng
+    {kế hoạch từ Bước 5}
 
-    ## Citation Coverage
-    {report from Step 6}
+    ## Độ Phủ Trích Dẫn
+    {báo cáo từ Bước 6}
 
-    ## Questions for Review
-    1. Is the narrative arc (gap → solution → evidence → impact) convincing?
-    2. Are any claims under-supported? Which experiments are missing?
-    3. Is the related work grouping appropriate? Missing directions?
-    4. Will the page budget work? Any section too long/short?
-    5. Are the figures/tables sufficient to tell the story?
+    ## Câu Hỏi Đánh Giá
+    1. Cấu trúc tường thuật (khoảng trống → giải pháp → bằng chứng → tác động) có thuyết phục không?
+    2. Có khẳng định nào thiếu hỗ trợ không? Thí nghiệm nào còn thiếu?
+    3. Việc nhóm công trình liên quan có phù hợp không? Có hướng nào bị thiếu không?
+    4. Ngân sách trang có khả thi không? Có phần nào quá dài/ngắn không?
+    5. Các hình ảnh/bảng có đủ để kể câu chuyện không?
 ```
 
-Revise the outline based on Review LLM feedback (add sections, adjust page budget, add figures/tables, correct narrative structure).
+Sửa đổi đề cương dựa trên phản hồi của Review LLM (thêm phần, điều chỉnh ngân sách trang, thêm hình ảnh/bảng, điều chỉnh cấu trúc tường thuật).
 
-### Step 8: Write to Wiki
+### Bước 8: Ghi Vào Wiki
 
-1. **Generate slug**:
+1. **Tạo slug**:
    ```bash
-   python3 tools/research_wiki.py slug "<working-title>"
+   python3 tools/research_wiki.py slug "<tiêu-đề-làm-việc>"
    ```
 
-2. **Write PAPER_PLAN.md**:
-   Create `wiki/outputs/paper-plan-{slug}-{date}.md` containing:
-   - Metadata (venue, title, date, target claims)
-   - Evidence Map (Step 2)
-   - Complete section outline (Step 4, with Review LLM revisions)
-   - Figure/Table Plan (Step 5)
-   - Citation Plan + coverage report (Step 6)
-   - Review LLM Review Summary (Step 7 key feedback and revision record)
+2. **Viết PAPER_PLAN.md**:
+   Tạo `wiki/outputs/paper-plan-{slug}-{date}.md` chứa:
+   - Siêu dữ liệu (hội nghị, tiêu đề, ngày, khẳng định mục tiêu)
+   - Bản đồ bằng chứng (Bước 2)
+   - Đề cương phần hoàn chỉnh (Bước 4, với sửa đổi của Review LLM)
+   - Kế hoạch hình ảnh/bảng (Bước 5)
+   - Kế hoạch trích dẫn + báo cáo độ phủ (Bước 6)
+   - Tóm tắt đánh giá Review LLM (phản hồi chính và ghi chép sửa đổi từ Bước 7)
 
-3. **Add graph edges**:
+3. **Thêm cạnh đồ thị**:
    ```bash
-   # plan → target claim
+   # kế hoạch → khẳng định mục tiêu
    python3 tools/research_wiki.py add-edge wiki/ \
      --from "outputs/paper-plan-{slug}-{date}" --to "claims/{primary-claim}" \
-     --type derived_from --evidence "Paper plan built from this claim"
+     --type derived_from --evidence "Kế hoạch bài báo được xây dựng từ khẳng định này"
 
-   # plan → key papers
+   # kế hoạch → bài báo chính
    python3 tools/research_wiki.py add-edge wiki/ \
      --from "outputs/paper-plan-{slug}-{date}" --to "papers/{paper-slug}" \
-     --type derived_from --evidence "Paper plan cites this paper"
+     --type derived_from --evidence "Kế hoạch bài báo trích dẫn bài báo này"
    ```
 
-4. **Rebuild derived data**:
+4. **Xây dựng lại dữ liệu phái sinh**:
    ```bash
    python3 tools/research_wiki.py rebuild-context-brief wiki/
    ```
 
-5. **Append log**:
+5. **Thêm nhật ký**:
    ```bash
    python3 tools/research_wiki.py log wiki/ \
-     "paper-plan | {venue} paper outline for [[{slug}]] | claims: {claim-list} | citations: {verified}/{total}"
+     "paper-plan | đề cương bài báo {venue} cho [[{slug}]] | khẳng định: {danh-sách-khẳng-định} | trích dẫn: {đã-xác-minh}/{tổng}"
    ```
 
-6. **Print PAPER_PLAN_REPORT to terminal**:
+6. **In PAPER_PLAN_REPORT ra terminal**:
    ```markdown
-   # Paper Plan Report
+   # Báo Cáo Kế Hoạch Bài Báo
 
-   ## Meta
-   - Title: {working title}
-   - Venue: {venue}
-   - Page limit: {N} pages
-   - Date: {date}
+   ## Siêu Dữ Liệu
+   - Tiêu đề: {tiêu đề làm việc}
+   - Hội nghị: {venue}
+   - Giới hạn trang: {N} trang
+   - Ngày: {date}
 
-   ## Claims → Sections
-   | Claim | Confidence | Section |
+   ## Khẳng Định → Phần
+   | Khẳng định | Độ tin cậy | Phần |
    |-------|-----------|---------|
-   | [[primary]] | 0.85 | Method + Exp 5.2 |
-   | [[supporting-1]] | 0.75 | Exp 5.3 |
+   | [[primary]] | 0.85 | Phương pháp + Thí nghiệm 5.2 |
+   | [[supporting-1]] | 0.75 | Thí nghiệm 5.3 |
 
-   ## Page Budget
-   | Section | Pages | Claims |
+   ## Ngân Sách Trang
+   | Phần | Trang | Khẳng định |
    |---------|-------|--------|
-   | Introduction | 1.5 | gap, contribution |
-   | Related Work | 1.0 | context |
-   | Method | 2.5 | primary, supporting |
-   | Experiments | 2.5 | all |
-   | Conclusion | 0.5 | — |
+   | Giới thiệu | 1.5 | khoảng trống, đóng góp |
+   | Công trình liên quan | 1.0 | ngữ cảnh |
+   | Phương pháp | 2.5 | chính, hỗ trợ |
+   | Thí nghiệm | 2.5 | tất cả |
+   | Kết luận | 0.5 | — |
 
-   ## Figures/Tables: {N} planned
-   ## Citations: {verified}/{total} verified, {verify_count} [UNCONFIRMED]
-   ## Review LLM Review: score {X}/10, verdict: {verdict}
+   ## Hình Ảnh/Bảng: {N} đã lên kế hoạch
+   ## Trích dẫn: {đã-xác-minh}/{tổng} đã xác minh, {số-xác-minh} [UNCONFIRMED]
+   ## Đánh giá Review LLM: điểm {X}/10, phán quyết: {verdict}
 
-   ## Next Steps
-   - Run `/paper-draft wiki/outputs/paper-plan-{slug}-{date}.md` to draft the paper
-   - Resolve {verify_count} [UNCONFIRMED] citations before /paper-compile
+   ## Bước Tiếp Theo
+   - Chạy `/paper-draft wiki/outputs/paper-plan-{slug}-{date}.md` để soạn thảo bài báo
+   - Giải quyết {số-xác-minh} trích dẫn [UNCONFIRMED] trước khi /paper-compile
    ```
 
-## Constraints
+## Các Ràng Buộc
 
-- **--venue is required**: page limits and format requirements vary significantly by venue; cannot be omitted
-- **At least one experiment evidence**: purely theoretical claims are insufficient for an empirical paper; at least one experimental result is required
-- **Page budget must be feasible**: total section pages <= venue main-body limit; otherwise adjust (compress or move to appendix)
-- **Review LLM review is mandatory**: cannot be skipped; catching problems at the outline stage has the lowest cost
-- **All citations from wiki**: every paper in the citation plan must exist in wiki/papers/
-- **claim → section mapping must be complete**: every target claim must appear in at least one section
-- **Every section must have a claim**: a section with no claim support is filler and should be removed or merged
-- **Graph edges via tools/research_wiki.py**: do not manually edit edges.jsonl
-- **Citations use [[slug]]**: all citations in the outline use wikilink syntax
+- **--venue là bắt buộc**: giới hạn trang và yêu cầu định dạng khác nhau đáng kể theo hội nghị; không thể bỏ qua
+- **Ít nhất một bằng chứng thí nghiệm**: các khẳng định lý thuyết thuần túy là không đủ cho một bài báo thực nghiệm; cần ít nhất một kết quả thí nghiệm
+- **Ngân sách trang phải khả thi**: tổng số trang phần ≤ giới hạn phần chính của hội nghị; nếu không điều chỉnh (nén hoặc chuyển sang phụ lục)
+- **Đánh giá Review LLM là bắt buộc**: không thể bỏ qua; phát hiện vấn đề ở giai đoạn đề cương có chi phí thấp nhất
+- **Tất cả trích dẫn từ wiki**: mọi bài báo trong kế hoạch trích dẫn phải tồn tại trong wiki/papers/
+- **Ánh xạ khẳng định → phần phải đầy đủ**: mọi khẳng định mục tiêu phải xuất hiện trong ít nhất một phần
+- **Mọi phần phải có khẳng định**: một phần không hỗ trợ khẳng định nào là phần thừa và nên được loại bỏ hoặc gộp
+- **Các cạnh đồ thị thông qua tools/research_wiki.py**: không chỉnh sửa thủ công edges.jsonl
+- **Trích dẫn sử dụng [[slug]]**: tất cả trích dẫn trong đề cương sử dụng cú pháp wikilink
 
-## Error Handling
+## Xử Lý Lỗi
 
-- **Insufficient claim status**: if all claims are `proposed`, error "claims are unvalidated; run experiments first"
-- **No experiment evidence**: error "at least one experimental result is required"; suggest running /exp-design + /exp-run first
-- **Insufficient wiki papers**: if the citation plan has fewer than 5 wiki papers, warn "related work coverage is insufficient; consider /ingest of more papers first"
-- **Page budget exceeded**: automatically move lower-priority sections to appendix plan; report the adjustment
-- **Review LLM unavailable**: fall back to Claude self-review; report annotated "single-model review — cross-model verification unavailable"
-- **BibTeX fetch failed**: mark [UNCONFIRMED]; summarize in the citation plan report
-- **Slug conflict**: append date suffix
-- **Target claim not found**: error; list candidates in wiki/claims/
+- **Trạng thái khẳng định không đủ**: nếu tất cả các khẳng định đều `proposed`, lỗi "các khẳng định chưa được xác thực; chạy thí nghiệm trước"
+- **Không có bằng chứng thí nghiệm**: lỗi "cần ít nhất một kết quả thí nghiệm"; đề xuất chạy /exp-design + /exp-run trước
+- **Không đủ bài báo wiki**: nếu kế hoạch trích dẫn có ít hơn 5 bài báo wiki, cảnh báo "độ phủ công trình liên quan không đủ; cân nhắc /ingest thêm bài báo trước"
+- **Ngân sách trang vượt quá**: tự động chuyển các phần ưu tiên thấp hơn sang kế hoạch phụ lục; báo cáo điều chỉnh
+- **Review LLM không khả dụng**: chuyển sang tự đánh giá của Claude; báo cáo chú thích "đánh giá một mô hình — xác minh chéo mô hình không khả dụng"
+- **Lấy BibTeX thất bại**: đánh dấu [UNCONFIRMED]; tóm tắt trong báo cáo kế hoạch trích dẫn
+- **Xung đột slug**: thêm hậu tố ngày
+- **Không tìm thấy khẳng định mục tiêu**: lỗi; liệt kê các ứng viên trong wiki/claims/
 
-## Dependencies
+## Phụ Thuộc
 
-### Tools（via Bash）
-- `python3 tools/research_wiki.py slug "<title>"` — generate slug
-- `python3 tools/research_wiki.py add-edge wiki/ ...` — add graph edge
-- `python3 tools/research_wiki.py rebuild-context-brief wiki/` — rebuild query_pack
-- `python3 tools/research_wiki.py log wiki/ "<message>"` — append log
-- `python3 tools/fetch_s2.py search "<title>"` — Semantic Scholar search (citation plan fallback)
+### Công cụ (thông qua Bash)
 
-### MCP Servers
-- `mcp__llm-review__chat` — Step 7 outline review (mandatory)
+- `python3 tools/research_wiki.py slug "<title>"` — tạo slug
+- `python3 tools/research_wiki.py add-edge wiki/ ...` — thêm cạnh đồ thị
+- `python3 tools/research_wiki.py rebuild-context-brief wiki/` — xây dựng lại query_pack
+- `python3 tools/research_wiki.py log wiki/ "<message>"` — thêm nhật ký
+- `python3 tools/fetch_s2.py search "<title>"` — tìm kiếm Semantic Scholar (dự phòng kế hoạch trích dẫn)
 
-### Claude Code Native
-- `Read` — read wiki pages
-- `Glob` — find claims, experiments, papers
-- `WebFetch` — DBLP / CrossRef BibTeX fetch (Step 6)
+### Máy Chủ MCP
 
-### Shared References
-- `.claude/skills/shared-references/academic-writing.md` — narrative structure and section design principles
-- `.claude/skills/shared-references/citation-verification.md` — citation fetch and verification rules
+- `mcp__llm-review__chat` — Bước 7 đánh giá đề cương (bắt buộc)
 
-### Called by
-- `/research` Stage 5 (paper writing stage)
-- Manual user invocation
+### Claude Code Gốc
+
+- `Read` — đọc các trang wiki
+- `Glob` — tìm các khẳng định, thí nghiệm, bài báo
+- `WebFetch` — lấy BibTeX DBLP / CrossRef (Bước 6)
+
+### Tài Liệu Tham Khảo Chung
+
+- `.claude/skills/shared-references/academic-writing.md` — cấu trúc tường thuật và nguyên tắc thiết kế phần
+- `.claude/skills/shared-references/citation-verification.md` — quy tắc lấy và xác minh trích dẫn
+
+### Được Gọi Bởi
+
+- `/research` Giai đoạn 5 (giai đoạn viết bài báo)
+- Người dùng gọi thủ công

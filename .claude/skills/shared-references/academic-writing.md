@@ -1,156 +1,156 @@
-# Academic Writing Principles
+# Nguyên Tắc Viết Học Thuật
 
-> Shared reference for all skills that produce written output: /paper-draft, /paper-plan, /survey.
-> These principles ensure publication-quality writing that reads as expert-authored, not AI-generated.
+> Tài liệu tham khảo chung cho tất cả các kỹ năng tạo ra sản phẩm viết: /paper-draft, /paper-plan, /survey.
+> Những nguyên tắc này đảm bảo chất lượng viết đủ tiêu chuẩn xuất bản, đọc như được viết bởi chuyên gia, không phải bởi AI.
 
 ---
 
-## 1. Narrative Structure
+## 1. Cấu Trúc Tường Thuật
 
-### The Hourglass Shape
+### Hình Dạng Đồng Hồ Cát
 
-Every well-structured paper follows an hourglass:
+Mọi bài báo có cấu trúc tốt đều tuân theo hình đồng hồ cát:
 
 ```
-BROAD:   Introduction — why this matters to the field
-NARROW:  Method — exactly what we did
-NARROW:  Experiments — exactly what happened
-BROAD:   Discussion — what this means for the field
+RỘNG:   Giới thiệu — tại sao điều này quan trọng đối với lĩnh vực
+HẸP:    Phương pháp — chính xác những gì chúng ta đã làm
+HẸP:    Thí nghiệm — chính xác những gì đã xảy ra
+RỘNG:   Thảo luận — điều này có ý nghĩa gì đối với lĩnh vực
 ```
 
-### Section-Level Rules
+### Quy Tắc Cấp Phần
 
-- **Introduction**: Start with the problem (not the solution). The reader must feel the gap before you fill it.
-  - Paragraph 1: broad context and importance
-  - Paragraph 2: specific problem and why existing approaches fall short
-  - Paragraph 3: "In this work, we..." — your contribution
-  - Paragraph 4: summary of results and paper structure
+- **Giới thiệu**: Bắt đầu với vấn đề (không phải giải pháp). Người đọc phải cảm nhận được khoảng trống trước khi bạn lấp đầy nó.
+  - Đoạn 1: bối cảnh rộng và tầm quan trọng
+  - Đoạn 2: vấn đề cụ thể và lý do các phương pháp hiện tại không đáp ứng được
+  - Đoạn 3: "Trong nghiên cứu này, chúng tôi..." — đóng góp của bạn
+  - Đoạn 4: tóm tắt kết quả và cấu trúc bài báo
 
-- **Related Work**: Organize by theme, not by paper. Each paragraph covers a research direction, not a single citation.
-  - End each paragraph with how your work differs from that direction
-  - Never write a flat list of "X did Y. Z did W."
+- **Công trình liên quan**: Tổ chức theo chủ đề, không theo bài báo. Mỗi đoạn đề cập đến một hướng nghiên cứu, không phải một trích dẫn đơn lẻ.
+  - Kết thúc mỗi đoạn bằng cách nêu sự khác biệt giữa công trình của bạn với hướng đó
+  - Không bao giờ viết một danh sách phẳng như "X đã làm Y. Z đã làm W."
 
-- **Method**: Lead with intuition before formalism. A reader should understand *why* before *how*.
-  - One figure showing the overall architecture (mandatory)
-  - Notation introduced before first use
-  - Each subsection = one design decision
+- **Phương pháp**: Bắt đầu bằng trực giác trước khi đi vào công thức. Người đọc nên hiểu *tại sao* trước *làm thế nào*.
+  - Một hình vẽ minh họa kiến trúc tổng thể (bắt buộc)
+  - Ký hiệu được giới thiệu trước khi sử dụng lần đầu
+  - Mỗi tiểu mục = một quyết định thiết kế
 
-- **Experiments**: Claim-first structure. Each subsection begins with the claim it validates.
-  - "We claim X. To verify, we..." (not "We ran experiment A. Results show...")
-  - Tables before discussion (readers scan tables first)
-  - Error bars or confidence intervals mandatory
+- **Thí nghiệm**: Cấu trúc ưu tiên khẳng định. Mỗi tiểu mục bắt đầu bằng khẳng định mà nó xác thực.
+  - "Chúng tôi khẳng định X. Để xác minh, chúng tôi..." (không phải "Chúng tôi đã chạy thí nghiệm A. Kết quả cho thấy...")
+  - Bảng trước khi thảo luận (người đọc quét bảng trước)
+  - Thanh lỗi hoặc khoảng tin cậy là bắt buộc
 
-- **Conclusion**: New insight, not summary. What should the reader remember tomorrow?
+- **Kết luận**: Ý tưởng mới, không phải tóm tắt. Người đọc nên nhớ điều gì vào ngày mai?
 
-## 2. Clarity Rules
+## 2. Quy Tắc Rõ Ràng
 
-### Sentence Level
+### Cấp Độ Câu
 
-- **One idea per sentence.** If a sentence has "and" + "which" + "that", split it.
-- **Active voice by default.** "We train the model" not "The model is trained."
-- **Specific > vague.** "Reduces latency by 40%" not "significantly improves performance."
-- **Define before use.** Every acronym spelled out on first use. Every symbol defined before first equation.
+- **Một ý tưởng mỗi câu.** Nếu một câu có "và" + "mà" + "điều đó", hãy tách nó ra.
+- **Thể chủ động theo mặc định.** "Chúng tôi huấn luyện mô hình" thay vì "Mô hình được huấn luyện."
+- **Cụ thể hơn mơ hồ.** "Giảm độ trễ 40%" thay vì "cải thiện đáng kể hiệu suất."
+- **Định nghĩa trước khi sử dụng.** Mọi từ viết tắt phải được viết đầy đủ khi sử dụng lần đầu. Mọi ký hiệu phải được định nghĩa trước phương trình đầu tiên.
 
-### Paragraph Level
+### Cấp Độ Đoạn
 
-- **Topic sentence first.** Every paragraph starts with its main claim.
-- **One point per paragraph.** If you find yourself writing "Additionally" mid-paragraph, start a new one.
-- **Transitions between paragraphs.** The last sentence of paragraph N should connect to the first sentence of paragraph N+1.
+- **Câu chủ đề đầu tiên.** Mọi đoạn văn bắt đầu bằng khẳng định chính của nó.
+- **Một điểm mỗi đoạn.** Nếu bạn thấy mình viết "Ngoài ra" ở giữa đoạn, hãy bắt đầu một đoạn mới.
+- **Chuyển tiếp giữa các đoạn.** Câu cuối của đoạn N nên kết nối với câu đầu của đoạn N+1.
 
-### Notation Consistency
+### Tính Nhất Quán Ký Hiệu
 
-- Define a `math_commands.tex` file for shared notation
-- Same symbol = same meaning throughout the paper
-- Bold lowercase for vectors (**x**), bold uppercase for matrices (**W**), calligraphic for sets
-- Never redefine a symbol mid-paper
+- Định nghĩa tệp `math_commands.tex` cho ký hiệu chung
+- Ký hiệu giống nhau = ý nghĩa giống nhau trong toàn bộ bài báo
+- Chữ thường in đậm cho vector (**x**), chữ hoa in đậm cho ma trận (**W**), chữ viết tay cho tập hợp
+- Không bao giờ định nghĩa lại ký hiệu ở giữa bài báo
 
-## 3. Figure and Table Design
+## 3. Thiết Kế Hình Ảnh và Bảng
 
-### Figures
+### Hình Ảnh
 
-- **Every figure must be referenced in text** and discussed (not just displayed)
-- **Colorblind-safe palettes**: use distinguishable patterns + colors (never rely on color alone)
-- **Font size >= 8pt** in all labels, legends, axis ticks
-- **Vector format preferred** (PDF/SVG for line plots, PNG only for photos/screenshots)
-- **Caption is self-contained**: a reader should understand the figure from its caption alone
-- **Consistent style**: all figures use the same font, line width, color scheme
+- **Mọi hình ảnh phải được tham chiếu trong văn bản** và được thảo luận (không chỉ hiển thị)
+- **Bảng màu an toàn cho người mù màu**: sử dụng mẫu phân biệt + màu sắc (không bao giờ chỉ dựa vào màu)
+- **Cỡ chữ >= 8pt** trong tất cả nhãn, chú giải, vạch trục
+- **Định dạng vector được ưu tiên** (PDF/SVG cho biểu đồ đường, PNG chỉ cho ảnh/ảnh chụp màn hình)
+- **Chú thích tự chứa**: người đọc nên hiểu hình ảnh chỉ từ chú thích của nó
+- **Phong cách nhất quán**: tất cả hình ảnh sử dụng cùng phông chữ, độ rộng đường, bảng màu
 
-### Tables
+### Bảng
 
-- **Horizontal rules only** (no vertical lines, no full grid): `\toprule`, `\midrule`, `\bottomrule`
-- **Best result in bold**, second-best underlined
-- **Units in column header**, not in every cell
-- **Align decimal points** in numeric columns
-- **Caption above table** (convention in most ML venues)
+- **Chỉ sử dụng đường ngang** (không đường dọc, không lưới đầy đủ): `\toprule`, `\midrule`, `\bottomrule`
+- **Kết quả tốt nhất in đậm**, kết quả tốt thứ hai gạch chân
+- **Đơn vị trong tiêu đề cột**, không phải trong mỗi ô
+- **Căn chỉnh dấu thập phân** trong cột số
+- **Chú thích phía trên bảng** (quy ước trong hầu hết các hội nghị ML)
 
-## 4. De-AI Polish Rules
+## 4. Quy Tắc Đánh Bóng Loại Bỏ Dấu Vết AI
 
-AI-generated text has recognizable patterns. These must be eliminated before submission.
+Văn bản do AI tạo ra có các mẫu nhận biết được. Những điều này phải được loại bỏ trước khi nộp.
 
-### Words and Phrases to Remove or Replace
+### Từ và Cụm Từ Cần Loại Bỏ hoặc Thay Thế
 
-| AI Pattern | Replace With |
+| Mẫu AI | Thay Thế Bằng |
 |------------|-------------|
-| "delve into" | "examine" / "analyze" / remove entirely |
-| "it is worth noting that" | remove (just state the thing) |
-| "it is important to note" | remove |
-| "in the realm of" | "in" |
-| "leverage" (as verb) | "use" / "exploit" / "apply" |
-| "utilize" | "use" |
-| "facilitate" | "enable" / "allow" / remove |
-| "comprehensive" (without evidence) | remove or quantify |
-| "crucial" / "pivotal" | "important" / "key" / remove |
-| "Furthermore" at paragraph start | vary: "Moreover" / "In addition" / restructure |
-| "In conclusion" (exact phrase) | "To summarize" / restructure without filler |
-| "a myriad of" | "many" / "various" / specific number |
-| "shed light on" | "reveal" / "clarify" / "show" |
-| "pave the way for" | "enable" / remove |
-| "cutting-edge" / "state-of-the-art" (as filler) | only use SOTA when citing specific benchmarks |
-| "robust" (without robustness experiments) | remove or qualify |
-| "novel" (overuse) | use once in abstract + once in intro, no more |
+| "đi sâu vào" | "xem xét" / "phân tích" / loại bỏ hoàn toàn |
+| "đáng chú ý là" | loại bỏ (chỉ nêu sự việc) |
+| "điều quan trọng cần lưu ý" | loại bỏ |
+| "trong lĩnh vực" | "trong" |
+| "tận dụng" (như động từ) | "sử dụng" / "khai thác" / "áp dụng" |
+| "sử dụng" | "dùng" |
+| "tạo điều kiện" | "cho phép" / "đáp ứng" / loại bỏ |
+| "toàn diện" (không có bằng chứng) | loại bỏ hoặc định lượng |
+| "quan trọng" / "then chốt" | "quan trọng" / "chính" / loại bỏ |
+| "Hơn nữa" ở đầu đoạn | thay đổi: "Ngoài ra" / "Thêm vào đó" / cấu trúc lại |
+| "Tóm lại" (cụm từ chính xác) | "Tóm tắt" / cấu trúc lại mà không cần từ đệm |
+| "vô số" | "nhiều" / "đa dạng" / số cụ thể |
+| "làm sáng tỏ" | "tiết lộ" / "làm rõ" / "chỉ ra" |
+| "mở đường cho" | "cho phép" / loại bỏ |
+| "hiện đại" / "tối tân" (như từ đệm) | chỉ sử dụng khi trích dẫn các tiêu chuẩn cụ thể |
+| "mạnh mẽ" (không có thí nghiệm về độ mạnh) | loại bỏ hoặc làm rõ |
+| "mới lạ" (lạm dụng) | sử dụng một lần trong tóm tắt + một lần trong giới thiệu, không hơn |
 
-### Structural Patterns to Fix
+### Mẫu Cấu Trúc Cần Sửa
 
-- **Excessive hedging**: "It could potentially be argued that X might..." → "X is likely because..."
-- **Redundant topic shifts**: "Having discussed X, we now turn to Y" → just start Y
-- **Enumeration addiction**: "First... Second... Third..." in every paragraph → vary structure
-- **Superlative inflation**: "groundbreaking", "revolutionary" → let results speak
-- **Repetitive sentence openings**: vary subject-verb patterns across consecutive sentences
+- **Dè dặt quá mức**: "Có thể cho rằng X có thể..." → "X có khả năng vì..."
+- **Chuyển chủ đề dư thừa**: "Sau khi thảo luận về X, giờ chúng ta chuyển sang Y" → chỉ bắt đầu Y
+- **Nghiện liệt kê**: "Thứ nhất... Thứ hai... Thứ ba..." trong mọi đoạn → thay đổi cấu trúc
+- **Lạm dụng so sánh nhất**: "đột phá", "cách mạng" → để kết quả tự nói
+- **Mở đầu câu lặp lại**: thay đổi mẫu chủ ngữ-động từ giữa các câu liên tiếp
 
-### The Polish Pass
+### Vòng Đánh Bóng
 
-After drafting, run this mental checklist on every paragraph:
+Sau khi soạn thảo, áp dụng danh sách kiểm tra tinh thần cho mỗi đoạn:
 
-1. Could a reviewer guess this was AI-generated? If yes, rewrite.
-2. Does every adjective earn its place? Remove unearned superlatives.
-3. Is there a shorter way to say this? Use it.
-4. Does this paragraph add information, or just fill space? Cut filler.
-5. Read aloud: does it sound like a human expert wrote it?
+1. Liệu một người phản biện có thể đoán được đoạn này do AI tạo ra không? Nếu có, hãy viết lại.
+2. Mọi tính từ có xứng đáng với vị trí của nó không? Loại bỏ các từ so sánh nhất không xứng đáng.
+3. Có cách nào ngắn gọn hơn để diễn đạt điều này không? Hãy sử dụng nó.
+4. Đoạn này bổ sung thông tin hay chỉ lấp đầy khoảng trống? Cắt bỏ phần lấp đầy.
+5. Đọc to: liệu nó có nghe như được viết bởi một chuyên gia không?
 
-## 5. Venue-Specific Formatting
+## 5. Định Dạng Theo Hội Nghị Cụ Thể
 
-### Page Limits (typical)
+### Giới Hạn Trang (điển hình)
 
-| Venue | Main | References | Appendix |
+| Hội nghị | Chính | Tài liệu tham khảo | Phụ lục |
 |-------|------|-----------|----------|
-| ICLR | 10 pages | unlimited | unlimited |
-| NeurIPS | 9 pages | unlimited | unlimited |
-| ICML | 8 pages | unlimited | unlimited |
-| ACL | 8 pages (long) | unlimited | unlimited |
-| CVPR | 8 pages | +2 pages | — |
-| IEEE TPAMI | ~20 pages | included | — |
+| ICLR | 10 trang | không giới hạn | không giới hạn |
+| NeurIPS | 9 trang | không giới hạn | không giới hạn |
+| ICML | 8 trang | không giới hạn | không giới hạn |
+| ACL | 8 trang (dài) | không giới hạn | không giới hạn |
+| CVPR | 8 trang | +2 trang | — |
+| IEEE TPAMI | ~20 trang | bao gồm | — |
 
-### Anonymity Rules
+### Quy Tắc Ẩn Danh
 
-- No author names, affiliations, or acknowledgments in submission
-- No "our previous work [1]" — use "Smith et al. [1]" (third person)
-- No GitHub links to identifiable repos
-- No institution-specific cluster names
+- Không có tên tác giả, tổ chức hoặc lời cảm ơn trong bản nộp
+- Không có "công trình trước đây của chúng tôi [1]" — sử dụng "Smith và cộng sự [1]" (ngôi thứ ba)
+- Không có liên kết GitHub đến kho lưu trữ có thể nhận diện
+- Không có tên cụm đặc trưng của tổ chức
 
-## What NOT To Do
+## Những Điều Không Nên Làm
 
-- **Never submit without de-AI polish** — reviewers increasingly check for AI patterns
-- **Never use filler paragraphs** — every paragraph must advance the argument
-- **Never present results without context** — "95% accuracy" means nothing without baseline comparison
-- **Never mix tenses** — Method in present tense, experiments in past tense, results in present
-- **Never cite without discussing** — every \cite must be accompanied by how it relates to your work
+- **Không bao giờ nộp mà không đánh bóng loại bỏ dấu vết AI** — người phản biện ngày càng kiểm tra các mẫu AI
+- **Không bao giờ sử dụng đoạn văn đệm** — mọi đoạn phải thúc đẩy lập luận
+- **Không bao giờ trình bày kết quả mà không có ngữ cảnh** — "độ chính xác 95%" không có ý nghĩa gì nếu không so sánh với cơ sở
+- **Không bao giờ trộn lẫn thì** — Phương pháp ở thì hiện tại, thí nghiệm ở thì quá khứ, kết quả ở thì hiện tại
+- **Không bao giờ trích dẫn mà không thảo luận** — mọi \cite phải đi kèm với cách nó liên quan đến công trình của bạn

@@ -1,348 +1,356 @@
 ---
-description: Experiment verdict gate — Review LLM independently judges results → 4 verdict paths → auto-update claims confidence, ideas status, graph edges
-argument-hint: <experiment-slug> [--auto]
+description: Cổng phán quyết thí nghiệm — Review LLM đánh giá độc lập kết quả → 4 đường dẫn phán quyết → tự động cập nhật độ tin cậy của khẳng định, trạng thái ý tưởng, cạnh đồ thị
+argument-hint: "<slug-thí-nghiệm> [--auto]"
 ---
 
 # /exp-eval
 
-> Convert completed experiment results into wiki knowledge updates.
-> Review LLM acts as an impartial judge (following cross-model-review), independently evaluating how experimental results affect the target claim.
-> Four verdict paths: supported → claim↑ + idea validated / partially_supported → supplementary experiments /
-> not_supported → claim↓ + idea failed / inconclusive → debug.
-> Auto-updates claims confidence and evidence, ideas status, and graph edges.
+> Chuyển đổi kết quả thí nghiệm đã hoàn thành thành các cập nhật kiến thức wiki.
+> Review LLM đóng vai trò như một giám khảo công bằng (tuân theo cross-model-review), đánh giá độc lập tác động của kết quả thí nghiệm đến khẳng định mục tiêu.
+> Bốn đường dẫn phán quyết: supported → khẳng định↑ + ý tưởng được xác thực / partially_supported → thí nghiệm bổ sung /
+> not_supported → khẳng định↓ + ý tưởng thất bại / inconclusive → gỡ lỗi.
+> Tự động cập nhật độ tin cậy và bằng chứng của khẳng định, trạng thái ý tưởng và các cạnh đồ thị.
 
-## Inputs
+## Đầu Vào
 
-- `experiment`: slug from wiki/experiments/ (status must be `completed`)
-- `--auto` (optional): automatic mode — do not pause for user confirmation before wiki updates (used when called by /research)
+- `experiment`: slug từ wiki/experiments/ (trạng thái phải là `completed`)
+- `--auto` *(tùy chọn)*: chế độ tự động — không tạm dừng để xác nhận người dùng trước khi cập nhật wiki (được sử dụng khi được gọi bởi /research)
 
-## Outputs
+## Đầu Ra
 
-- `wiki/claims/{slug}.md` — updated confidence, status, evidence list
-- `wiki/ideas/{slug}.md` — updated status (validated/failed), pilot_result, failure_reason
-- `wiki/experiments/{slug}.md` — `## Claim updates` section filled in
-- `wiki/graph/edges.jsonl` — new supports/invalidates edges added
-- `wiki/graph/context_brief.md` — rebuilt
-- `wiki/graph/open_questions.md` — rebuilt
-- `wiki/log.md` — appended log entry
-- **VERDICT_REPORT** (printed to terminal) — verdict result, wiki change summary, next step suggestions
+- `wiki/claims/{slug}.md` — cập nhật độ tin cậy, trạng thái, danh sách bằng chứng
+- `wiki/ideas/{slug}.md` — cập nhật trạng thái (validated/failed), pilot_result, failure_reason
+- `wiki/experiments/{slug}.md` — điền phần `## Cập Nhật Khẳng Định`
+- `wiki/graph/edges.jsonl` — thêm các cạnh supports/invalidates mới
+- `wiki/graph/context_brief.md` — xây dựng lại
+- `wiki/graph/open_questions.md` — xây dựng lại
+- `wiki/log.md` — thêm mục nhật ký
+- **VERDICT_REPORT** *(in ra terminal)* — kết quả phán quyết, tóm tắt thay đổi wiki, gợi ý bước tiếp theo
 
-## Wiki Interaction
+## Tương Tác Wiki
 
-### Reads
-- `wiki/experiments/{slug}.md` — experiment results: outcome, key_result, metrics, full Results section
-- `wiki/claims/{target-claim}.md` — target claim current state: status, confidence, evidence list
-- `wiki/ideas/{linked-idea}.md` — linked idea current state
-- `wiki/experiments/*.md` — other experiments on the same claim (aggregate assessment)
-- `wiki/graph/context_brief.md` — global context
-- `.claude/skills/shared-references/cross-model-review.md` — reviewer independence principle
+### Đọc
 
-### Writes
-- `wiki/claims/{target-claim}.md` — update status, confidence, evidence, date_updated
-- `wiki/ideas/{linked-idea}.md` — update status, pilot_result, failure_reason, date_resolved
-- `wiki/experiments/{slug}.md` — fill in `## Claim updates` section
-- `wiki/graph/edges.jsonl` — add supports or invalidates edges
-- `wiki/graph/context_brief.md` — rebuild
-- `wiki/graph/open_questions.md` — rebuild
-- `wiki/log.md` — append operation log
+- `wiki/experiments/{slug}.md` — kết quả thí nghiệm: outcome, key_result, metrics, toàn bộ phần Kết Quả
+- `wiki/claims/{target-claim}.md` — trạng thái hiện tại của khẳng định mục tiêu: status, confidence, danh sách evidence
+- `wiki/ideas/{linked-idea}.md` — trạng thái hiện tại của ý tưởng liên kết
+- `wiki/experiments/*.md` — các thí nghiệm khác trên cùng khẳng định (đánh giá tổng hợp)
+- `wiki/graph/context_brief.md` — ngữ cảnh toàn cục
+- `.claude/skills/shared-references/cross-model-review.md` — nguyên tắc độc lập của người đánh giá
 
-### Graph edges created
-- `supports`: experiment → claim (experiment supports the claim) — verdict = supported or partially_supported
-- `invalidates`: experiment → claim (experiment refutes the claim) — verdict = not_supported
+### Ghi
 
-## Workflow
+- `wiki/claims/{target-claim}.md` — cập nhật status, confidence, evidence, date_updated
+- `wiki/ideas/{linked-idea}.md` — cập nhật status, pilot_result, failure_reason, date_resolved
+- `wiki/experiments/{slug}.md` — điền phần `## Cập Nhật Khẳng Định`
+- `wiki/graph/edges.jsonl` — thêm các cạnh supports hoặc invalidates
+- `wiki/graph/context_brief.md` — xây dựng lại
+- `wiki/graph/open_questions.md` — xây dựng lại
+- `wiki/log.md` — thêm nhật ký hoạt động
 
-**Precondition**:
-1. Confirm working directory is the wiki project root (directory containing `wiki/`, `raw/`, `tools/`)
-2. Confirm experiment status == `completed` (incomplete experiments cannot be evaluated)
+### Các cạnh đồ thị được tạo
 
-### Step 1: Load Context
+- `supports`: thí nghiệm → khẳng định (thí nghiệm hỗ trợ khẳng định) — phán quyết = supported hoặc partially_supported
+- `invalidates`: thí nghiệm → khẳng định (thí nghiệm bác bỏ khẳng định) — phán quyết = not_supported
 
-1. **Read experiment page** `wiki/experiments/{slug}.md`:
+## Quy Trình Làm Việc
+
+**Điều kiện tiên quyết**:
+1. Xác nhận thư mục làm việc là thư mục gốc dự án wiki (thư mục chứa `wiki/`, `raw/`, `tools/`)
+2. Xác nhận trạng thái thí nghiệm == `completed` (các thí nghiệm chưa hoàn thành không thể đánh giá)
+
+### Bước 1: Tải Ngữ Cảnh
+
+1. **Đọc trang thí nghiệm** `wiki/experiments/{slug}.md`:
    - outcome (succeeded/failed/inconclusive)
    - key_result
-   - target_claim slug
-   - linked_idea slug
-   - metrics and full Results section
+   - slug target_claim
+   - slug linked_idea
+   - metrics và toàn bộ phần Kết Quả
    - hypothesis
 
-2. **Read target claim** `wiki/claims/{target-claim}.md`:
-   - Current status and confidence
-   - Existing evidence list
-   - Conditions and scope
+2. **Đọc khẳng định mục tiêu** `wiki/claims/{target-claim}.md`:
+   - Trạng thái và độ tin cậy hiện tại
+   - Danh sách bằng chứng hiện có
+   - Điều kiện và phạm vi
 
-3. **Read linked idea** `wiki/ideas/{linked-idea}.md` (if it exists):
-   - Current status
-   - Hypothesis
+3. **Đọc ý tưởng liên kết** `wiki/ideas/{linked-idea}.md` (nếu tồn tại):
+   - Trạng thái hiện tại
+   - Giả thuyết
 
-4. **Load other experiments on the same claim**:
-   - Glob: `wiki/experiments/*.md`, filter target_claim == same claim
-   - Summarize existing experiment results (for aggregate claim confidence assessment)
+4. **Tải các thí nghiệm khác trên cùng khẳng định**:
+   - Glob: `wiki/experiments/*.md`, lọc target_claim == cùng khẳng định
+   - Tóm tắt kết quả thí nghiệm hiện có (để đánh giá độ tin cậy tổng hợp của khẳng định)
 
-5. **Read global context**:
+5. **Đọc ngữ cảnh toàn cục**:
    - `wiki/graph/context_brief.md`
 
-6. **Read cross-model-review.md**: confirm Review LLM independence principle
+6. **Đọc cross-model-review.md**: xác nhận nguyên tắc độc lập của Review LLM
 
-### Step 2: Review LLM Verdict (Cross-Model Verdict)
+### Bước 2: Phán Quyết Review LLM (Phán Quyết Chéo Mô Hình)
 
-**Follow cross-model-review.md**: do not send Claude's pre-judgment to Review LLM.
+**Tuân theo cross-model-review.md**: không gửi đánh giá trước của Claude đến Review LLM.
 
 ```
 mcp__llm-review__chat:
-  system: "You are an impartial scientific judge evaluating whether experimental
-           results support or refute a research claim. Be rigorous and objective.
-           Consider: statistical significance, effect size, experimental validity,
-           potential confounds, and whether the results generalize beyond the
-           specific setup tested."
+  system: "Bạn là một giám khảo khoa học công bằng đánh giá liệu kết quả thí nghiệm
+           có hỗ trợ hay bác bỏ một khẳng định nghiên cứu hay không. Hãy nghiêm ngặt và khách quan.
+           Xem xét: ý nghĩa thống kê, kích thước hiệu ứng, tính hợp lệ của thí nghiệm,
+           các yếu tố gây nhiễu tiềm ẩn, và liệu kết quả có thể khái quát hóa ngoài
+           thiết lập cụ thể được kiểm tra hay không."
   message: |
-    ## Claim Under Test
-    Title: {claim title}
-    Statement: {claim statement from ## Statement section}
-    Current status: {status}
-    Current confidence: {confidence}
-    Conditions: {conditions and scope}
+    ## Khẳng Định Đang Kiểm Tra
+    Tiêu đề: {tiêu đề khẳng định}
+    Phát biểu: {phát biểu khẳng định từ phần ## Phát biểu}
+    Trạng thái hiện tại: {status}
+    Độ tin cậy hiện tại: {confidence}
+    Điều kiện: {điều kiện và phạm vi}
 
-    ## Experiment
-    Title: {experiment title}
-    Hypothesis: {hypothesis}
-    Setup: {model, dataset, hardware, framework}
-    Metrics: {metrics list}
+    ## Thí Nghiệm
+    Tiêu đề: {tiêu đề thí nghiệm}
+    Giả thuyết: {hypothesis}
+    Thiết lập: {mô hình, tập dữ liệu, phần cứng, framework}
+    Chỉ số: {danh sách chỉ số}
 
-    ## Results
-    {full Results section from experiment page}
+    ## Kết Quả
+    {toàn bộ phần Kết Quả từ trang thí nghiệm}
 
-    ## Key Finding
+    ## Phát Hiện Chính
     {key_result}
 
-    ## Other Experiments on This Claim
-    {summary of other experiments' outcomes on the same claim, if any}
+    ## Các Thí Nghiệm Khác Trên Khẳng Định Này
+    {tóm tắt kết quả của các thí nghiệm khác trên cùng khẳng định, nếu có}
 
-    ## Your Task
-    Provide your verdict:
-    1. **Verdict**: One of: supported / partially_supported / not_supported / inconclusive
-    2. **Confidence adjustment**: Suggest new confidence value (0.0-1.0) with reasoning
-    3. **Evidence strength**: weak / moderate / strong
-    4. **Key reasoning**: 2-3 sentences explaining your verdict
-    5. **Concerns**: Any methodological concerns or limitations
-    6. **Suggested next steps**: What would strengthen or clarify this result?
+    ## Nhiệm Vụ Của Bạn
+    Đưa ra phán quyết của bạn:
+    1. **Phán quyết**: Một trong: supported / partially_supported / not_supported / inconclusive
+    2. **Điều chỉnh độ tin cậy**: Đề xuất giá trị độ tin cậy mới (0.0-1.0) kèm lý do
+    3. **Độ mạnh bằng chứng**: weak / moderate / strong
+    4. **Lý luận chính**: 2-3 câu giải thích phán quyết của bạn
+    5. **Mối quan ngại**: Bất kỳ mối quan ngại về phương pháp hoặc hạn chế nào
+    6. **Gợi ý bước tiếp theo**: Điều gì sẽ củng cố hoặc làm rõ kết quả này?
 ```
 
-Record Review LLM's verdict.
+Ghi lại phán quyết của Review LLM.
 
-### Step 3: Claude Synthesis
+### Bước 3: Tổng Hợp Claude
 
-1. **Form Claude's independent verdict** (after reading Review LLM's verdict, Claude also analyzes independently):
-   - Based on experimental results, claim context, and aggregate evidence from other experiments
-   - Form Claude's own verdict and confidence suggestion
+1. **Hình thành phán quyết độc lập của Claude** (sau khi đọc phán quyết của Review LLM, Claude cũng phân tích độc lập):
+   - Dựa trên kết quả thí nghiệm, ngữ cảnh khẳng định và bằng chứng tổng hợp từ các thí nghiệm khác
+   - Hình thành phán quyết và đề xuất độ tin cậy của riêng Claude
 
-2. **Synthesize both verdicts** (follow cross-model-review.md composing rules):
-   - **Both agree** (same verdict): use that verdict, average the confidence, high certainty
-   - **Both disagree**:
-     - Explicitly flag the disagreement
-     - Take the more conservative verdict (supported > partially_supported > not_supported)
-     - Use the lower confidence value
-     - Detail the disagreement reason in the report
-   - **Fatal findings take priority**: if either party finds a methodological issue (data leakage, unfair comparison), that finding takes precedence
+2. **Tổng hợp cả hai phán quyết** (tuân theo quy tắc tổng hợp trong cross-model-review.md):
+   - **Cả hai đồng ý** (cùng phán quyết): sử dụng phán quyết đó, lấy trung bình độ tin cậy, độ chắc chắn cao
+   - **Cả hai không đồng ý**:
+     - Gắn cờ rõ ràng về sự không đồng ý
+     - Lấy phán quyết thận trọng hơn (supported > partially_supported > not_supported)
+     - Sử dụng giá trị độ tin cậy thấp hơn
+     - Chi tiết lý do không đồng ý trong báo cáo
+   - **Phát hiện nghiêm trọng được ưu tiên**: nếu một trong hai bên phát hiện vấn đề phương pháp (rò rỉ dữ liệu, so sánh không công bằng), phát hiện đó được ưu tiên
 
-3. **Determine final verdict**: verdict + new_confidence + evidence_strength
+3. **Xác định phán quyết cuối cùng**: phán quyết + new_confidence + evidence_strength
 
-### Step 4: Update Wiki Based on Verdict
+### Bước 4: Cập Nhật Wiki Dựa Trên Phán Quyết
 
-**If `--auto` is not set**: display verdict and planned changes first, wait for user confirmation.
+**Nếu `--auto` không được thiết lập**: hiển thị phán quyết và các thay đổi dự kiến trước, chờ xác nhận của người dùng.
 
-#### Path A: SUPPORTED (experiment supports claim)
+#### Đường dẫn A: SUPPORTED (thí nghiệm hỗ trợ khẳng định)
 
-1. **Update claim**:
-   - confidence: ↑ adjust to new value (typically +0.1~0.3)
-   - status: adjust based on new confidence
+1. **Cập nhật khẳng định**:
+   - confidence: ↑ điều chỉnh đến giá trị mới (thường +0.1~0.3)
+   - status: điều chỉnh dựa trên độ tin cậy mới
      - confidence >= 0.7 → `supported`
      - confidence 0.4–0.7 → `weakly_supported`
-   - evidence: append new entry `{source: experiment-slug, type: supports, strength: strong/moderate, detail: key_result}`
-   - date_updated: today's date
+   - evidence: thêm mục mới `{source: experiment-slug, type: supports, strength: strong/moderate, detail: key_result}`
+   - date_updated: ngày hôm nay
 
-2. **Update idea** (if it exists and status is in_progress/tested):
-   - If all linked claims are supported/weakly_supported:
+2. **Cập nhật ý tưởng** (nếu tồn tại và trạng thái là in_progress/tested):
+   - Nếu tất cả các khẳng định liên kết đều supported/weakly_supported:
      - status: `validated`
-     - pilot_result: key_result summary
-     - date_resolved: today's date
+     - pilot_result: tóm tắt key_result
+     - date_resolved: ngày hôm nay
 
-3. **Add graph edge**:
+3. **Thêm cạnh đồ thị**:
    ```bash
    python3 tools/research_wiki.py add-edge wiki/ \
      --from "experiments/{slug}" --to "claims/{target-claim}" \
      --type supports --evidence "{key_result}"
    ```
 
-4. **Suggest next steps**: `/paper-plan` or continue ablation/robustness experiments
+4. **Gợi ý bước tiếp theo**: `/paper-plan` hoặc tiếp tục các thí nghiệm ablation/robustness
 
-#### Path B: PARTIALLY_SUPPORTED (partial support)
+#### Đường dẫn B: PARTIALLY_SUPPORTED (hỗ trợ một phần)
 
-1. **Update claim**:
-   - confidence: minor adjustment (+0.05~0.15)
-   - evidence: append `{type: supports, strength: weak, detail: ...}`
-   - date_updated: today's date
+1. **Cập nhật khẳng định**:
+   - confidence: điều chỉnh nhỏ (+0.05~0.15)
+   - evidence: thêm `{type: supports, strength: weak, detail: ...}`
+   - date_updated: ngày hôm nay
 
-2. **Add graph edge**:
+2. **Thêm cạnh đồ thị**:
    ```bash
    python3 tools/research_wiki.py add-edge wiki/ \
      --from "experiments/{slug}" --to "claims/{target-claim}" \
-     --type supports --evidence "Partially supported: {limitation}"
+     --type supports --evidence "Hỗ trợ một phần: {hạn chế}"
    ```
 
-3. **Suggest supplementary experiments**:
-   - Specify what evidence is missing
-   - Suggest using `/exp-design` to design supplementary experiments
-   - If Review LLM-flagged concerns are addressable by experiment, suggest concrete experiment direction
+3. **Gợi ý thí nghiệm bổ sung**:
+   - Chỉ rõ bằng chứng nào còn thiếu
+   - Đề xuất sử dụng `/exp-design` để thiết kế các thí nghiệm bổ sung
+   - Nếu các mối quan ngại do Review LLM gắn cờ có thể giải quyết bằng thí nghiệm, đề xuất hướng thí nghiệm cụ thể
 
-4. **Idea status unchanged**: keep in_progress, wait for more evidence
+4. **Trạng thái ý tưởng không thay đổi**: giữ in_progress, chờ thêm bằng chứng
 
-#### Path C: NOT_SUPPORTED (experiment does not support claim)
+#### Đường dẫn C: NOT_SUPPORTED (thí nghiệm không hỗ trợ khẳng định)
 
-1. **Update claim**:
-   - confidence: ↓ significantly lower (typically -0.2~0.4)
-   - status: if confidence < 0.3 → `challenged`
-   - evidence: append `{type: invalidates, strength: strong/moderate, detail: ...}`
-   - date_updated: today's date
+1. **Cập nhật khẳng định**:
+   - confidence: ↓ giảm đáng kể (thường -0.2~0.4)
+   - status: nếu confidence < 0.3 → `challenged`
+   - evidence: thêm `{type: invalidates, strength: strong/moderate, detail: ...}`
+   - date_updated: ngày hôm nay
 
-2. **Update idea** (if it exists):
+2. **Cập nhật ý tưởng** (nếu tồn tại):
    - status: `failed`
-   - failure_reason: specific reason for failure (extracted from experiment results and Review LLM analysis)
-   - date_resolved: today's date
-   - Note: failure_reason is anti-repetition memory — must be written clearly, explaining why it failed
+   - failure_reason: lý do cụ thể cho thất bại (trích xuất từ kết quả thí nghiệm và phân tích của Review LLM)
+   - date_resolved: ngày hôm nay
+   - Lưu ý: failure_reason là bộ nhớ chống lặp lại — phải được viết rõ ràng, giải thích tại sao thất bại
 
-3. **Add graph edge**:
+3. **Thêm cạnh đồ thị**:
    ```bash
    python3 tools/research_wiki.py add-edge wiki/ \
      --from "experiments/{slug}" --to "claims/{target-claim}" \
      --type invalidates --evidence "{failure_reason}"
    ```
 
-4. **Suggest next steps**:
-   - Analyze the failure reason
-   - Consider pivoting (new idea addressing the same gap while avoiding the known failure)
-   - Suggest `/ideate` to generate alternatives
+4. **Gợi ý bước tiếp theo**:
+   - Phân tích lý do thất bại
+   - Cân nhắc thay đổi hướng (ý tưởng mới giải quyết cùng khoảng trống nhưng tránh thất bại đã biết)
+   - Đề xuất `/ideate` để tạo các phương án thay thế
 
-#### Path D: INCONCLUSIVE (results are uncertain)
+#### Đường dẫn D: INCONCLUSIVE (kết quả không rõ ràng)
 
-1. **Do not modify claim status/confidence**: insufficient evidence to make a judgment
+1. **Không sửa đổi trạng thái/độ tin cậy của khẳng định**: bằng chứng không đủ để đưa ra phán quyết
 
-2. **Update experiment page**: outcome is already inconclusive (set by /exp-run)
+2. **Cập nhật trang thí nghiệm**: outcome đã là inconclusive (được thiết lập bởi /exp-run)
 
-3. **Suggest debugging**:
-   - Data issue? Implementation bug? Wrong metric?
-   - Too much variance? More seeds needed?
-   - Experiment setup not aligned with claim?
+3. **Gợi ý gỡ lỗi**:
+   - Vấn đề dữ liệu? Lỗi triển khai? Chỉ số sai?
+   - Phương sai quá lớn? Cần thêm seed?
+   - Thiết lập thí nghiệm không phù hợp với khẳng định?
 
-4. **Idea status unchanged**: keep current status
+4. **Trạng thái ý tưởng không thay đổi**: giữ trạng thái hiện tại
 
-#### All Paths (common steps)
+#### Tất Cả Đường Dẫn (các bước chung)
 
-1. **Fill in `## Claim updates` section of the experiment page**:
+1. **Điền phần `## Cập Nhật Khẳng Định` của trang thí nghiệm**:
    ```markdown
-   ## Claim updates
-   - **Verdict**: {supported/partially_supported/not_supported/inconclusive}
-   - **Claim**: [[{target-claim}]] confidence {old} → {new}
-   - **Judge agreement**: {Claude and Review LLM agreed / disagreed on ...}
-   - **Date**: YYYY-MM-DD
+   ## Cập Nhật Khẳng Định
+   - **Phán quyết**: {supported/partially_supported/not_supported/inconclusive}
+   - **Khẳng định**: [[{target-claim}]] độ tin cậy {old} → {new}
+   - **Sự đồng thuận của giám khảo**: {Claude và Review LLM đồng ý / không đồng ý về ...}
+   - **Ngày**: YYYY-MM-DD
    ```
 
-2. **Update index.md** (if claim status changed)
+2. **Cập nhật index.md** (nếu trạng thái khẳng định thay đổi)
 
-3. **Rebuild derived data**:
+3. **Xây dựng lại dữ liệu phái sinh**:
    ```bash
    python3 tools/research_wiki.py rebuild-context-brief wiki/
    python3 tools/research_wiki.py rebuild-open-questions wiki/
    ```
 
-4. **Append log**:
+4. **Thêm nhật ký**:
    ```bash
    python3 tools/research_wiki.py log wiki/ \
-     "exp-eval | {slug} → {target-claim} | verdict: {verdict} | confidence: {old}→{new}"
+     "exp-eval | {slug} → {target-claim} | phán quyết: {verdict} | độ tin cậy: {old}→{new}"
    ```
 
-5. **Print VERDICT_REPORT to terminal**:
+5. **In VERDICT_REPORT ra terminal**:
    ```markdown
-   # Verdict Report: {experiment title}
+   # Báo Cáo Phán Quyết: {tiêu đề thí nghiệm}
 
-   ## Verdict: {SUPPORTED / PARTIALLY_SUPPORTED / NOT_SUPPORTED / INCONCLUSIVE}
+   ## Phán Quyết: {SUPPORTED / PARTIALLY_SUPPORTED / NOT_SUPPORTED / INCONCLUSIVE}
 
-   ## Judge Assessment
-   | | Claude | Review LLM | Final |
+   ## Đánh Giá Của Giám Khảo
+   | | Claude | Review LLM | Cuối cùng |
    |---|-------|------|-------|
-   | Verdict | {verdict} | {verdict} | {verdict} |
-   | Confidence | {value} | {value} | {value} |
-   | Evidence strength | {strength} | {strength} | {strength} |
+   | Phán quyết | {verdict} | {verdict} | {verdict} |
+   | Độ tin cậy | {value} | {value} | {value} |
+   | Độ mạnh bằng chứng | {strength} | {strength} | {strength} |
 
-   ## Key Reasoning
-   {2-3 sentences from Review LLM + Claude synthesis}
+   ## Lý Luận Chính
+   {2-3 câu từ tổng hợp Review LLM + Claude}
 
-   ## Wiki Changes
-   | Entity | Field | Before | After |
+   ## Thay Đổi Wiki
+   | Thực thể | Trường | Trước | Sau |
    |--------|-------|--------|-------|
    | claims/{slug} | confidence | {old} | {new} |
    | claims/{slug} | status | {old} | {new} |
    | ideas/{slug} | status | {old} | {new} |
 
-   ## Graph Edges Added
+   ## Các Cạnh Đồ Thị Được Thêm
    - experiments/{slug} → claims/{target} (supports/invalidates)
 
-   ## Concerns
-   {methodological concerns from Review LLM}
+   ## Mối Quan Ngại
+   {các mối quan ngại về phương pháp từ Review LLM}
 
-   ## Next Steps
-   - {path-specific suggestions}
+   ## Bước Tiếp Theo
+   - {gợi ý cụ thể theo đường dẫn}
 
-   ## Wiki Growth
-   | Metric | Before | After | Delta |
+   ## Tăng Trưởng Wiki
+   | Chỉ số | Trước | Sau | Chênh lệch |
    |--------|--------|-------|-------|
-   | Claims updated | — | — | {N} |
-   | Edges | {before} | {after} | +{delta} |
-   | Maturity | {level} | {level} | {unchanged/upgraded} |
-   (Data from comparing `python3 tools/research_wiki.py maturity wiki/ --json` calls at the start of Step 1 and end of Step 4.)
+   | Khẳng định được cập nhật | — | — | {N} |
+   | Cạnh | {before} | {after} | +{delta} |
+   | Độ trưởng thành | {level} | {level} | {không thay đổi/nâng cấp} |
+   (Dữ liệu từ so sánh lệnh `python3 tools/research_wiki.py maturity wiki/ --json` ở đầu Bước 1 và cuối Bước 4.)
    ```
 
-## Constraints
+## Các Ràng Buộc
 
-- **Only process completed experiments**: experiments with status != completed are refused; prompt user to use /exp-run first
-- **Reviewer independence**: strictly follow cross-model-review.md — do not send Claude's pre-judgment to Review LLM
-- **Confidence range 0.0–1.0**: updated confidence must not exceed this range
-- **failure_reason must be specific**: the not_supported path's failure_reason cannot be vague (e.g. "experiment failed") — must state the concrete reason
-- **Do not delete claims**: even when not_supported, only challenge or lower confidence; do not delete the claim page. In extreme cases (multiple consistent refutations, confidence → 0), set status to deprecated rather than deleting
-- **Graph edges via tools/research_wiki.py**: do not manually edit edges.jsonl
-- **Conservative principle**: when Claude and Review LLM verdicts disagree, use the more conservative verdict
-- **Idea status advances only forward**: proposed → in_progress → tested → validated/failed, irreversible
-- **Assess claim using all experiments**: consider not just the current experiment but also other experiments on the same claim
+- **Chỉ xử lý các thí nghiệm đã hoàn thành**: từ chối các thí nghiệm có trạng thái != completed; nhắc người dùng sử dụng /exp-run trước
+- **Tính độc lập của người đánh giá**: tuân thủ nghiêm ngặt cross-model-review.md — không gửi đánh giá trước của Claude đến Review LLM
+- **Phạm vi độ tin cậy 0.0–1.0**: độ tin cậy cập nhật không được vượt quá phạm vi này
+- **failure_reason phải cụ thể**: failure_reason của đường dẫn not_supported không được mơ hồ (ví dụ: "thí nghiệm thất bại") — phải nêu lý do cụ thể
+- **Không xóa khẳng định**: ngay cả khi not_supported, chỉ thách thức hoặc giảm độ tin cậy; không xóa trang khẳng định. Trong trường hợp cực đoan (nhiều bác bỏ nhất quán, độ tin cậy → 0), đặt trạng thái là deprecated thay vì xóa
+- **Các cạnh đồ thị thông qua tools/research_wiki.py**: không chỉnh sửa thủ công edges.jsonl
+- **Nguyên tắc thận trọng**: khi phán quyết của Claude và Review LLM không đồng ý, sử dụng phán quyết thận trọng hơn
+- **Trạng thái ý tưởng chỉ tiến về phía trước**: proposed → in_progress → tested → validated/failed, không thể đảo ngược
+- **Đánh giá khẳng định bằng tất cả các thí nghiệm**: xem xét không chỉ thí nghiệm hiện tại mà còn các thí nghiệm khác trên cùng khẳng định
 
-## Error Handling
+## Xử Lý Lỗi
 
-- **Experiment not found**: prompt user to check slug, list candidates in wiki/experiments/ with status=completed
-- **Experiment not completed**: report status, suggest running `/exp-run {slug}` or `/exp-run {slug} --check`
-- **Target claim does not exist**: create new claim page (status: proposed, confidence: 0.3), note "auto-created by exp-eval"
-- **Linked idea does not exist**: skip idea update, only update claim, note in report
-- **Review LLM unavailable**: fall back to Claude single-model verdict, note "single-model verdict, cross-model verification unavailable" in report, suggest user confirm later
-- **Claim was modified by another experiment**: read the latest state, make adjustments based on current confidence (do not overwrite other experiments' contributions)
-- **Results data missing**: if the experiment page's Results section is empty, prompt user to run `/exp-run {slug} --check` first
+- **Không tìm thấy thí nghiệm**: nhắc người dùng kiểm tra slug, liệt kê các ứng viên trong wiki/experiments/ với status=completed
+- **Thí nghiệm chưa hoàn thành**: báo cáo trạng thái, đề xuất chạy `/exp-run {slug}` hoặc `/exp-run {slug} --check`
+- **Khẳng định mục tiêu không tồn tại**: tạo trang khẳng định mới (trạng thái: proposed, độ tin cậy: 0.3), ghi chú "tự động tạo bởi exp-eval"
+- **Ý tưởng liên kết không tồn tại**: bỏ qua cập nhật ý tưởng, chỉ cập nhật khẳng định, ghi chú trong báo cáo
+- **Review LLM không khả dụng**: chuyển sang phán quyết một mô hình của Claude, ghi chú "phán quyết một mô hình, xác minh chéo mô hình không khả dụng" trong báo cáo, đề xuất người dùng xác nhận sau
+- **Khẳng định đã được sửa đổi bởi thí nghiệm khác**: đọc trạng thái mới nhất, điều chỉnh dựa trên độ tin cậy hiện tại (không ghi đè đóng góp của các thí nghiệm khác)
+- **Thiếu dữ liệu kết quả**: nếu phần Kết Quả của trang thí nghiệm trống, nhắc người dùng chạy `/exp-run {slug} --check` trước
 
-## Dependencies
+## Phụ Thuộc
 
-### Tools（via Bash）
-- `python3 tools/research_wiki.py add-edge wiki/ ...` — add graph edge
-- `python3 tools/research_wiki.py rebuild-context-brief wiki/` — rebuild query_pack
-- `python3 tools/research_wiki.py rebuild-open-questions wiki/` — rebuild gap_map
-- `python3 tools/research_wiki.py log wiki/ "<message>"` — append log
+### Công cụ (thông qua Bash)
 
-### MCP Servers
-- `mcp__llm-review__chat` — Step 2 Review LLM independent verdict
+- `python3 tools/research_wiki.py add-edge wiki/ ...` — thêm cạnh đồ thị
+- `python3 tools/research_wiki.py rebuild-context-brief wiki/` — xây dựng lại query_pack
+- `python3 tools/research_wiki.py rebuild-open-questions wiki/` — xây dựng lại gap_map
+- `python3 tools/research_wiki.py log wiki/ "<message>"` — thêm nhật ký
 
-### Claude Code Native
-- `Read` — read wiki pages
-- `Glob` — find other experiments on the same claim
-- `Edit` — update wiki pages
+### Máy Chủ MCP
 
-### Shared References
-- `.claude/skills/shared-references/cross-model-review.md` — Review LLM independence principle (required reading)
+- `mcp__llm-review__chat` — Bước 2 phán quyết độc lập của Review LLM
 
-### Called by
-- `/research` Stage 4 (verdict and iteration stage)
-- User directly
+### Claude Code Gốc
+
+- `Read` — đọc các trang wiki
+- `Glob` — tìm các thí nghiệm khác trên cùng khẳng định
+- `Edit` — cập nhật các trang wiki
+
+### Tài Liệu Tham Khảo Chung
+
+- `.claude/skills/shared-references/cross-model-review.md` — nguyên tắc độc lập của Review LLM (bắt buộc đọc)
+
+### Được Gọi Bởi
+
+- `/research` Giai đoạn 4 (giai đoạn phán quyết và lặp lại)
+- Người dùng trực tiếp

@@ -1,203 +1,206 @@
 ---
-description: Claim-driven experiment design — scope target claims → design experiment blocks (baseline/validation/ablation/robustness) → build run order → optional Review LLM review → write to wiki
-argument-hint: <idea-slug-or-hypothesis> [--review] [--budget <gpu-hours>]
+description: Thiết kế thí nghiệm dựa trên khẳng định — xác định phạm vi các khẳng định mục tiêu → thiết kế các khối thí nghiệm (baseline/validation/ablation/robustness) → xây dựng thứ tự chạy → tùy chọn đánh giá Review LLM → ghi vào wiki
+argument-hint: "<slug-ý-tưởng-hoặc-giả-thuyết> [--review] [--budget <giờ-GPU>]"
 ---
 
 # /exp-design
 
-> Given an idea (or a free-text hypothesis), design a complete experiment plan.
-> Claims are the core: scope the claims to validate across three dimensions — Target, Decomposition, and Threats.
-> Design four types of experiment blocks: baseline (reproduce baseline), validation (core verification), ablation (factor isolation), and robustness (stress testing).
-> Experiments are ordered by dependency with decision gates between stages (sanity fail → early stop).
-> Optional Review LLM review checks experiment plan completeness. All experiments are written to wiki/experiments/ with graph edges.
+> Dựa trên một ý tưởng (hoặc một giả thuyết dạng văn bản tự do), thiết kế một kế hoạch thí nghiệm hoàn chỉnh.
+> Khẳng định là cốt lõi: xác định phạm vi các khẳng định cần xác thực trên ba chiều — Mục tiêu, Phân rã và Mối đe dọa.
+> Thiết kế bốn loại khối thí nghiệm: baseline (tái tạo baseline), validation (xác minh cốt lõi), ablation (cô lập yếu tố), và robustness (kiểm tra độ bền).
+> Các thí nghiệm được sắp xếp theo thứ tự phụ thuộc với các cổng quyết định giữa các giai đoạn (thất bại kiểm tra tính hợp lý → dừng sớm).
+> Tùy chọn đánh giá Review LLM để kiểm tra tính đầy đủ của kế hoạch thí nghiệm. Tất cả các thí nghiệm được ghi vào wiki/experiments/ với các cạnh đồ thị.
 
-## Inputs
+## Đầu Vào
 
-- `idea`: one of:
-  - A slug from wiki/ideas/ (e.g. `sparse-lora-for-edge-devices`)
-  - A free-text hypothesis description (provide the experiment goal directly)
-- `--review` (optional): enable Review LLM review to check experiment plan completeness
-- `--budget <gpu-hours>` (optional): total compute budget cap (GPU hours), affects robustness experiment scope
+- `idea`: một trong các mục sau:
+  - Một slug từ wiki/ideas/ (ví dụ: `sparse-lora-for-edge-devices`)
+  - Mô tả giả thuyết dạng văn bản tự do (cung cấp mục tiêu thí nghiệm trực tiếp)
+- `--review` *(tùy chọn)*: kích hoạt đánh giá Review LLM để kiểm tra tính đầy đủ của kế hoạch thí nghiệm
+- `--budget <giờ-GPU>` *(tùy chọn)*: giới hạn tổng ngân sách tính toán (giờ GPU), ảnh hưởng đến phạm vi thí nghiệm robustness
 
-## Outputs
+## Đầu Ra
 
-- `wiki/experiments/{slug}.md` — one page per experiment block (status: planned)
-- `wiki/graph/edges.jsonl` — new tested_by edges: experiment → claim
-- `wiki/ideas/{slug}.md` — updated linked_experiments field
-- `wiki/graph/context_brief.md` — rebuilt
-- `wiki/graph/open_questions.md` — rebuilt
-- `wiki/log.md` — appended log entry
-- **EXPERIMENT_PLAN_REPORT** (printed to terminal) — experiment block summary, run order, compute budget
+- `wiki/experiments/{slug}.md` — một trang cho mỗi khối thí nghiệm (trạng thái: planned)
+- `wiki/graph/edges.jsonl` — các cạnh tested_by mới: thí nghiệm → khẳng định
+- `wiki/ideas/{slug}.md` — cập nhật trường linked_experiments
+- `wiki/graph/context_brief.md` — xây dựng lại
+- `wiki/graph/open_questions.md` — xây dựng lại
+- `wiki/log.md` — thêm mục nhật ký
+- **EXPERIMENT_PLAN_REPORT** *(in ra terminal)* — tóm tắt khối thí nghiệm, thứ tự chạy, ngân sách tính toán
 
-## Wiki Interaction
+## Tương Tác Wiki
 
-### Reads
-- `wiki/ideas/{slug}.md` — idea's hypothesis, approach, risks, origin_gaps
-- `wiki/claims/*.md` — target claims' current status, existing evidence, confidence
-- `wiki/experiments/*.md` — existing experiments (avoid duplicate designs, reference setup configs)
-- `wiki/papers/*.md` — related papers' baselines and experiment setups
-- `wiki/concepts/*.md` — relevant technical concepts (guide experiment design)
-- `wiki/graph/context_brief.md` — global context
-- `wiki/graph/open_questions.md` — knowledge gaps (guide experiment priority)
+### Đọc
 
-### Writes
-- `wiki/experiments/{slug}.md` — create experiment pages (one per experiment block)
-- `wiki/ideas/{slug}.md` — update linked_experiments field
-- `wiki/graph/edges.jsonl` — add tested_by edges
-- `wiki/graph/context_brief.md` — rebuild
-- `wiki/graph/open_questions.md` — rebuild
-- `wiki/log.md` — append operation log
+- `wiki/ideas/{slug}.md` — giả thuyết, cách tiếp cận, rủi ro, origin_gaps của ý tưởng
+- `wiki/claims/*.md` — trạng thái hiện tại, bằng chứng hiện có, độ tin cậy của các khẳng định mục tiêu
+- `wiki/experiments/*.md` — các thí nghiệm hiện có (tránh thiết kế trùng lặp, tham khảo cấu hình thiết lập)
+- `wiki/papers/*.md` — các bài báo liên quan với baseline và thiết lập thí nghiệm
+- `wiki/concepts/*.md` — các khái niệm kỹ thuật liên quan (hướng dẫn thiết kế thí nghiệm)
+- `wiki/graph/context_brief.md` — ngữ cảnh toàn cục
+- `wiki/graph/open_questions.md` — các khoảng trống kiến thức (hướng dẫn ưu tiên thí nghiệm)
 
-### Graph edges created
-- `tested_by`: claim → experiment (the claim is validated by this experiment)
+### Ghi
 
-## Workflow
+- `wiki/experiments/{slug}.md` — tạo trang thí nghiệm (một trang cho mỗi khối thí nghiệm)
+- `wiki/ideas/{slug}.md` — cập nhật trường linked_experiments
+- `wiki/graph/edges.jsonl` — thêm các cạnh tested_by
+- `wiki/graph/context_brief.md` — xây dựng lại
+- `wiki/graph/open_questions.md` — xây dựng lại
+- `wiki/log.md` — thêm mục nhật ký hoạt động
 
-**Precondition**: confirm working directory is the wiki project root (directory containing `wiki/`, `raw/`, `tools/`).
+### Các cạnh đồ thị được tạo
 
-### Step 1: Load Context
+- `tested_by`: khẳng định → thí nghiệm (khẳng định được xác thực bởi thí nghiệm này)
 
-1. **Parse idea input**:
-   - If slug: read `wiki/ideas/{slug}.md`, extract `## Motivation`, `## Hypothesis`, `## Approach sketch`, `## Risks`, and the frontmatter fields `origin_gaps`, `tags`, `domain`, `priority` (per CLAUDE.md ideas template)
-   - If free text: use directly as the hypothesis description
-2. **Load relevant wiki context**:
-   - Read `wiki/graph/context_brief.md` (global context)
-   - Read `wiki/graph/open_questions.md` (knowledge gaps)
-   - From the idea's `origin_gaps`, read the corresponding `wiki/claims/*.md` (target claims)
-   - From each target claim's `source_papers` field, read the corresponding `wiki/papers/*.md` for baseline setups and prior experiment protocols — this is the canonical path from idea → claim → paper (ideas do **not** carry a `linked_papers` field; use `origin_gaps` → `source_papers` instead)
-   - Read existing `wiki/experiments/*.md` to check for similar experiments
-3. **If idea has no origin_gaps**: extract implied claims from the hypothesis description; search wiki/claims/ or flag as needing new claim creation
+## Quy Trình Làm Việc
 
-### Step 2: Scope Claims
+**Điều kiện tiên quyết**: xác nhận thư mục làm việc là thư mục gốc dự án wiki (thư mục chứa `wiki/`, `raw/`, `tools/`).
 
-Scope the claims for this experiment plan across three dimensions. For each dimension, search wiki/claims/ for existing claims first; if none exist, create a new claim (status: proposed, confidence: 0.3).
+### Bước 1: Tải Ngữ Cảnh
 
-1. **Target** (what to validate):
-   - The claim corresponding to the idea's core hypothesis — the primary target this experiment plan directly validates
-   - Typically 1, at most 2
-2. **Decomposition** (what to decompose):
-   - Individual contribution claims for each independent factor in the method
-   - One claim per factor, used to design isolation experiments
-3. **Threats** (what could falsify us):
-   - Known risks, alternative explanations, boundary conditions
-   - Sources: counter-evidence in wiki, paper limitations, open questions in claims
-   - Guides robustness experiment design
+1. **Phân tích đầu vào ý tưởng**:
+   - Nếu là slug: đọc `wiki/ideas/{slug}.md`, trích xuất `## Motivation`, `## Hypothesis`, `## Approach sketch`, `## Risks`, và các trường frontmatter `origin_gaps`, `tags`, `domain`, `priority` (theo mẫu ý tưởng trong CLAUDE.md)
+   - Nếu là văn bản tự do: sử dụng trực tiếp như mô tả giả thuyết
+2. **Tải ngữ cảnh wiki liên quan**:
+   - Đọc `wiki/graph/context_brief.md` (ngữ cảnh toàn cục)
+   - Đọc `wiki/graph/open_questions.md` (các khoảng trống kiến thức)
+   - Từ `origin_gaps` của ý tưởng, đọc các `wiki/claims/*.md` tương ứng (các khẳng định mục tiêu)
+   - Từ trường `source_papers` của mỗi khẳng định mục tiêu, đọc các `wiki/papers/*.md` tương ứng để lấy thiết lập baseline và giao thức thí nghiệm trước đó — đây là đường dẫn chính tắc từ ý tưởng → khẳng định → bài báo (ý tưởng **không** mang trường `linked_papers`; sử dụng `origin_gaps` → `source_papers` thay thế)
+   - Đọc các `wiki/experiments/*.md` hiện có để kiểm tra các thí nghiệm tương tự
+3. **Nếu ý tưởng không có origin_gaps**: trích xuất các khẳng định ngụ ý từ mô tả giả thuyết; tìm kiếm trong wiki/claims/ hoặc gắn cờ cần tạo khẳng định mới
 
-Output: scoped claims list (slug list + dimension annotation + current status/confidence for each claim)
+### Bước 2: Xác Định Phạm Vi Khẳng Định
 
-### Step 3: Design Experiment Blocks
+Xác định phạm vi các khẳng định cho kế hoạch thí nghiệm này trên ba chiều. Đối với mỗi chiều, tìm kiếm trong wiki/claims/ các khẳng định hiện có trước; nếu không có, tạo khẳng định mới (trạng thái: proposed, độ tin cậy: 0.3).
 
-Design experiment blocks for each scoped claim. Four types:
+1. **Mục tiêu** *(cần xác thực gì)*:
+   - Khẳng định tương ứng với giả thuyết cốt lõi của ý tưởng — mục tiêu chính mà kế hoạch thí nghiệm này trực tiếp xác thực
+   - Thông thường là 1, tối đa 2
+2. **Phân rã** *(cần phân rã gì)*:
+   - Các khẳng định đóng góp riêng lẻ cho từng yếu tố độc lập trong phương pháp
+   - Một khẳng định cho mỗi yếu tố, dùng để thiết kế các thí nghiệm cô lập
+3. **Mối đe dọa** *(điều gì có thể bác bỏ chúng ta)*:
+   - Các rủi ro đã biết, giải thích thay thế, điều kiện biên
+   - Nguồn: bằng chứng phản bác trong wiki, hạn chế của bài báo, câu hỏi mở trong khẳng định
+   - Hướng dẫn thiết kế thí nghiệm robustness
 
-**A. Baseline experiments (reproduce baseline)**:
-- Purpose: confirm the problem exists and the baseline is reproducible
-- Reproduce the core experiment from the most relevant paper
-- Success criterion: baseline results deviate < 5% from reported paper values (this threshold is the same one used by the Stage 1 decision gate below — do not introduce a different number elsewhere)
-- Compute: typically minimal
+Đầu ra: danh sách các khẳng định đã xác định phạm vi (danh sách slug + chú thích chiều + trạng thái/độ tin cậy hiện tại cho mỗi khẳng định)
 
-**B. Validation experiments (validate Target claim)**:
-- Purpose: validate the core contribution on top of the baseline
-- Metrics: statistically significant improvement over baseline
-- Requires sufficient seed/run count for reliability (recommend >= 3 seeds)
-- Compute: moderate
+### Bước 3: Thiết Kế Các Khối Thí Nghiệm
 
-**C. Ablation experiments (validate Decomposition claims)**:
-- Purpose: isolate the contribution of each independent factor
-- Each ablation removes one factor and validates the resulting performance drop
-- N factors → N ablation experiments
-- Compute: similar to validation × N
+Thiết kế các khối thí nghiệm cho từng khẳng định đã xác định phạm vi. Bốn loại:
 
-**D. Robustness experiments (rule out Threats)**:
-- Purpose: rule out known risks and alternative explanations; verify the method holds under varied conditions
-- Variation dimensions: model size, dataset, hyperparameters, domain
-- Test at least 2 variation dimensions
-- Compute: depends on --budget
+**A. Thí nghiệm baseline (tái tạo baseline)**:
+- Mục đích: xác nhận vấn đề tồn tại và baseline có thể tái tạo được
+- Tái tạo thí nghiệm cốt lõi từ bài báo liên quan nhất
+- Tiêu chí thành công: kết quả baseline sai lệch < 5% so với giá trị báo cáo trong bài báo (ngưỡng này giống với ngưỡng được sử dụng bởi cổng quyết định Giai đoạn 1 bên dưới — không đưa ra số khác ở nơi khác)
+- Tính toán: thường là tối thiểu
 
-Each experiment block includes:
-- `title`: descriptive title
-- `target_claim`: corresponding claim slug
-- `hypothesis`: specific hypothesis the experiment tests
+**B. Thí nghiệm validation (xác minh khẳng định Mục tiêu)**:
+- Mục đích: xác thực đóng góp cốt lõi trên baseline
+- Chỉ số: cải thiện có ý nghĩa thống kê so với baseline
+- Yêu cầu đủ số lượng seed/lần chạy để đảm bảo độ tin cậy (khuyến nghị >= 3 seeds)
+- Tính toán: trung bình
+
+**C. Thí nghiệm ablation (xác minh các khẳng định Phân rã)**:
+- Mục đích: cô lập đóng góp của từng yếu tố độc lập
+- Mỗi ablation loại bỏ một yếu tố và xác thực sự giảm hiệu suất kết quả
+- N yếu tố → N thí nghiệm ablation
+- Tính toán: tương tự validation × N
+
+**D. Thí nghiệm robustness (loại trừ các Mối đe dọa)**:
+- Mục đích: loại trừ các rủi ro đã biết và giải thích thay thế; xác minh phương pháp vẫn hiệu quả trong các điều kiện khác nhau
+- Các chiều biến đổi: kích thước mô hình, tập dữ liệu, siêu tham số, lĩnh vực
+- Kiểm tra ít nhất 2 chiều biến đổi
+- Tính toán: phụ thuộc vào --budget
+
+Mỗi khối thí nghiệm bao gồm:
+- `title`: tiêu đề mô tả
+- `target_claim`: slug khẳng định tương ứng
+- `hypothesis`: giả thuyết cụ thể mà thí nghiệm kiểm tra
 - `type`: baseline / validation / ablation / robustness
-- `setup`: model, dataset, hardware, framework
-- `metrics`: list of evaluation metrics
-- `baseline`: comparison baseline
-- `success_criterion`: explicit pass/fail criterion
-- `estimated_gpu_hours`: estimated compute time
-- `seeds`: number of random seeds (recommend >= 3)
+- `setup`: mô hình, tập dữ liệu, phần cứng, framework
+- `metrics`: danh sách các chỉ số đánh giá
+- `baseline`: baseline so sánh
+- `success_criterion`: tiêu chí thành công/ thất bại rõ ràng
+- `estimated_gpu_hours`: thời gian tính toán ước tính
+- `seeds`: số lượng seed ngẫu nhiên (khuyến nghị >= 3)
 
-### Step 4: Build Run Order
+### Bước 4: Xây Dựng Thứ Tự Chạy
 
-Sort experiments by dependency and set decision gates:
+Sắp xếp các thí nghiệm theo thứ tự phụ thuộc và thiết lập các cổng quyết định:
 
 ```
-Stage 0: Sanity check
-  └── Small-scale run (1 epoch / 100 steps) to verify no code bugs, data loads, GPU available, loss decreasing
-  └── Gate: sanity fails → stop, fix code
+Giai đoạn 0: Kiểm tra tính hợp lý
+  └── Chạy quy mô nhỏ (1 epoch / 100 bước) để xác minh không có lỗi code, dữ liệu tải được, GPU khả dụng, loss giảm
+  └── Cổng: thất bại kiểm tra tính hợp lý → dừng, sửa code
 
-Stage 1: Baseline (reproduce baseline)
-  └── Reproduce baseline results
-  └── Gate: baseline deviation > 5% → stop, check implementation (same threshold as Step 3 success criterion)
+Giai đoạn 1: Baseline (tái tạo baseline)
+  └── Tái tạo kết quả baseline
+  └── Cổng: độ lệch baseline > 5% → dừng, kiểm tra triển khai (ngưỡng giống với tiêu chí thành công ở Bước 3)
 
-Stage 2: Validation (core verification)
-  └── Validate core method on top of baseline
-  └── Gate: no improvement → stop, analyze reason (idea may not hold)
+Giai đoạn 2: Validation (xác minh cốt lõi)
+  └── Xác thực phương pháp cốt lõi trên baseline
+  └── Cổng: không cải thiện → dừng, phân tích lý do (ý tưởng có thể không đúng)
 
-Stage 3: Ablation (factor isolation)
-  └── Multiple ablations can run in parallel
-  └── Gate: if a factor ablation shows no effect → record it, but continue other ablations
+Giai đoạn 3: Ablation (cô lập yếu tố)
+  └── Nhiều ablation có thể chạy song song
+  └── Cổng: nếu một ablation yếu tố không có tác dụng → ghi lại, nhưng tiếp tục các ablation khác
 
-Stage 4: Robustness (robustness verification)
-  └── Only execute after Stage 2 succeeds
-  └── Scope determined by remaining --budget
+Giai đoạn 4: Robustness (xác minh độ bền)
+  └── Chỉ thực hiện sau khi Giai đoạn 2 thành công
+  └── Phạm vi được xác định bởi ngân sách --budget còn lại
 ```
 
-Output:
-- Ordered experiment list (with dependencies)
-- Decision gate conditions for each stage
-- Total compute budget estimate (if exceeding --budget, adjust Stage 4 scope)
+Đầu ra:
+- Danh sách thí nghiệm đã sắp xếp (với các phụ thuộc)
+- Điều kiện cổng quyết định cho mỗi giai đoạn
+- Ước tính tổng ngân sách tính toán (nếu vượt quá --budget, điều chỉnh phạm vi Giai đoạn 4)
 
-### Step 5: Optional Review LLM Review (--review)
+### Bước 5: Đánh Giá Review LLM Tùy Chọn (--review)
 
-If `--review` is specified:
+Nếu `--review` được chỉ định:
 
 ```
 mcp__llm-review__chat:
-  system: "You are a senior ML researcher reviewing an experiment plan.
-           Focus on: missing baselines, missing ablations, unfair comparisons,
-           statistical rigor (enough seeds?), and dataset selection.
-           For every issue found, suggest a concrete fix."
+  system: "Bạn là một nhà nghiên cứu ML cao cấp đang đánh giá kế hoạch thí nghiệm.
+           Tập trung vào: thiếu baseline, thiếu ablation, so sánh không công bằng,
+           độ chặt chẽ thống kê (đủ seed?), và lựa chọn tập dữ liệu.
+           Đối với mỗi vấn đề phát hiện, đề xuất một giải pháp cụ thể."
   message: |
-    ## Experiment Plan
-    {complete experiment plan: claims, blocks, run order, budgets}
+    ## Kế Hoạch Thí Nghiệm
+    {kế hoạch thí nghiệm hoàn chỉnh: khẳng định, khối, thứ tự chạy, ngân sách}
 
-    ## Context
-    {target claims with current status, related papers' experiment setups}
+    ## Ngữ Cảnh
+    {các khẳng định mục tiêu với trạng thái hiện tại, thiết lập thí nghiệm của các bài báo liên quan}
 
-    ## Review Questions
-    1. Are any critical experiments missing?
-    2. Are the baselines fair and comprehensive?
-    3. Is the ablation design sufficient to isolate each contribution?
-    4. Are the success criteria well-defined and reasonable?
-    5. Any statistical concerns (sample size, variance, seeds)?
+    ## Câu Hỏi Đánh Giá
+    1. Có thiếu thí nghiệm quan trọng nào không?
+    2. Các baseline có công bằng và toàn diện không?
+    3. Thiết kế ablation có đủ để cô lập từng đóng góp không?
+    4. Các tiêu chí thành công có được định nghĩa rõ ràng và hợp lý không?
+    5. Có vấn đề thống kê nào không (kích thước mẫu, phương sai, seed)?"
 ```
 
-Revise the experiment plan based on Review LLM feedback (add missing experiments, correct unreasonable criteria).
+Sửa đổi kế hoạch thí nghiệm dựa trên phản hồi của Review LLM (thêm thí nghiệm thiếu, điều chỉnh tiêu chí không hợp lý).
 
-### Step 6: Write to Wiki
+### Bước 6: Ghi Vào Wiki
 
-1. **Create experiment pages**:
-   For each experiment block:
+1. **Tạo trang thí nghiệm**:
+   Đối với mỗi khối thí nghiệm:
    ```bash
-   python3 tools/research_wiki.py slug "<experiment-title>"
+   python3 tools/research_wiki.py slug "<tiêu-đề-thí-nghiệm>"
    ```
-   Create `wiki/experiments/{slug}.md`:
-   Create `wiki/experiments/{slug}.md` following the **CLAUDE.md experiments template exactly** — every field below must be present even if empty, because `/exp-run` later uses `tools/research_wiki.py set-meta` to update them, and `set-meta` refuses to create fields that don't already exist in the frontmatter (it only updates existing keys):
+   Tạo `wiki/experiments/{slug}.md`:
+   Tạo `wiki/experiments/{slug}.md` theo **mẫu experiments trong CLAUDE.md chính xác** — mọi trường dưới đây phải có mặt ngay cả khi trống, vì `/exp-run` sau này sử dụng `tools/research_wiki.py set-meta` để cập nhật chúng, và `set-meta` từ chối tạo các trường không tồn tại trong frontmatter (chỉ cập nhật các khóa đã tồn tại):
    ```yaml
    ---
    title: ""
    slug: ""
    status: planned
-   target_claim: ""          # claim slug
+   target_claim: ""          # slug khẳng định
    hypothesis: ""
    tags: []
    domain: ""
@@ -208,15 +211,15 @@ Revise the experiment plan based on Review LLM feedback (add missing experiments
      framework: ""
    metrics: []
    baseline: ""
-   outcome: ""                # empty until /exp-run Phase 4 — succeeded | failed | inconclusive
-   key_result: ""             # empty until /exp-run Phase 4
-   linked_idea: "{idea-slug}" # MANDATORY: the source idea slug (reverse link to wiki/ideas/{idea-slug}.md linked_experiments)
+   outcome: ""                # trống cho đến /exp-run Giai đoạn 4 — succeeded | failed | inconclusive
+   key_result: ""             # trống cho đến /exp-run Giai đoạn 4
+   linked_idea: "{idea-slug}" # BẮT BUỘC: slug ý tưởng nguồn (liên kết ngược đến wiki/ideas/{idea-slug}.md linked_experiments)
    date_planned: YYYY-MM-DD
-   date_completed: ""         # empty until /exp-run Phase 4
-   run_log: ""                # empty until /exp-run Phase 2
-   started: ""                # empty until /exp-run Phase 2 (ISO timestamp, set via set-meta)
-   estimated_hours: 0         # 0 until /exp-run Phase 2 (set via set-meta)
-   remote:                    # full block must exist so /exp-run --env remote can populate sub-fields via Edit
+   date_completed: ""         # trống cho đến /exp-run Giai đoạn 4
+   run_log: ""                # trống cho đến /exp-run Giai đoạn 2
+   started: ""                # trống cho đến /exp-run Giai đoạn 2 (dấu thời gian ISO, thiết lập qua set-meta)
+   estimated_hours: 0         # 0 cho đến /exp-run Giai đoạn 2 (thiết lập qua set-meta)
+   remote:                    # toàn bộ khối phải tồn tại để /exp-run --env remote có thể điền các trường con qua Edit
      server: ""
      gpu: ""
      session: ""
@@ -224,135 +227,140 @@ Revise the experiment plan based on Review LLM feedback (add missing experiments
      completed: ""
    ---
 
-   ## Objective
-   {what this experiment proves}
+   ## Mục Tiêu
+   {mục đích của thí nghiệm này}
 
-   ## Setup
-   {detailed setup: model, dataset, hardware, hyperparameters}
+   ## Thiết Lập
+   {thiết lập chi tiết: mô hình, tập dữ liệu, phần cứng, siêu tham số}
 
-   ## Procedure
-   {step-by-step execution plan}
+   ## Quy Trình
+   {kế hoạch thực hiện từng bước}
 
-   ## Results
-   (to be filled after /exp-run)
+   ## Kết Quả
+   (sẽ được điền sau /exp-run)
 
-   ## Analysis
-   (to be filled after /exp-run)
+   ## Phân Tích
+   (sẽ được điền sau /exp-run)
 
-   ## Claim updates
-   (to be filled after /exp-eval)
+   ## Cập Nhật Khẳng Định
+   (sẽ được điền sau /exp-eval)
 
-   ## Follow-up
-   {contingency plans: what to do if success / failure}
+   ## Tiếp Theo
+   {kế hoạch dự phòng: làm gì nếu thành công / thất bại}
    ```
 
-2. **Create new claims (if missing claims were identified in Step 2)**:
+2. **Tạo khẳng định mới (nếu các khẳng định thiếu được xác định ở Bước 2)**:
    ```bash
-   python3 tools/research_wiki.py slug "<claim-title>"
+   python3 tools/research_wiki.py slug "<tiêu-đề-khẳng-định>"
    ```
-   Create `wiki/claims/{slug}.md` (status: proposed, confidence: 0.3)
+   Tạo `wiki/claims/{slug}.md` (trạng thái: proposed, độ tin cậy: 0.3)
 
-3. **Add graph edges**:
+3. **Thêm cạnh đồ thị**:
    ```bash
-   # For each experiment → target claim
+   # Đối với mỗi thí nghiệm → khẳng định mục tiêu
    python3 tools/research_wiki.py add-edge wiki/ \
      --from "claims/{target-claim}" --to "experiments/{slug}" \
-     --type tested_by --evidence "Designed by /exp-design"
+     --type tested_by --evidence "Được thiết kế bởi /exp-design"
    ```
 
-4. **Update idea page** (if idea came from wiki):
-   - Append all new experiment slugs to `linked_experiments` in `wiki/ideas/{idea-slug}.md`
-   - If idea status is `proposed`, update to `in_progress`
+4. **Cập nhật trang ý tưởng** (nếu ý tưởng đến từ wiki):
+   - Thêm tất cả các slug thí nghiệm mới vào `linked_experiments` trong `wiki/ideas/{idea-slug}.md`
+   - Nếu trạng thái ý tưởng là `proposed`, cập nhật thành `in_progress`
 
-5. **Update index.md**: append entries under the experiments and claims (if new) categories
+5. **Cập nhật index.md**: thêm mục vào các danh mục experiments và claims (nếu mới)
 
-6. **Rebuild derived data**:
+6. **Xây dựng lại dữ liệu phái sinh**:
    ```bash
    python3 tools/research_wiki.py rebuild-context-brief wiki/
    python3 tools/research_wiki.py rebuild-open-questions wiki/
    ```
 
-7. **Append log**:
+7. **Thêm nhật ký**:
    ```bash
    python3 tools/research_wiki.py log wiki/ \
-     "exp-design | {N} experiments designed for idea {slug} | claims: {claim-list}"
+     "exp-design | {N} thí nghiệm được thiết kế cho ý tưởng {slug} | khẳng định: {danh-sách-khẳng-định}"
    ```
 
-8. **Print EXPERIMENT_PLAN_REPORT to terminal**:
+8. **In EXPERIMENT_PLAN_REPORT ra terminal**:
    ```markdown
-   # Experiment Plan Report
+   # Báo Cáo Kế Hoạch Thí Nghiệm
 
-   ## Target Idea
-   - Idea: [[idea-slug]]
-   - Hypothesis: {hypothesis}
+   ## Ý Tưởng Mục Tiêu
+   - Ý tưởng: [[idea-slug]]
+   - Giả thuyết: {giả thuyết}
 
-   ## Scoped Claims
-   | Claim | Current status | Confidence | Dimension |
+   ## Các Khẳng Định Được Xác Định Phạm Vi
+   | Khẳng định | Trạng thái hiện tại | Độ tin cậy | Chiều |
    |-------|---------------|------------|-----------|
-   | [[claim-slug]] | proposed | 0.3 | target |
-   | [[claim-slug]] | weakly_supported | 0.5 | decomposition |
+   | [[claim-slug]] | proposed | 0.3 | mục tiêu |
+   | [[claim-slug]] | weakly_supported | 0.5 | phân rã |
 
-   ## Experiment Blocks
-   | # | Experiment | Type | Claim | GPU-hrs | Stage |
+   ## Các Khối Thí Nghiệm
+   | # | Thí nghiệm | Loại | Khẳng định | Giờ-GPU | Giai đoạn |
    |---|-----------|------|-------|---------|-------|
    | 1 | [[baseline-slug]] | baseline | — | 2 | 1 |
-   | 2 | [[validation-slug]] | validation | target | 8 | 2 |
-   | 3 | [[ablation-1-slug]] | ablation | decomposition-1 | 8 | 3 |
-   | 4 | [[robustness-slug]] | robustness | target | 16 | 4 |
+   | 2 | [[validation-slug]] | validation | mục tiêu | 8 | 2 |
+   | 3 | [[ablation-1-slug]] | ablation | phân-rã-1 | 8 | 3 |
+   | 4 | [[robustness-slug]] | robustness | mục tiêu | 16 | 4 |
 
-   ## Run Order
-   Stage 0: Sanity → Stage 1: Baseline → Stage 2: Validation → Stage 3: Ablation → Stage 4: Robustness
-   Decision gates at each stage boundary.
+   ## Thứ Tự Chạy
+   Giai đoạn 0: Kiểm tra tính hợp lý → Giai đoạn 1: Baseline → Giai đoạn 2: Validation → Giai đoạn 3: Ablation → Giai đoạn 4: Robustness
+   Cổng quyết định tại ranh giới mỗi giai đoạn.
 
-   ## Budget
-   - Total estimated: {N} GPU-hours
-   - Budget limit: {--budget or "unlimited"}
+   ## Ngân Sách
+   - Tổng ước tính: {N} giờ-GPU
+   - Giới hạn ngân sách: {--budget hoặc "không giới hạn"}
 
-   ## Next Steps
-   - Run `/exp-run [[baseline-slug]]` to start Stage 1
-   - After each stage, run `/exp-eval` to update wiki
+   ## Các Bước Tiếp Theo
+   - Chạy `/exp-run [[baseline-slug]]` để bắt đầu Giai đoạn 1
+   - Sau mỗi giai đoạn, chạy `/exp-eval` để cập nhật wiki
    ```
 
-## Constraints
+## Các Ràng Buộc
 
-- **Every experiment must be linked to a claim**: `target_claim` cannot be empty (baseline experiments may link to the Target claim)
-- **No duplicate experiments**: before creating, check wiki/experiments/ for existing experiments with the same target_claim + hypothesis
-- **Scoped claims are not modified**: claims scoped in Step 2 are not updated for status/confidence during this plan — only /exp-eval may update them
-- **Success criteria must be quantified**: each experiment block's success criterion must include a specific number (e.g. "> 2% accuracy improvement")
-- **At least 3 seeds**: experiments requiring statistical reliability (validation, ablation) must specify >= 3 random seeds
-- **Graph edges via tools/research_wiki.py**: do not manually edit edges.jsonl
-- **Idea status advances only forward**: proposed → in_progress, irreversible
-- **Slug uniqueness**: check for existing slug before creating
+- **Mỗi thí nghiệm phải liên kết đến một khẳng định**: `target_claim` không được để trống (các thí nghiệm baseline có thể liên kết đến khẳng định Mục tiêu)
+- **Không trùng lặp thí nghiệm**: trước khi tạo, kiểm tra wiki/experiments/ để tìm các thí nghiệm hiện có với cùng target_claim + hypothesis
+- **Các khẳng định được xác định phạm vi không được sửa đổi**: các khẳng định được xác định phạm vi ở Bước 2 không được cập nhật trạng thái/độ tin cậy trong kế hoạch này — chỉ /exp-eval mới có thể cập nhật chúng
+- **Tiêu chí thành công phải được định lượng**: tiêu chí thành công của mỗi khối thí nghiệm phải bao gồm một con số cụ thể (ví dụ: "> 2% cải thiện độ chính xác")
+- **Ít nhất 3 seed**: các thí nghiệm yêu cầu độ tin cậy thống kê (validation, ablation) phải chỉ định >= 3 seed ngẫu nhiên
+- **Các cạnh đồ thị thông qua tools/research_wiki.py**: không chỉnh sửa thủ công edges.jsonl
+- **Trạng thái ý tưởng chỉ tiến về phía trước**: proposed → in_progress, không thể đảo ngược
+- **Độ duy nhất của slug**: kiểm tra slug hiện có trước khi tạo
 
-## Error Handling
+## Xử Lý Lỗi
 
-- **Idea not found**: prompt user to check slug, list candidates in wiki/ideas/
-- **Target claim does not exist**: auto-create new claim page (status: proposed, confidence: 0.3), flag in report
-- **Similar experiment already exists**: list existing experiments, ask user whether to add or skip
-- **Review LLM unavailable** (--review mode): skip Step 5, note "unreviewed — Review LLM unavailable" in report
-- **Budget insufficient**: reduce Stage 4 robustness experiment scope, note actual budget allocation in report
-- **Slug conflict**: append numeric suffix (e.g. `sparse-lora-ablation-v2`)
-- **Wiki is empty**: proceed normally but baseline experiments have no prior results to reference; recommend running /ingest for relevant papers first
+- **Không tìm thấy ý tưởng**: nhắc người dùng kiểm tra slug, liệt kê các ứng viên trong wiki/ideas/
+- **Khẳng định mục tiêu không tồn tại**: tự động tạo trang khẳng định mới (trạng thái: proposed, độ tin cậy: 0.3), gắn cờ trong báo cáo
+- **Thí nghiệm tương tự đã tồn tại**: liệt kê các thí nghiệm hiện có, hỏi người dùng có muốn thêm hay bỏ qua
+- **Review LLM không khả dụng** (chế độ --review): bỏ qua Bước 5, ghi chú "chưa được đánh giá — Review LLM không khả dụng" trong báo cáo
+- **Ngân sách không đủ**: giảm phạm vi thí nghiệm robustness ở Giai đoạn 4, ghi chú phân bổ ngân sách thực tế trong báo cáo
+- **Xung đột slug**: thêm hậu tố số (ví dụ: `sparse-lora-ablation-v2`)
+- **Wiki trống**: tiến hành bình thường nhưng các thí nghiệm baseline không có kết quả trước đó để tham khảo; khuyến nghị chạy /ingest cho các bài báo liên quan trước
 
-## Dependencies
+## Phụ Thuộc
 
-### Tools（via Bash）
-- `python3 tools/research_wiki.py slug "<title>"` — generate slug
-- `python3 tools/research_wiki.py add-edge wiki/ ...` — add graph edge
-- `python3 tools/research_wiki.py rebuild-context-brief wiki/` — rebuild query_pack
-- `python3 tools/research_wiki.py rebuild-open-questions wiki/` — rebuild gap_map
-- `python3 tools/research_wiki.py log wiki/ "<message>"` — append log
+### Công cụ (thông qua Bash)
 
-### MCP Servers
-- `mcp__llm-review__chat` — Step 5 experiment plan review (optional)
+- `python3 tools/research_wiki.py slug "<title>"` — tạo slug
+- `python3 tools/research_wiki.py add-edge wiki/ ...` — thêm cạnh đồ thị
+- `python3 tools/research_wiki.py rebuild-context-brief wiki/` — xây dựng lại query_pack
+- `python3 tools/research_wiki.py rebuild-open-questions wiki/` — xây dựng lại gap_map
+- `python3 tools/research_wiki.py log wiki/ "<message>"` — thêm nhật ký
 
-### Claude Code Native
-- `Read` — read wiki pages
-- `Glob` — find existing experiments and claims
+### Máy Chủ MCP
 
-### Shared References
-- `.claude/skills/shared-references/cross-model-review.md` — Step 5 Review LLM review independence (if enabled)
+- `mcp__llm-review__chat` — Bước 5 đánh giá kế hoạch thí nghiệm (tùy chọn)
 
-### Called by
-- `/research` Stage 2 (experiment design stage)
-- User directly
+### Claude Code Gốc
+
+- `Read` — đọc các trang wiki
+- `Glob` — tìm các thí nghiệm và khẳng định hiện có
+
+### Tài Liệu Tham Khảo Chung
+
+- `.claude/skills/shared-references/cross-model-review.md` — Bước 5 nguyên tắc độc lập đánh giá Review LLM (nếu được kích hoạt)
+
+### Được Gọi Bởi
+
+- `/research` Giai đoạn 2 (giai đoạn thiết kế thí nghiệm)
+- Người dùng trực tiếp

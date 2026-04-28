@@ -1,211 +1,211 @@
 ---
-description: Ask the wiki a question, retrieve and synthesize relevant pages, optionally crystallize the answer back into the wiki
-argument-hint: <question>
+description: Đặt câu hỏi cho wiki, truy xuất và tổng hợp các trang liên quan, tùy chọn kết tinh câu trả lời trở lại wiki
+argument-hint: <câu-hỏi>
 ---
 
 # /ask
 
-> Ask a question to the wiki knowledge base. The LLM reads context_brief.md for global context,
-> retrieves relevant pages, synthesizes an answer with citations. Good answers can be
-> crystallized back into the wiki — written to outputs/ or as new concept/claim pages —
-> so exploration compounds like ingestion does.
+> Đặt câu hỏi cho cơ sở tri thức wiki. LLM đọc context_brief.md để có ngữ cảnh toàn cục,
+> truy xuất các trang liên quan, tổng hợp câu trả lời với trích dẫn. Câu trả lời tốt có thể được
+> kết tinh trở lại wiki — ghi vào outputs/ hoặc dưới dạng trang concept/claim mới —
+> để việc khám phá tích lũy như việc ingest.
 
-## Inputs
+## Đầu Vào
 
-- `question`: natural-language question (e.g. "What is the core difference between LoRA and Adapter?")
-- `--crystallize` (optional): if specified, crystallize the answer back into the wiki (default: answer only, no write)
-- `--format` (optional): output format, default `markdown`, options: `table` / `timeline` / `bullets`
+- `question`: câu hỏi bằng ngôn ngữ tự nhiên (ví dụ: "Sự khác biệt cốt lõi giữa LoRA và Adapter là gì?")
+- `--crystallize` (tùy chọn): nếu được chỉ định, kết tinh câu trả lời trở lại wiki (mặc định: chỉ trả lời, không ghi)
+- `--format` (tùy chọn): định dạng đầu ra, mặc định `markdown`, tùy chọn: `table` / `timeline` / `bullets`
 
-## Outputs
+## Đầu Ra
 
-- **Always**: terminal output of synthesized answer (with `[[slug]]` citations)
-- **If crystallize**:
-  - `wiki/outputs/{query-slug}.md` — query result page (default crystallize target)
-  - or `wiki/concepts/{slug}.md` — if the answer reveals a new cross-paper concept
-  - or `wiki/claims/{slug}.md` — if the answer surfaces a new verifiable assertion
-  - updated `wiki/graph/edges.jsonl` (relationships produced by crystallize)
-  - updated `wiki/index.md` and `wiki/log.md`
+- **Luôn luôn**: đầu ra terminal của câu trả lời được tổng hợp (với trích dẫn `[[slug]]`)
+- **Nếu crystallize**:
+  - `wiki/outputs/{query-slug}.md` — trang kết quả truy vấn (mục tiêu kết tinh mặc định)
+  - hoặc `wiki/concepts/{slug}.md` — nếu câu trả lời tiết lộ một khái niệm xuyên bài báo mới
+  - hoặc `wiki/claims/{slug}.md` — nếu câu trả lời nổi lên một khẳng định có thể xác minh mới
+  - cập nhật `wiki/graph/edges.jsonl` (các mối quan hệ được tạo ra bởi crystallize)
+  - cập nhật `wiki/index.md` và `wiki/log.md`
 
-## Wiki Interaction
+## Tương Tác Wiki
 
-### Reads
-- `wiki/graph/context_brief.md` — global compressed context (claims, gaps, failed ideas, papers, edges)
-- `wiki/index.md` — page catalog for locating relevant pages
-- `wiki/graph/open_questions.md` — open questions, helps identify whether the question touches known gaps
-- `wiki/papers/*.md` — paper pages relevant to the question
-- `wiki/concepts/*.md` — concept pages relevant to the question
-- `wiki/claims/*.md` — claim pages relevant to the question
-- `wiki/topics/*.md` — topic pages relevant to the question
-- `wiki/people/*.md` — if the question involves specific researchers
-- `wiki/ideas/*.md` — if the question involves research ideas or failed ideas
-- `wiki/experiments/*.md` — if the question involves experiment results
-- `wiki/Summary/*.md` — if the question involves domain-wide landscape
+### Đọc
+- `wiki/graph/context_brief.md` — ngữ cảnh nén toàn cục (khẳng định, khoảng trống, ý tưởng thất bại, bài báo, cạnh)
+- `wiki/index.md` — danh mục trang để định vị các trang liên quan
+- `wiki/graph/open_questions.md` — câu hỏi mở, giúp xác định liệu câu hỏi có chạm đến các khoảng trống đã biết không
+- `wiki/papers/*.md` — các trang bài báo liên quan đến câu hỏi
+- `wiki/concepts/*.md` — các trang khái niệm liên quan đến câu hỏi
+- `wiki/claims/*.md` — các trang khẳng định liên quan đến câu hỏi
+- `wiki/topics/*.md` — các trang chủ đề liên quan đến câu hỏi
+- `wiki/people/*.md` — nếu câu hỏi liên quan đến các nhà nghiên cứu cụ thể
+- `wiki/ideas/*.md` — nếu câu hỏi liên quan đến ý tưởng nghiên cứu hoặc ý tưởng thất bại
+- `wiki/experiments/*.md` — nếu câu hỏi liên quan đến kết quả thí nghiệm
+- `wiki/Summary/*.md` — nếu câu hỏi liên quan đến cảnh quan toàn lĩnh vực
 
-### Writes (crystallize mode only)
-- `wiki/outputs/{query-slug}.md` — CREATE (query result page)
-- `wiki/concepts/{slug}.md` — CREATE (newly discovered concept) or EDIT (supplement existing concept)
-- `wiki/claims/{slug}.md` — CREATE (newly discovered assertion) or EDIT (add evidence)
-- `wiki/graph/edges.jsonl` — APPEND (relationships produced by crystallize)
-- `wiki/graph/context_brief.md` — REBUILD (if crystallize created new pages)
-- `wiki/graph/open_questions.md` — REBUILD (if crystallize created new pages)
-- `wiki/index.md` — EDIT (if crystallize created new pages)
-- `wiki/log.md` — APPEND
+### Ghi (chỉ chế độ crystallize)
+- `wiki/outputs/{query-slug}.md` — TẠO (trang kết quả truy vấn)
+- `wiki/concepts/{slug}.md` — TẠO (khái niệm mới được phát hiện) hoặc CHỈNH SỬA (bổ sung khái niệm hiện có)
+- `wiki/claims/{slug}.md` — TẠO (khẳng định mới được phát hiện) hoặc CHỈNH SỬA (thêm bằng chứng)
+- `wiki/graph/edges.jsonl` — THÊM (các mối quan hệ được tạo ra bởi crystallize)
+- `wiki/graph/context_brief.md` — XÂY DỰNG LẠI (nếu crystallize tạo ra các trang mới)
+- `wiki/graph/open_questions.md` — XÂY DỰNG LẠI (nếu crystallize tạo ra các trang mới)
+- `wiki/index.md` — CHỈNH SỬA (nếu crystallize tạo ra các trang mới)
+- `wiki/log.md` — THÊM
 
-### Graph edges created (crystallize only)
-- `output → paper`: `derived_from` (papers cited in the answer)
-- `output → concept`: `derived_from` (concepts cited in the answer)
-- `output → claim`: `derived_from` (claims cited in the answer)
-- `concept → paper`: `supports` (if a new concept is generalized from papers)
-- `claim → paper`: `supports` (if a new claim is extracted from papers)
+### Các cạnh đồ thị được tạo ra (chỉ crystallize)
+- `output → paper`: `derived_from` (các bài báo được trích dẫn trong câu trả lời)
+- `output → concept`: `derived_from` (các khái niệm được trích dẫn trong câu trả lời)
+- `output → claim`: `derived_from` (các khẳng định được trích dẫn trong câu trả lời)
+- `concept → paper`: `supports` (nếu một khái niệm mới được tổng quát hóa từ các bài báo)
+- `claim → paper`: `supports` (nếu một khẳng định mới được trích xuất từ các bài báo)
 
-## Workflow
+## Quy Trình Làm Việc
 
-**Precondition**: confirm working directory is the wiki project root (containing `wiki/`, `raw/`, `tools/`).
-Set `WIKI_ROOT=wiki/`.
+**Điều kiện tiên quyết**: xác nhận thư mục làm việc là thư mục gốc dự án wiki (chứa `wiki/`, `raw/`, `tools/`).
+Đặt `WIKI_ROOT=wiki/`.
 
-### Step 1: Load Global Context
+### Bước 1: Tải Ngữ Cảnh Toàn Cục
 
-1. Read `wiki/graph/context_brief.md` — get compressed snapshot of wiki's current knowledge (claims, gaps, papers, edges)
-2. Read `wiki/graph/open_questions.md` — understand known open questions and knowledge gaps
-3. If both are missing, rebuild first:
+1. Đọc `wiki/graph/context_brief.md` — lấy ảnh chụp nhanh nén của kiến thức hiện tại của wiki (khẳng định, khoảng trống, bài báo, cạnh)
+2. Đọc `wiki/graph/open_questions.md` — hiểu các câu hỏi mở đã biết và khoảng trống kiến thức
+3. Nếu cả hai đều thiếu, xây dựng lại trước:
    ```bash
    python3 tools/research_wiki.py rebuild-context-brief wiki/
    python3 tools/research_wiki.py rebuild-open-questions wiki/
    ```
 
-### Step 2: Retrieve Relevant Pages
+### Bước 2: Truy Xuất Các Trang Liên Quan
 
-1. Read `wiki/index.md`, match relevant slugs against question keywords
-2. Extract claims and papers semantically related to the question from context_brief.md
-3. Sort by relevance, select top-K pages (K ≤ 15 to avoid exceeding context window)
-4. Read full content of selected pages
-5. If the question involves relationships (e.g. "difference between X and Y"), additionally read edges connecting X and Y from `wiki/graph/edges.jsonl`
+1. Đọc `wiki/index.md`, khớp các slug liên quan với từ khóa câu hỏi
+2. Trích xuất các khẳng định và bài báo liên quan ngữ nghĩa đến câu hỏi từ context_brief.md
+3. Sắp xếp theo mức độ liên quan, chọn top-K trang (K ≤ 15 để tránh vượt quá cửa sổ ngữ cảnh)
+4. Đọc nội dung đầy đủ của các trang đã chọn
+5. Nếu câu hỏi liên quan đến mối quan hệ (ví dụ: "sự khác biệt giữa X và Y"), đọc thêm các cạnh kết nối X và Y từ `wiki/graph/edges.jsonl`
 
-### Step 3: Synthesize Answer
+### Bước 3: Tổng Hợp Câu Trả Lời
 
-1. Synthesize an answer to the user's question based on collected page content
-2. Answer requirements:
-   - **Cited**: every key claim must include a `[[slug]]` wikilink pointing to its source page
-   - **Structured**: organize output according to `--format` parameter (markdown / table / timeline / bullets)
-   - **Acknowledge uncertainty**: clearly flag "insufficient evidence in wiki" for parts with weak support
-   - **Flag knowledge gaps**: if the question touches a known gap in open_questions.md, call it out explicitly
-   - **Cite claim confidence**: when referencing claims, note their confidence and status
-3. If the question exceeds the wiki's current knowledge, honestly say so and suggest:
-   - which papers to ingest to fill the gap
-   - possible search directions (arXiv keywords, Semantic Scholar queries)
+1. Tổng hợp câu trả lời cho câu hỏi của người dùng dựa trên nội dung trang đã thu thập
+2. Yêu cầu câu trả lời:
+   - **Có trích dẫn**: mọi khẳng định chính phải bao gồm một wikilink `[[slug]]` trỏ đến trang nguồn của nó
+   - **Có cấu trúc**: tổ chức đầu ra theo tham số `--format` (markdown / table / timeline / bullets)
+   - **Thừa nhận sự không chắc chắn**: gắn cờ rõ ràng "bằng chứng không đủ trong wiki" cho các phần có hỗ trợ yếu
+   - **Gắn cờ khoảng trống kiến thức**: nếu câu hỏi chạm đến một khoảng trống đã biết trong open_questions.md, gọi nó ra một cách rõ ràng
+   - **Trích dẫn độ tin cậy của khẳng định**: khi tham chiếu các khẳng định, lưu ý độ tin cậy và trạng thái của chúng
+3. Nếu câu hỏi vượt quá kiến thức hiện tại của wiki, hãy nói thẳng và đề xuất:
+   - những bài báo nào cần ingest để lấp đầy khoảng trống
+   - các hướng tìm kiếm có thể (từ khóa arXiv, truy vấn Semantic Scholar)
 
-### Step 4: Assess Crystallize Value
+### Bước 4: Đánh Giá Giá Trị Crystallize
 
-1. Judge whether the answer is worth writing back to the wiki (make a recommendation even if `--crystallize` was not specified)
-2. Signals that crystallize is worthwhile:
-   - The answer synthesizes information from multiple papers, forming a new cross-paper insight
-   - The answer reveals a concept not yet explicitly recorded in the wiki
-   - The answer surfaces a new verifiable assertion (claim)
-   - The answer addresses a known gap in open_questions.md
-3. Signals that crystallize is not worthwhile:
-   - The answer merely restates the content of a single page
-   - The question is a simple factual lookup (e.g. "What year was LoRA published?")
-   - The answer relies primarily on inference rather than wiki evidence
-4. Append a crystallize recommendation at the end of the answer:
+1. Đánh giá liệu câu trả lời có đáng được ghi lại vào wiki không (đưa ra khuyến nghị ngay cả khi `--crystallize` không được chỉ định)
+2. Tín hiệu cho thấy crystallize đáng giá:
+   - Câu trả lời tổng hợp thông tin từ nhiều bài báo, hình thành một cái nhìn xuyên bài báo mới
+   - Câu trả lời tiết lộ một khái niệm chưa được ghi lại rõ ràng trong wiki
+   - Câu trả lời nổi lên một khẳng định có thể xác minh mới (claim)
+   - Câu trả lời giải quyết một khoảng trống đã biết trong open_questions.md
+3. Tín hiệu cho thấy crystallize không đáng giá:
+   - Câu trả lời chỉ đơn thuần trình bày lại nội dung của một trang duy nhất
+   - Câu hỏi là một tra cứu thực tế đơn giản (ví dụ: "LoRA được xuất bản năm nào?")
+   - Câu trả lời chủ yếu dựa vào suy luận hơn là bằng chứng wiki
+4. Thêm một khuyến nghị crystallize vào cuối câu trả lời:
    ```
-   💡 Crystallize recommendation: [worthwhile / not needed] — [reason]
+   💡 Khuyến nghị crystallize: [đáng giá / không cần thiết] — [lý do]
    ```
 
-### Step 5: Crystallize Back to Wiki (if user confirms or --crystallize was specified)
+### Bước 5: Kết Tinh Trở Lại Wiki (nếu người dùng xác nhận hoặc --crystallize được chỉ định)
 
-Choose the crystallize target based on answer content:
+Chọn mục tiêu crystallize dựa trên nội dung câu trả lời:
 
-**Case A — Write to outputs/ (default):**
-1. Generate slug: `python3 tools/research_wiki.py slug "<query-summary>"`
-2. Create `wiki/outputs/{query-slug}.md`:
+**Trường hợp A — Ghi vào outputs/ (mặc định):**
+1. Tạo slug: `python3 tools/research_wiki.py slug "<query-summary>"`
+2. Tạo `wiki/outputs/{query-slug}.md`:
    ```yaml
    ---
    title: ""
    slug: ""
-   query: ""           # original question
-   source_pages: []    # slugs of all pages cited in the answer
+   query: ""           # câu hỏi gốc
+   source_pages: []    # slug của tất cả các trang được trích dẫn trong câu trả lời
    date_created: YYYY-MM-DD
    ---
    ```
-   Body is the answer content (preserve wikilinks)
-3. Add a graph edge for each cited source page:
+   Nội dung là câu trả lời (giữ nguyên wikilinks)
+3. Thêm một cạnh đồ thị cho mỗi trang nguồn được trích dẫn:
    ```bash
    python3 tools/research_wiki.py add-edge wiki/ --from outputs/<slug> --to papers/<source-slug> --type derived_from --evidence "query answer"
    ```
 
-**Case B — Create new concept:**
-1. If the answer reveals a new concept: create `wiki/concepts/{slug}.md` using the CLAUDE.md concept template
+**Trường hợp B — Tạo khái niệm mới:**
+1. Nếu câu trả lời tiết lộ một khái niệm mới: tạo `wiki/concepts/{slug}.md` sử dụng mẫu concept trong CLAUDE.md
 2. maturity: emerging
-3. key_papers: extracted from answer citations
-4. Add graph edges (concept → papers)
-5. Append reverse links to relevant paper pages under `## Related`
+3. key_papers: trích xuất từ trích dẫn câu trả lời
+4. Thêm các cạnh đồ thị (concept → papers)
+5. Thêm liên kết ngược vào các trang bài báo liên quan dưới `## Related`
 
-**Case C — Create new claim:**
-1. If the answer surfaces a new assertion: create `wiki/claims/{slug}.md` using the CLAUDE.md claim template
-2. status: proposed (synthesized from query, not direct experimental evidence)
-3. confidence: set initial value based on strength of cited evidence
-4. source_papers: extracted from answer citations
-5. Add graph edges (claim → papers)
-6. Append reverse links to relevant paper pages under `## Related`
+**Trường hợp C — Tạo khẳng định mới:**
+1. Nếu câu trả lời nổi lên một khẳng định mới: tạo `wiki/claims/{slug}.md` sử dụng mẫu claim trong CLAUDE.md
+2. status: proposed (được tổng hợp từ truy vấn, không phải bằng chứng thí nghiệm trực tiếp)
+3. confidence: đặt giá trị ban đầu dựa trên sức mạnh của bằng chứng được trích dẫn
+4. source_papers: trích xuất từ trích dẫn câu trả lời
+5. Thêm các cạnh đồ thị (claim → papers)
+6. Thêm liên kết ngược vào các trang bài báo liên quan dưới `## Related`
 
-### Step 6: Update Navigation and Graph (crystallize only)
+### Bước 6: Cập Nhật Điều Hướng và Đồ Thị (chỉ crystallize)
 
-1. **index.md**: append new page entries under the appropriate category
+1. **index.md**: thêm các mục trang mới dưới danh mục thích hợp
 2. **log.md**:
    ```bash
    python3 tools/research_wiki.py log wiki/ "ask | <question-summary> | crystallized: <target-path>"
    ```
-   If not crystallized:
+   Nếu không crystallize:
    ```bash
    python3 tools/research_wiki.py log wiki/ "ask | <question-summary> | answer-only"
    ```
-3. **Rebuild derived graph files** (only if crystallize created new pages):
+3. **Xây dựng lại các tệp đồ thị phái sinh** (chỉ khi crystallize tạo ra các trang mới):
    ```bash
    python3 tools/research_wiki.py rebuild-context-brief wiki/
    python3 tools/research_wiki.py rebuild-open-questions wiki/
    ```
 
-### Step 7: Report to User
+### Bước 7: Báo Cáo Cho Người Dùng
 
-Output a summary including:
-- Number and list of retrieved pages
-- Answer (with citations and formatting)
-- Knowledge gap annotations (if any)
-- Crystallize recommendation or execution result
-- Follow-up suggestions (papers recommended for ingestion, related open questions)
+Xuất ra một bản tóm tắt bao gồm:
+- Số lượng và danh sách các trang đã truy xuất
+- Câu trả lời (với trích dẫn và định dạng)
+- Chú thích khoảng trống kiến thức (nếu có)
+- Khuyến nghị crystallize hoặc kết quả thực thi
+- Đề xuất tiếp theo (các bài báo được khuyến nghị để ingest, các câu hỏi mở liên quan)
 
-## Constraints
+## Các Ràng Buộc
 
-- **No fabrication**: answers must be grounded in actual wiki content; do not invent from LLM pre-training knowledge
-- **Citations must exist**: every `[[slug]]` must point to a page that actually exists in the wiki
-- **raw/ is read-only**: do not modify files under `raw/`
-- **graph/ only via tools**: do not hand-edit files under `graph/`
-- **Crystallize requires confirmation**: unless the user explicitly specifies `--crystallize`, only recommend but do not write
-- **Context limit**: retrieve at most 15 pages to stay within context window
-- **Cite claim confidence**: when referencing claims, always note their confidence value and status
-- **Flag gaps**: if the question touches a known gap in open_questions.md, explicitly call it out
-- **outputs/ frontmatter must include query and source_pages**: ensures traceability
+- **Không bịa đặt**: câu trả lời phải dựa trên nội dung wiki thực tế; không tự tạo từ kiến thức tiền huấn luyện của LLM
+- **Trích dẫn phải tồn tại**: mọi `[[slug]]` phải trỏ đến một trang thực sự tồn tại trong wiki
+- **raw/ là chỉ đọc**: không sửa đổi các tệp dưới `raw/`
+- **graph/ chỉ thông qua công cụ**: không chỉnh sửa thủ công các tệp dưới `graph/`
+- **Crystallize yêu cầu xác nhận**: trừ khi người dùng chỉ định rõ ràng `--crystallize`, chỉ khuyến nghị nhưng không ghi
+- **Giới hạn ngữ cảnh**: truy xuất tối đa 15 trang để ở trong cửa sổ ngữ cảnh
+- **Trích dẫn độ tin cậy của khẳng định**: khi tham chiếu các khẳng định, luôn lưu ý giá trị độ tin cậy và trạng thái của chúng
+- **Gắn cờ khoảng trống**: nếu câu hỏi chạm đến một khoảng trống đã biết trong open_questions.md, gọi nó ra một cách rõ ràng
+- **frontmatter của outputs/ phải bao gồm query và source_pages**: đảm bảo khả năng truy xuất nguồn gốc
 
-## Error Handling
+## Xử Lý Lỗi
 
-- **context_brief.md missing**: run `python3 tools/research_wiki.py rebuild-context-brief wiki/` to rebuild, then retry
-- **wiki is empty**: inform the user to first run `/init` or `/ingest` to build the knowledge base
-- **no matching pages**: honestly report that no relevant content exists in the wiki, suggest search and ingest directions
-- **crystallize slug conflict**: append a numeric suffix (e.g. `query-result-2`)
-- **index.md missing**: run `python3 tools/research_wiki.py init wiki/` to initialize, then retry
+- **context_brief.md thiếu**: chạy `python3 tools/research_wiki.py rebuild-context-brief wiki/` để xây dựng lại, sau đó thử lại
+- **wiki trống**: thông báo cho người dùng chạy `/init` hoặc `/ingest` trước để xây dựng cơ sở tri thức
+- **không có trang khớp**: báo cáo trung thực rằng không có nội dung liên quan trong wiki, đề xuất hướng tìm kiếm và ingest
+- **xung đột slug crystallize**: thêm hậu tố số (ví dụ: `query-result-2`)
+- **index.md thiếu**: chạy `python3 tools/research_wiki.py init wiki/` để khởi tạo, sau đó thử lại
 
-## Dependencies
+## Phụ Thuộc
 
-### Tools（via Bash）
-- `python3 tools/research_wiki.py slug "<title>"` — slug generation
-- `python3 tools/research_wiki.py add-edge wiki/ --from <id> --to <id> --type <type> --evidence "<text>"` — add graph edge
-- `python3 tools/research_wiki.py rebuild-context-brief wiki/` — rebuild compressed context
-- `python3 tools/research_wiki.py rebuild-open-questions wiki/` — rebuild knowledge gap map
-- `python3 tools/research_wiki.py log wiki/ "<message>"` — append log entry
-- `python3 tools/research_wiki.py init wiki/` — initialize wiki (fallback)
+### Công cụ (qua Bash)
+- `python3 tools/research_wiki.py slug "<title>"` — tạo slug
+- `python3 tools/research_wiki.py add-edge wiki/ --from <id> --to <id> --type <type> --evidence "<text>"` — thêm cạnh đồ thị
+- `python3 tools/research_wiki.py rebuild-context-brief wiki/` — xây dựng lại ngữ cảnh nén
+- `python3 tools/research_wiki.py rebuild-open-questions wiki/` — xây dựng lại bản đồ khoảng trống kiến thức
+- `python3 tools/research_wiki.py log wiki/ "<message>"` — thêm mục nhật ký
+- `python3 tools/research_wiki.py init wiki/` — khởi tạo wiki (dự phòng)
 
-### Skills（via Skill tool）
-- `/ingest` — referenced when suggesting the user supplement knowledge
+### Kỹ năng (qua công cụ Skill)
+- `/ingest` — được tham chiếu khi đề xuất người dùng bổ sung kiến thức
 
-### Shared References
-- `.claude/skills/shared-references/citation-verification.md` (created in Phase 3)
+### Tài liệu tham khảo chung
+- `.claude/skills/shared-references/citation-verification.md` (được tạo trong Giai đoạn 3)

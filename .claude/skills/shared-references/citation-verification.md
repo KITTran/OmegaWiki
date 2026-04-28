@@ -1,94 +1,94 @@
-# Citation Discipline
+# Kỷ Luật Trích Dẫn
 
-> Shared reference for all skills that generate citations: /paper-draft, /survey, /paper-plan.
-> Every citation in a OmegaWiki output must be **verifiable** — never LLM-generated.
+> Tài liệu tham khảo chung cho tất cả các kỹ năng tạo ra trích dẫn: /paper-draft, /survey, /paper-plan.
+> Mọi trích dẫn trong sản phẩm của ΩmegaWiki phải **có thể xác minh** — không bao giờ được tạo ra bởi AI.
 
 ---
 
-## Core Rule
+## Quy Tắc Cốt Lõi
 
-**BibTeX entries must come from authoritative sources, not from LLM memory.**
+**Các mục BibTeX phải đến từ các nguồn có thẩm quyền, không phải từ bộ nhớ của AI.**
 
-LLMs hallucinate citation details (wrong year, wrong venue, wrong authors, non-existent papers).
-The only acceptable sources for BibTeX are:
+AI thường tạo ra các chi tiết trích dẫn sai (năm sai, hội nghị sai, tác giả sai, bài báo không tồn tại).
+Các nguồn chấp nhận được cho BibTeX chỉ bao gồm:
 
-1. **DBLP** (`https://dblp.org/`) — primary source for CS venues
-2. **CrossRef** (`https://api.crossref.org/`) — primary source for DOI-bearing publications
-3. **Semantic Scholar** (`https://api.semanticscholar.org/`) — fallback for preprints
-4. **The paper's own .bib file** — if available in `raw/papers/`
+1. **DBLP** (`https://dblp.org/`) — nguồn chính cho các hội nghị khoa học máy tính
+2. **CrossRef** (`https://api.crossref.org/`) — nguồn chính cho các ấn phẩm có DOI
+3. **Semantic Scholar** (`https://api.semanticscholar.org/`) — nguồn dự phòng cho các bản preprint
+4. **Tệp .bib của chính bài báo** — nếu có sẵn trong `raw/papers/`
 
-## The [UNCONFIRMED] Protocol
+## Giao Thức [UNCONFIRMED]
 
-When a BibTeX entry **cannot** be fetched from any authoritative source:
+Khi một mục BibTeX **không thể** được lấy từ bất kỳ nguồn có thẩm quyền nào:
 
-1. Generate a best-effort entry from available information (title, authors, year from wiki page)
-2. Prefix the BibTeX key with `UNCONFIRMED_`: `@article{UNCONFIRMED_smith2024attention, ...}`
-3. Add a comment: `% [UNCONFIRMED] BibTeX not confirmed from DBLP/CrossRef — manual check required`
-4. The `[UNCONFIRMED]` marker is a **hard blocker** for submission — /paper-compile must flag all remaining `[UNCONFIRMED]` entries
+1. Tạo một mục nỗ lực tốt nhất từ thông tin có sẵn (tiêu đề, tác giả, năm từ trang wiki)
+2. Thêm tiền tố `UNCONFIRMED_` vào khóa BibTeX: `@article{UNCONFIRMED_smith2024attention, ...}`
+3. Thêm chú thích: `% [UNCONFIRMED] BibTeX chưa được xác nhận từ DBLP/CrossRef — cần kiểm tra thủ công`
+4. Dấu `[UNCONFIRMED]` là **rào cản cứng** đối với việc nộp bài — /paper-compile phải gắn cờ tất cả các mục `[UNCONFIRMED]` còn lại
 
-## Fetching BibTeX
+## Lấy BibTeX
 
-### DBLP (preferred for CS)
+### DBLP (ưu tiên cho khoa học máy tính)
 
 ```bash
-# Search by title
+# Tìm kiếm theo tiêu đề
 WebFetch: https://dblp.org/search/publ/api?q={url-encoded-title}&format=json&h=3
 
-# Parse response: .result.hits.hit[].info contains title, authors, venue, year, url
-# Get BibTeX: WebFetch the .url field + ".bib" suffix
+# Phân tích phản hồi: .result.hits.hit[].info chứa tiêu đề, tác giả, hội nghị, năm, url
+# Lấy BibTeX: WebFetch trường .url + hậu tố ".bib"
 ```
 
-### CrossRef (preferred for DOI)
+### CrossRef (ưu tiên cho DOI)
 
 ```bash
-# Search by title
+# Tìm kiếm theo tiêu đề
 WebFetch: https://api.crossref.org/works?query.bibliographic={url-encoded-title}&rows=3
 
-# Parse response: .message.items[] contains title, author, container-title, DOI
-# Construct BibTeX from structured data
+# Phân tích phản hồi: .message.items[] chứa tiêu đề, tác giả, container-title, DOI
+# Xây dựng BibTeX từ dữ liệu có cấu trúc
 ```
 
-### Semantic Scholar (fallback for arXiv preprints)
+### Semantic Scholar (dự phòng cho arXiv preprints)
 
 ```bash
-# Use tools/fetch_s2.py which is already in the project
+# Sử dụng tools/fetch_s2.py đã có trong dự án
 python3 tools/fetch_s2.py search "<title>"
-# Returns paperId, title, authors, year, venue, externalIds
+# Trả về paperId, tiêu đề, tác giả, năm, hội nghị, externalIds
 ```
 
-## Citation Key Convention
+## Quy Ước Đặt Khóa Trích Dẫn
 
 ```
-{first-author-lastname}{year}{first-keyword}
+{họ-tác-giả-đầu}{năm}{từ-khóa-đầu}
 ```
 
-Examples:
-- `hu2022lora` (Hu et al., 2022, "LoRA: Low-Rank Adaptation...")
-- `vaswani2017attention` (Vaswani et al., 2017, "Attention Is All You Need")
+Ví dụ:
+- `hu2022lora` (Hu và cộng sự, 2022, "LoRA: Low-Rank Adaptation...")
+- `vaswani2017attention` (Vaswani và cộng sự, 2017, "Attention Is All You Need")
 
-## Rules for Skills
+## Quy Tắc Cho Các Kỹ Năng
 
 ### /paper-draft
-1. After drafting each section, collect all `\cite{}` references
-2. For each citation: attempt DBLP → CrossRef → S2 in order
-3. Only include entries that are actually cited (`\nocite{*}` is forbidden)
-4. Write `references.bib` with fetched entries + [UNCONFIRMED] entries separated at bottom
+1. Sau khi soạn thảo mỗi phần, thu thập tất cả các tham chiếu `\cite{}`
+2. Đối với mỗi trích dẫn: thử DBLP → CrossRef → S2 theo thứ tự
+3. Chỉ bao gồm các mục thực sự được trích dẫn (`\nocite{*}` bị cấm)
+4. Viết `references.bib` với các mục đã lấy + các mục [UNCONFIRMED] được tách riêng ở cuối
 
 ### /survey
-1. Use `[[slug]]` wikilinks during drafting (wiki-internal format)
-2. When converting to LaTeX, resolve each `[[slug]]` to a `\cite{key}`
-3. The citation key must match a verified BibTeX entry
-4. If a wiki paper has no verifiable BibTeX, output `\cite{UNCONFIRMED_slug}` and flag
+1. Sử dụng liên kết wiki `[[slug]]` trong quá trình soạn thảo (định dạng nội bộ wiki)
+2. Khi chuyển đổi sang LaTeX, giải quyết mỗi `[[slug]]` thành `\cite{key}`
+3. Khóa trích dẫn phải khớp với một mục BibTeX đã được xác minh
+4. Nếu một bài báo wiki không có BibTeX có thể xác minh, xuất ra `\cite{UNCONFIRMED_slug}` và gắn cờ
 
 ### /paper-plan
-1. In the citation plan, list all wiki papers that will be cited
-2. Pre-fetch BibTeX for each planned citation (fail-fast: identify [UNCONFIRMED] entries early)
-3. Report citation coverage: how many are verified vs. [UNCONFIRMED]
+1. Trong kế hoạch trích dẫn, liệt kê tất cả các bài báo wiki sẽ được trích dẫn
+2. Tiền lấy BibTeX cho mỗi trích dẫn đã lên kế hoạch (thất bại sớm: xác định các mục [UNCONFIRMED] sớm)
+3. Báo cáo mức độ bao phủ trích dẫn: bao nhiêu đã được xác minh so với [UNCONFIRMED]
 
-## What NOT To Do
+## Những Điều Không Nên Làm
 
-- **Never** generate BibTeX from memory (wrong venue/year is worse than [UNCONFIRMED])
-- **Never** cite a paper not in the wiki (all citations trace back to wiki/papers/)
-- **Never** use `\nocite{*}` (every entry must be explicitly cited)
-- **Never** silently drop a [UNCONFIRMED] marker (it must survive until human verification or successful fetch)
-- **Never** fabricate DOIs or arXiv IDs
+- **Không bao giờ** tạo BibTeX từ bộ nhớ (hội nghị/năm sai còn tệ hơn [UNCONFIRMED])
+- **Không bao giờ** trích dẫn bài báo không có trong wiki (mọi trích dẫn phải truy nguyên về wiki/papers/)
+- **Không bao giờ** sử dụng `\nocite{*}` (mọi mục phải được trích dẫn rõ ràng)
+- **Không bao giờ** âm thầm bỏ qua dấu [UNCONFIRMED] (nó phải tồn tại cho đến khi được xác minh thủ công hoặc lấy thành công)
+- **Không bao giờ** bịa đặt DOI hoặc arXiv ID

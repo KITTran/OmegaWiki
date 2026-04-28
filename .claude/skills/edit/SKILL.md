@@ -1,60 +1,60 @@
 ---
 name: edit
-description: Add or remove raw sources, or update wiki content, per user request
-argument-hint: "[request]"
+description: Thêm hoặc xóa nguồn thô, hoặc cập nhật nội dung wiki theo yêu cầu của người dùng
+argument-hint: "[yêu cầu]"
 ---
 
 # /edit
 
-> Add or remove raw sources, or update wiki content, per user request.
+> Thêm hoặc xóa nguồn thô, hoặc cập nhật nội dung wiki theo yêu cầu của người dùng.
 
-## Trigger
+## Kích Hoạt
 
-User manual: `/edit <user request>`
+Lệnh thủ công của người dùng: `/edit <yêu cầu người dùng>`
 
-## Inputs
+## Đầu Vào
 
-User request, for example:
-- "Download this paper to raw/papers/"
-- "Delete raw/papers/xxx.pdf"
-- "Update the SOTA tracker in topics/efficient-llm-adaptation"
-- "Add a new variant to concepts/lora"
+Yêu cầu của người dùng, ví dụ:
+- "Tải bài báo này vào raw/papers/"
+- "Xóa raw/papers/xxx.pdf"
+- "Cập nhật theo dõi SOTA trong topics/efficient-llm-adaptation"
+- "Thêm một biến thể mới vào concepts/lora"
 
-## Outputs
+## Đầu Ra
 
-Updated wiki files, `index.md`, `log.md`
+Các tệp wiki đã cập nhật, `index.md`, `log.md`
 
-## Steps
+## Các Bước
 
-### STEP 1: Parse User Intent
+### BƯỚC 1: Phân Tích Ý Định Người Dùng
 
-1. **Add raw sources**:
-   - If the user provides a local path: copy to the corresponding directory under `raw/`
-   - If the user provides an arXiv URL: download to `raw/papers/`
-   - If the user provides a web URL: fetch content with markdownify and save to `raw/web/`
-2. **Delete raw sources**:
-   - Confirm then execute deletion
-3. **Update wiki**:
-   - Read the relevant pages and modify content per user instructions
+1. **Thêm nguồn thô**:
+   - Nếu người dùng cung cấp đường dẫn cục bộ: sao chép vào thư mục tương ứng dưới `raw/`
+   - Nếu người dùng cung cấp URL arXiv: tải xuống vào `raw/papers/`
+   - Nếu người dùng cung cấp URL web: lấy nội dung với markdownify và lưu vào `raw/web/`
+2. **Xóa nguồn thô**:
+   - Xác nhận sau đó thực hiện xóa
+3. **Cập nhật wiki**:
+   - Đọc các trang liên quan và sửa đổi nội dung theo hướng dẫn của người dùng
 
-### STEP 2: Execute Updates
+### BƯỚC 2: Thực Hiện Cập Nhật
 
-1. Newly added raw sources can later be incorporated into the wiki via `/ingest`
-2. Direct wiki modifications: update the specified fields/content in specific pages per user instructions
-3. When writing forward links, simultaneously write reverse links
+1. Các nguồn thô mới thêm sau này có thể được tích hợp vào wiki qua `/ingest`
+2. Các sửa đổi wiki trực tiếp: cập nhật các trường/nội dung cụ thể trong các trang cụ thể theo hướng dẫn của người dùng
+3. Khi viết liên kết xuôi, đồng thời viết liên kết ngược
 
-### STEP 3: Update Navigation
+### BƯỚC 3: Cập Nhật Điều Hướng
 
-1. `EDIT wiki/index.md`: update relevant entries
-2. `APPEND wiki/log.md`: `## [{date}] update | {description}`
+1. `CHỈNH SỬA wiki/index.md`: cập nhật các mục liên quan
+2. `THÊM wiki/log.md`: `## [{date}] update | {mô tả}`
 
-### STEP 4: Report
+### BƯỚC 4: Báo Cáo
 
-- List all changes made
-- Suggest follow-up actions (e.g. ingest newly added raw sources if applicable)
+- Liệt kê tất cả các thay đổi đã thực hiện
+- Đề xuất các hành động tiếp theo (ví dụ: ingest các nguồn thô mới thêm nếu áp dụng)
 
-## Constraints
+## Các Ràng Buộc
 
-- `raw/` is read-only for existing files (this skill may add files to `raw/`, but must not modify existing ones)
-- Wiki modifications must follow template structure
-- Bidirectional links must be kept in sync
+- `raw/` là chỉ đọc đối với các tệp hiện có (kỹ năng này có thể thêm tệp vào `raw/`, nhưng không được sửa đổi các tệp hiện có)
+- Các sửa đổi wiki phải tuân theo cấu trúc mẫu
+- Liên kết hai chiều phải được đồng bộ

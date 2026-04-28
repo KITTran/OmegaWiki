@@ -1,112 +1,112 @@
 ---
-description: Reset wiki state to a clean scaffold by scope (wiki / raw / log / checkpoints / all). Useful during development or carefree restarts after a botched setup.
+description: Đặt lại trạng thái wiki về khung sạch theo phạm vi (wiki / raw / log / checkpoints / all). Hữu ích trong quá trình phát triển hoặc khởi động lại không lo lắng sau khi thiết lập thất bại.
 argument-hint: "--scope wiki|raw|log|checkpoints|all"
 ---
 
 # /reset
 
-> Resets the wiki to a clean scaffold by scope. Designed for development iteration and recovery after a failed setup — not a routine operation.
+> Đặt lại wiki về khung sạch theo phạm vi. Được thiết kế cho quá trình lặp phát triển và khôi phục sau khi thiết lập thất bại — không phải là hoạt động thường xuyên.
 
-## Trigger
+## Kích Hoạt
 
-Manual: `/reset --scope wiki` / `--scope raw` / `--scope log` / `--scope checkpoints` / `--scope all`. Multiple scopes may be combined comma-separated: `--scope wiki,log`.
+Thủ công: `/reset --scope wiki` / `--scope raw` / `--scope log` / `--scope checkpoints` / `--scope all`. Có thể kết hợp nhiều phạm vi bằng dấu phẩy: `--scope wiki,log`.
 
-## Inputs
+## Đầu Vào
 
-- `--scope` *(required)*: one of
-  - `wiki` — delete every `*.md` under `wiki/<entity>/` and `wiki/outputs/`, plus `wiki/index.md`, `wiki/log.md`, and `wiki/graph/` files. Preserves `.gitkeep` and `wiki/CLAUDE.md`.
-  - `raw` — delete every entry under `raw/papers/`, `raw/discovered/`, `raw/tmp/`, `raw/notes/`, `raw/web/` (except `.gitkeep`).
-  - `log` — reset `wiki/log.md` to the empty header.
-  - `checkpoints` — clear batch state via `research_wiki.py checkpoint-clear`.
-  - `all` — every scope above.
+- `--scope` *(bắt buộc)*: một trong các mục sau
+  - `wiki` — xóa mọi `*.md` trong `wiki/<entity>/` và `wiki/outputs/`, cộng với `wiki/index.md`, `wiki/log.md` và các tệp trong `wiki/graph/`. Giữ lại `.gitkeep` và `wiki/CLAUDE.md`.
+  - `raw` — xóa mọi mục trong `raw/papers/`, `raw/discovered/`, `raw/tmp/`, `raw/notes/`, `raw/web/` (trừ `.gitkeep`).
+  - `log` — đặt lại `wiki/log.md` về tiêu đề trống.
+  - `checkpoints` — xóa trạng thái batch qua `research_wiki.py checkpoint-clear`.
+  - `all` — tất cả phạm vi trên.
 
-## Outputs
+## Đầu Ra
 
-- Cleared / reset files on disk.
-- Console summary of deleted files and reset files.
+- Các tệp đã xóa / đặt lại trên đĩa.
+- Tóm tắt trên console về các tệp đã xóa và đặt lại.
 
-## Wiki Interaction
+## Tương Tác Wiki
 
-### Reads
-- All `wiki/<entity>/*.md` (to enumerate the deletion plan).
-- `raw/<sub>/*` (to enumerate raw deletions).
+### Đọc
+- Tất cả `wiki/<entity>/*.md` (để lập kế hoạch xóa).
+- `raw/<sub>/*` (để liệt kê các xóa raw).
 
-### Writes
-- Deletes `wiki/<entity>/*.md` (preserves `.gitkeep`).
-- Rewrites `wiki/index.md`, `wiki/graph/*`, optionally `wiki/log.md`.
-- Deletes `raw/<sub>/*` (except `.gitkeep`).
+### Ghi
+- Xóa `wiki/<entity>/*.md` (giữ lại `.gitkeep`).
+- Viết lại `wiki/index.md`, `wiki/graph/*`, tùy chọn `wiki/log.md`.
+- Xóa `raw/<sub>/*` (trừ `.gitkeep`).
 
-## Workflow
+## Quy Trình Làm Việc
 
-**Pre-conditions**: working directory contains `wiki/`, `tools/`. Set `WIKI_ROOT=wiki/`.
+**Điều kiện tiên quyết**: thư mục làm việc chứa `wiki/`, `tools/`. Đặt `WIKI_ROOT=wiki/`.
 
-### Step 1: Build the deletion plan (dry-run)
-
-```bash
-python3 tools/reset_wiki.py --scope <scope>
-```
-
-This prints a JSON plan listing every file that would be deleted or reset, **without modifying anything**. Display the plan to the user grouped by scope (wiki entity dirs, raw subdirs, log, checkpoints).
-
-### Step 2: Confirm with the user
-
-Print the plan summary and ask for explicit confirmation:
-
-```
-About to delete N files and reset M files. Continue? [y/N]
-```
-
-If the user says no, exit. **Never proceed without explicit approval** — `/reset` is destructive and `raw/` deletions are not tracked by git.
-
-### Step 3: Execute
+### Bước 1: Xây dựng kế hoạch xóa (dry-run)
 
 ```bash
-python3 tools/reset_wiki.py --scope <scope> --yes
+python3 tools/reset_wiki.py --scope <phạm-vi>
 ```
 
-The tool prints a JSON status report (`{deleted_files, reset_files}`).
+Điều này in ra kế hoạch JSON liệt kê mọi tệp sẽ bị xóa hoặc đặt lại, **mà không sửa đổi bất cứ thứ gì**. Hiển thị kế hoạch cho người dùng theo nhóm phạm vi (thư mục thực thể wiki, thư mục con raw, log, checkpoints).
 
-### Step 4: Log (unless `log` scope was reset)
+### Bước 2: Xác nhận với người dùng
 
-If the executed scope did not include `log`, append a log entry so future sessions can see the reset happened:
+In ra tóm tắt kế hoạch và yêu cầu xác nhận rõ ràng:
+
+```
+Sắp xóa N tệp và đặt lại M tệp. Tiếp tục? [y/N]
+```
+
+Nếu người dùng nói không, thoát. **Không bao giờ tiếp tục mà không có sự chấp thuận rõ ràng** — `/reset` có tính phá hủy và việc xóa `raw/` không được git theo dõi.
+
+### Bước 3: Thực thi
 
 ```bash
-python3 tools/research_wiki.py log wiki/ "reset | scope: <scope>"
+python3 tools/reset_wiki.py --scope <phạm-vi> --yes
 ```
 
-### Step 5: Report
+Công cụ in ra báo cáo trạng thái JSON (`{deleted_files, reset_files}`).
 
-Print the result and suggest next steps:
+### Bước 4: Ghi nhật ký (trừ khi phạm vi `log` được đặt lại)
 
-```
-## Reset complete — scope: <scope>
+Nếu phạm vi thực thi không bao gồm `log`, thêm một mục nhật ký để các phiên sau có thể thấy việc đặt lại đã xảy ra:
 
-Deleted: N files
-Reset:   M files
-
-Next steps:
-- /init       — bootstrap wiki from raw/
-- /prefill    — seed foundational background
-- /ingest     — add a single source manually
+```bash
+python3 tools/research_wiki.py log wiki/ "reset | phạm vi: <phạm-vi>"
 ```
 
-## Constraints
+### Bước 5: Báo cáo
 
-- **Confirm before destructive action**: never call `--yes` without showing the plan and asking the user.
-- **Preserves**: `.gitkeep` placeholders, `wiki/CLAUDE.md`, `.claude/` (skills are never touched).
-- **`raw/` deletes are irreversible**: PDFs are not in git history. Warn the user before executing `raw` or `all` scopes.
-- **`/reset` does not touch `tools/`, `mcp-servers/`, `i18n/`, `.env`, or git state.**
-- **Scope is required**: no default action (`/reset` with no flag prompts for scope rather than guessing).
+In ra kết quả và đề xuất các bước tiếp theo:
 
-## Error Handling
+```
+## Đặt lại hoàn tất — phạm vi: <phạm-vi>
 
-- **Unknown scope**: print valid scopes and exit nonzero.
-- **Missing wiki directory**: report and suggest running `/init`.
-- **`checkpoint-clear` failure**: log a warning but do not fail other scopes.
+Đã xóa: N tệp
+Đã đặt lại:   M tệp
 
-## Dependencies
+Các bước tiếp theo:
+- /init       — khởi tạo wiki từ raw/
+- /prefill    — gieo nền tảng kiến thức cơ bản
+- /ingest     — thêm một nguồn thủ công
+```
 
-### Tools (via Bash)
-- `python3 tools/reset_wiki.py --scope <scope> [--yes] [--project-root .]` — deterministic destructive helper
-- `python3 tools/research_wiki.py log wiki/ "<message>"` — append log
-- `reset_wiki.py` clears `wiki/.checkpoints/*.json` directly for `checkpoints` scope (no CLI dispatch — the `checkpoint-clear` subcommand requires a specific `task_id`, while `/reset --scope checkpoints` semantics is "clear everything")
+## Các Ràng Buộc
+
+- **Xác nhận trước khi hành động phá hủy**: không bao giờ gọi `--yes` mà không hiển thị kế hoạch và hỏi người dùng.
+- **Bảo tồn**: các placeholder `.gitkeep`, `wiki/CLAUDE.md`, `.claude/` (không bao giờ chạm vào kỹ năng).
+- **Xóa `raw/` không thể hoàn tác**: các tệp PDF không có trong lịch sử git. Cảnh báo người dùng trước khi thực thi phạm vi `raw` hoặc `all`.
+- **`/reset` không chạm vào `tools/`, `mcp-servers/`, `i18n/`, `.env` hoặc trạng thái git.**
+- **Phạm vi là bắt buộc**: không có hành động mặc định (`/reset` không có cờ sẽ nhắc nhập phạm vi thay vì đoán).
+
+## Xử Lý Lỗi
+
+- **Phạm vi không xác định**: in ra các phạm vi hợp lệ và thoát với mã lỗi.
+- **Thiếu thư mục wiki**: báo cáo và đề xuất chạy `/init`.
+- **Lỗi `checkpoint-clear`**: ghi lại cảnh báo nhưng không làm lỗi các phạm vi khác.
+
+## Phụ Thuộc
+
+### Công cụ (qua Bash)
+- `python3 tools/reset_wiki.py --scope <phạm-vi> [--yes] [--project-root .]` — công cụ hỗ trợ phá hủy xác định
+- `python3 tools/research_wiki.py log wiki/ "<thông-điệp>"` — thêm nhật ký
+- `reset_wiki.py` xóa trực tiếp `wiki/.checkpoints/*.json` cho phạm vi `checkpoints` (không gọi CLI — lệnh con `checkpoint-clear` yêu cầu `task_id` cụ thể, trong khi ngữ nghĩa `/reset --scope checkpoints` là "xóa tất cả")

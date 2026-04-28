@@ -1,136 +1,139 @@
 ---
-description: General-purpose multi-round iterative improvement — repeatedly calls /review on any research artifact, parses feedback, applies fixes, updates wiki, until the target score is reached
-argument-hint: <artifact-slug-or-path> [--max-rounds N] [--target-score N] [--difficulty standard|hard|adversarial] [--focus method|evidence|writing|completeness]
+description: Cải thiện lặp đi lặp lại đa vòng đa năng — liên tục gọi /review trên bất kỳ tạo tác nghiên cứu nào, phân tích phản hồi, áp dụng sửa chữa, cập nhật wiki, cho đến khi đạt được điểm mục tiêu
+argument-hint: <tạo-tác-slug-hoặc-đường-dẫn> [--max-rounds N] [--target-score N] [--difficulty standard|hard|adversarial] [--focus method|evidence|writing|completeness]
 ---
 
 # /refine
 
-> General-purpose multi-round iterative improvement loop for any research artifact
-> (idea, proposal, experiment plan, paper draft).
-> Each round calls /review for structured feedback → parses actionable items → Claude fixes the artifact →
-> updates wiki entities → re-reviews, until the score reaches the target or the maximum rounds are exhausted.
-> Outputs an improvement history and the final review score.
+> Vòng lặp cải thiện lặp đi lặp lại đa năng cho bất kỳ tạo tác nghiên cứu nào
+> (ý tưởng, đề xuất, kế hoạch thí nghiệm, bản thảo bài báo).
+> Mỗi vòng gọi /review để lấy phản hồi có cấu trúc → phân tích các mục có thể thực hiện → Claude sửa chữa tạo tác →
+> cập nhật các thực thể wiki → đánh giá lại, cho đến khi đạt được điểm mục tiêu hoặc hết số vòng tối đa.
+> Xuất ra lịch sử cải thiện và điểm đánh giá cuối cùng.
 
-## Inputs
+## Đầu Vào
 
-- `artifact`: the artifact to improve, one of:
-  - slug of a wiki page (searched in ideas/experiments/claims/outputs/)
-  - file path (e.g. `wiki/outputs/paper-draft-v1.md`)
-- `--max-rounds N` (optional, default 4): maximum iteration rounds
-- `--target-score N` (optional, default 8): target review score (1-10); stop when reached
-- `--difficulty` (optional, default `hard`): difficulty level passed to /review
-- `--focus` (optional): review focus passed to /review
+- `artifact`: tạo tác cần cải thiện, một trong các mục sau:
+  - slug của trang wiki (tìm kiếm trong ideas/experiments/claims/outputs/)
+  - đường dẫn tệp (ví dụ: `wiki/outputs/paper-draft-v1.md`)
+- `--max-rounds N` *(tùy chọn, mặc định 4)*: số vòng lặp tối đa
+- `--target-score N` *(tùy chọn, mặc định 8)*: điểm đánh giá mục tiêu (1-10); dừng khi đạt được
+- `--difficulty` *(tùy chọn, mặc định `hard`)*: mức độ khó chuyển đến /review
+- `--focus` *(tùy chọn)*: trọng tâm đánh giá chuyển đến /review
 
-## Outputs
+## Đầu Ra
 
-- **Improved artifact** (wiki page or file, updated in place)
-- **Wiki entity updates** (if review finds claims needing strengthening or identifies gaps)
-- **REFINE_REPORT** (output to terminal):
-  - Score trajectory across all rounds
-  - Cumulative list of fixed issues
-  - Final review score and verdict
-  - Unresolved issues (if any)
+- **Tạo tác đã cải thiện** (trang wiki hoặc tệp, được cập nhật tại chỗ)
+- **Cập nhật thực thể wiki** (nếu đánh giá phát hiện khẳng định cần củng cố hoặc xác định lỗ hổng)
+- **BÁO_CÁO_REFINE** (xuất ra terminal):
+  - Lịch sử điểm qua tất cả các vòng
+  - Danh sách tích lũy các vấn đề đã sửa
+  - Điểm đánh giá cuối cùng và kết luận
+  - Các vấn đề chưa giải quyết (nếu có)
 
-## Wiki Interaction
+## Tương Tác Wiki
 
-### Reads
-- `wiki/ideas/*.md` — if artifact is an idea
-- `wiki/experiments/*.md` — if artifact is an experiment plan
-- `wiki/claims/*.md` — claims referenced by the review
-- `wiki/papers/*.md` — papers referenced by the review
-- `wiki/outputs/*.md` — if artifact is a paper draft or output
-- `wiki/graph/context_brief.md` — global context passed to /review
-- `wiki/graph/open_questions.md` — check whether new gaps need recording
+### Đọc
 
-### Writes
-- `wiki/ideas/{slug}.md` — if artifact is an idea, fix issues found by review
-- `wiki/experiments/{slug}.md` — if artifact is an experiment plan
-- `wiki/claims/{slug}.md` — if review finds a claim needing update (confidence adjustment, evidence note)
-- `wiki/outputs/*.md` — if artifact is a paper draft or output
-- `wiki/graph/edges.jsonl` — if new relationships are discovered during fixes
-- `wiki/graph/context_brief.md` — rebuild after each round if wiki changes were made
-- `wiki/graph/open_questions.md` — rebuild after each round if wiki changes were made
-- `wiki/log.md` — append operation log
+- `wiki/ideas/*.md` — nếu tạo tác là một ý tưởng
+- `wiki/experiments/*.md` — nếu tạo tác là một kế hoạch thí nghiệm
+- `wiki/claims/*.md` — các khẳng định được tham chiếu bởi đánh giá
+- `wiki/papers/*.md` — các bài báo được tham chiếu bởi đánh giá
+- `wiki/outputs/*.md` — nếu tạo tác là bản thảo bài báo hoặc đầu ra
+- `wiki/graph/context_brief.md` — ngữ cảnh toàn cục chuyển đến /review
+- `wiki/graph/open_questions.md` — kiểm tra xem có lỗ hổng mới cần ghi lại không
 
-### Graph edges created
-- Depends on fix content; may add: `supports`, `addresses_gap`, `inspired_by`, etc.
+### Ghi
 
-## Workflow
+- `wiki/ideas/{slug}.md` — nếu tạo tác là ý tưởng, sửa các vấn đề được phát hiện bởi đánh giá
+- `wiki/experiments/{slug}.md` — nếu tạo tác là kế hoạch thí nghiệm
+- `wiki/claims/{slug}.md` — nếu đánh giá phát hiện khẳng định cần cập nhật (điều chỉnh độ tin cậy, ghi chú bằng chứng)
+- `wiki/outputs/*.md` — nếu tạo tác là bản thảo bài báo hoặc đầu ra
+- `wiki/graph/edges.jsonl` — nếu phát hiện mối quan hệ mới trong quá trình sửa chữa
+- `wiki/graph/context_brief.md` — xây dựng lại sau mỗi vòng nếu có thay đổi wiki
+- `wiki/graph/open_questions.md` — xây dựng lại sau mỗi vòng nếu có thay đổi wiki
+- `wiki/log.md` — thêm nhật ký hoạt động
 
-**Precondition**: confirm working directory is the wiki project root (containing `wiki/`, `raw/`, `tools/`).
+### Các cạnh đồ thị được tạo
 
-### Step 1: Initialize
+- Phụ thuộc vào nội dung sửa chữa; có thể thêm: `supports`, `addresses_gap`, `inspired_by`, v.v.
 
-1. **Locate artifact**:
-   - If slug: search sequentially in `wiki/ideas/`, `wiki/experiments/`, `wiki/claims/`, `wiki/outputs/`, `wiki/papers/` for `{slug}.md`
-   - If file path: read directly
-   - Record artifact type and path
-2. **Read current content**: load full artifact text
-3. **Initialize tracking variables**:
+## Quy Trình Làm Việc
+
+**Điều kiện tiên quyết**: xác nhận thư mục làm việc là thư mục gốc dự án wiki (chứa `wiki/`, `raw/`, `tools/`).
+
+### Bước 1: Khởi Tạo
+
+1. **Xác định vị trí tạo tác**:
+   - Nếu là slug: tìm kiếm tuần tự trong `wiki/ideas/`, `wiki/experiments/`, `wiki/claims/`, `wiki/outputs/`, `wiki/papers/` cho `{slug}.md`
+   - Nếu là đường dẫn tệp: đọc trực tiếp
+   - Ghi lại loại và đường dẫn của tạo tác
+2. **Đọc nội dung hiện tại**: tải toàn bộ văn bản tạo tác
+3. **Khởi tạo các biến theo dõi**:
    - `round = 0`
    - `score_history = []`
    - `fixed_issues = []`
    - `unresolved_issues = []`
    - `wiki_changes = []`
 
-### Step 2: Iteration Loop
+### Bước 2: Vòng Lặp Lặp Đi Lặp Lại
 
-Repeat the following steps until the termination condition is met:
+Lặp lại các bước sau cho đến khi điều kiện kết thúc được đáp ứng:
 
-**Round N (N = 1, 2, ..., max-rounds):**
+**Vòng N (N = 1, 2, ..., max-rounds):**
 
-#### 2a. Call /review
+#### 2a. Gọi /review
 
 ```
 Skill: review
 Args: "<artifact-path-or-content>" --difficulty {difficulty} --focus {focus}
 ```
 
-Parse the review output and extract:
+Phân tích đầu ra đánh giá và trích xuất:
 - `score` (1-10)
 - `verdict` (ready / needs-work / major-revision / rethink)
-- `weaknesses` (by severity: critical / major / minor)
-- `actionable_items` (ranked list)
-- `wiki_entity_mapping` (claims needing support, gaps identified)
+- `weaknesses` (theo mức độ nghiêm trọng: critical / major / minor)
+- `actionable_items` (danh sách được xếp hạng)
+- `wiki_entity_mapping` (các khẳng định cần hỗ trợ, các lỗ hổng được xác định)
 
-#### 2b. Check Termination Conditions
+#### 2b. Kiểm Tra Điều Kiện Kết Thúc
 
-- **Target score reached**: `score >= target-score` → terminate, output final report
-- **No score improvement for two consecutive rounds**: `score_history[-1] == score_history[-2]` → terminate (converged)
-- **Maximum rounds reached**: `round >= max-rounds` → terminate
-- **verdict == ready**: → terminate
-- **verdict == rethink and round == 1**: → terminate and suggest redesign (do not iterate on a rethink-level artifact)
+- **Đạt điểm mục tiêu**: `score >= target-score` → kết thúc, xuất báo cáo cuối cùng
+- **Không cải thiện điểm trong hai vòng liên tiếp**: `score_history[-1] == score_history[-2]` → kết thúc (đã hội tụ)
+- **Đạt số vòng tối đa**: `round >= max-rounds` → kết thúc
+- **verdict == ready**: → kết thúc
+- **verdict == rethink và round == 1**: → kết thúc và đề xuất thiết kế lại (không lặp lại trên một tạo tác cấp độ rethink)
 
-#### 2c. Classify Actionable Items and Apply Fixes
+#### 2c. Phân Loại Các Mục Có Thể Thực Hiện và Áp Dụng Sửa Chữa
 
-Classify and handle each actionable item:
+Phân loại và xử lý từng mục có thể thực hiện:
 
-**Category A — Method/content issues (Claude fixes directly):**
-- Method description too vague → add details
-- Missing comparative analysis → add comparison against baseline
-- Incomplete argumentative logic → add reasoning steps
-- Unclear expression → rewrite relevant paragraphs
-- → Edit the artifact file directly
+**Loại A — Vấn đề về phương pháp/nội dung (Claude sửa trực tiếp):**
+- Mô tả phương pháp quá mơ hồ → thêm chi tiết
+- Thiếu phân tích so sánh → thêm so sánh với baseline
+- Logic lập luận không đầy đủ → thêm các bước lập luận
+- Diễn đạt không rõ ràng → viết lại các đoạn liên quan
+- → Chỉnh sửa trực tiếp tệp tạo tác
 
-**Category B — Wiki knowledge gaps (suggest external operations):**
-- Insufficient claim evidence → suggest running `/exp-design` or `/ingest`
-- Missing related work citations → suggest running `/ingest` to add papers
-- Requires experimental validation → suggest running `/exp-run`
-- → Record in `unresolved_issues`, list suggested operations in the report
-- → If claim confidence needs adjustment, update `wiki/claims/{slug}.md` directly
+**Loại B — Lỗ hổng tri thức wiki (đề xuất thao tác bên ngoài):**
+- Bằng chứng khẳng định không đủ → đề xuất chạy `/exp-design` hoặc `/ingest`
+- Thiếu trích dẫn công trình liên quan → đề xuất chạy `/ingest` để thêm bài báo
+- Cần xác thực thực nghiệm → đề xuất chạy `/exp-run`
+- → Ghi lại trong `unresolved_issues`, liệt kê các thao tác được đề xuất trong báo cáo
+- → Nếu cần điều chỉnh độ tin cậy của khẳng định, cập nhật trực tiếp `wiki/claims/{slug}.md`
 
-**Category C — Claim status updates (Claude fixes wiki):**
-- Review says a claim's confidence should be lowered → update claim page
-- Review discovers a new gap → record to gap_map (via rebuild)
-- Review discovers a new relationship → add graph edge
-- → Update relevant wiki pages, record in `wiki_changes`
+**Loại C — Cập nhật trạng thái khẳng định (Claude sửa wiki):**
+- Đánh giá cho biết độ tin cậy của một khẳng định nên được hạ thấp → cập nhật trang khẳng định
+- Đánh giá phát hiện lỗ hổng mới → ghi lại vào gap_map (thông qua rebuild)
+- Đánh giá phát hiện mối quan hệ mới → thêm cạnh đồ thị
+- → Cập nhật các trang wiki liên quan, ghi lại trong `wiki_changes`
 
-**Category D — Out of scope (skip):**
-- Requires new experimental data → cannot resolve in refine loop
-- Requires domain expert judgment → mark as unresolved
-- → Record in `unresolved_issues`
+**Loại D — Ngoài phạm vi (bỏ qua):**
+- Cần dữ liệu thực nghiệm mới → không thể giải quyết trong vòng lặp refine
+- Cần đánh giá của chuyên gia lĩnh vực → đánh dấu là chưa giải quyết
+- → Ghi lại trong `unresolved_issues`
 
-#### 2d. Update Tracking
+#### 2d. Cập Nhật Theo Dõi
 
 - `score_history.append(score)`
 - `fixed_issues.extend(category_A_items + category_C_items)`
@@ -138,94 +141,98 @@ Classify and handle each actionable item:
 - `wiki_changes.extend(category_C_changes)`
 - `round += 1`
 
-#### 2e. Rebuild Derived Data (if wiki was changed)
+#### 2e. Xây Dựng Lại Dữ Liệu Phái Sinh (nếu wiki đã thay đổi)
 
-If this round had wiki changes (Category C):
+Nếu vòng này có thay đổi wiki (Loại C):
 ```bash
 python3 tools/research_wiki.py rebuild-context-brief wiki/
 python3 tools/research_wiki.py rebuild-open-questions wiki/
 ```
 
-### Step 3: Final Report
+### Bước 3: Báo Cáo Cuối Cùng
 
-After iteration ends, generate the REFINE_REPORT:
+Sau khi vòng lặp kết thúc, tạo BÁO_CÁO_REFINE:
 
 ```markdown
-# Refine Loop Report: {artifact title}
+# Báo Cáo Vòng Lặp Refine: {tiêu đề tạo tác}
 
-## Summary
-- **Artifact**: {slug or path}
-- **Rounds**: {N} / {max-rounds}
-- **Score trajectory**: {score_history, e.g., 5 → 6 → 7 → 8}
-- **Final score**: {final_score}/10
-- **Final verdict**: {verdict}
-- **Termination reason**: {target reached / converged / max rounds / rethink}
+## Tóm Tắt
+- **Tạo tác**: {slug hoặc đường dẫn}
+- **Số vòng**: {N} / {max-rounds}
+- **Lịch sử điểm**: {score_history, ví dụ: 5 → 6 → 7 → 8}
+- **Điểm cuối cùng**: {final_score}/10
+- **Kết luận cuối cùng**: {verdict}
+- **Lý do kết thúc**: {đạt mục tiêu / hội tụ / đạt số vòng tối đa / rethink}
 
-## Issues Fixed ({count})
+## Các Vấn Đề Đã Sửa ({số lượng})
 
-| Round | Issue | Severity | Fix applied |
-|-------|-------|----------|-------------|
-| 1 | Method description too vague | major | Added specific algorithm steps |
-| 1 | Claim confidence too high | major | Lowered [[claim-slug]] confidence 0.8→0.6 |
-| 2 | Missing ablation design | minor | Added ablation plan |
+| Vòng | Vấn Đề | Mức Độ Nghiêm Trọng | Sửa Chữa Áp Dụng |
+|-------|--------|---------------------|------------------|
+| 1 | Mô tả phương pháp quá mơ hồ | lớn | Thêm các bước thuật toán cụ thể |
+| 1 | Độ tin cậy của khẳng định quá cao | lớn | Giảm độ tin cậy [[claim-slug]] từ 0.8→0.6 |
+| 2 | Thiếu thiết kế ablation | nhỏ | Thêm kế hoạch ablation |
 
-## Wiki Changes Made
+## Các Thay Đổi Wiki Đã Thực Hiện
 
-| Page | Change | Round |
-|------|--------|-------|
-| `wiki/claims/{slug}.md` | confidence 0.8 → 0.6 | 1 |
-| `wiki/graph/edges.jsonl` | +1 edge (addresses_gap) | 2 |
+| Trang | Thay Đổi | Vòng |
+|-------|----------|-------|
+| `wiki/claims/{slug}.md` | độ tin cậy 0.8 → 0.6 | 1 |
+| `wiki/graph/edges.jsonl` | +1 cạnh (addresses_gap) | 2 |
 
-## Unresolved Issues ({count})
+## Các Vấn Đề Chưa Giải Quyết ({số lượng})
 
-| Issue | Severity | Suggested action |
-|-------|----------|------------------|
-| Missing experimental validation | critical | Run `/exp-design {slug}` |
-| Missing comparison paper | major | Run `/ingest` for {paper-title} |
+| Vấn Đề | Mức Độ Nghiêm Trọng | Hành Động Đề Xuất |
+|--------|---------------------|-------------------|
+| Thiếu xác thực thực nghiệm | nghiêm trọng | Chạy `/exp-design {slug}` |
+| Thiếu bài báo so sánh | lớn | Chạy `/ingest` cho {tiêu-đề-bài-báo} |
 
-## Next Steps
-- {based on verdict and unresolved issues}
+## Bước Tiếp Theo
+- {dựa trên verdict và các vấn đề chưa giải quyết}
 ```
 
-Append log:
+Thêm nhật ký:
 ```bash
 python3 tools/research_wiki.py log wiki/ \
-  "refine | {artifact-slug} | {N} rounds | score {initial}→{final} | verdict: {verdict}"
+  "refine | {artifact-slug} | {N} vòng | điểm {initial}→{final} | verdict: {verdict}"
 ```
 
-## Constraints
+## Các Ràng Buộc
 
-- **Each round must show substantive progress**: if score does not change for two consecutive rounds, terminate (prevents infinite loops)
-- **Do not iterate on rethink**: if the first round verdict == rethink, terminate immediately and suggest redesign
-- **Wiki modifications limited to review suggestions**: refine only modifies wiki entities explicitly recommended by the review; do not expand scope proactively
-- **Unresolved issues must be listed**: do not silently skip issues that cannot be resolved in the loop
-- **Preserve improvement history**: score_history and fixed_issues are recorded in full; do not discard intermediate state
-- **Pass review parameters through**: --difficulty and --focus are passed through to /review; maintain consistent review standards
-- **Artifact updated in place**: fixes modify the original file directly; do not create copies
+- **Mỗi vòng phải thể hiện tiến triển thực chất**: nếu điểm không thay đổi trong hai vòng liên tiếp, kết thúc (ngăn chặn vòng lặp vô hạn)
+- **Không lặp lại trên rethink**: nếu verdict của vòng đầu tiên là rethink, kết thúc ngay lập tức và đề xuất thiết kế lại
+- **Các sửa đổi wiki chỉ giới hạn trong đề xuất của đánh giá**: refine chỉ sửa đổi các thực thể wiki được đề xuất rõ ràng bởi đánh giá; không mở rộng phạm vi chủ động
+- **Các vấn đề chưa giải quyết phải được liệt kê**: không bỏ qua các vấn đề không thể giải quyết trong vòng lặp
+- **Bảo toàn lịch sử cải thiện**: score_history và fixed_issues được ghi lại đầy đủ; không loại bỏ trạng thái trung gian
+- **Chuyển tiếp các tham số đánh giá**: --difficulty và --focus được chuyển tiếp đến /review; duy trì tiêu chuẩn đánh giá nhất quán
+- **Cập nhật tạo tác tại chỗ**: các sửa chữa sửa đổi trực tiếp tệp gốc; không tạo bản sao
 
-## Error Handling
+## Xử Lý Lỗi
 
-- **Artifact not found**: prompt user to check slug or path, list likely candidate pages
-- **/review call fails**: retry once; if still failing, terminate the loop and output the improvement history completed so far
-- **Wiki write fails**: log the error, continue to the next round (wiki changes downgraded to unresolved)
-- **First round score already >= target-score**: terminate immediately, output report (no improvement needed)
-- **All issues are Category B/D**: cannot fix within the loop; terminate and output the unresolved issues list
+- **Không tìm thấy tạo tác**: nhắc người dùng kiểm tra slug hoặc đường dẫn, liệt kê các trang ứng viên có khả năng
+- **Gọi /review thất bại**: thử lại một lần; nếu vẫn thất bại, kết thúc vòng lặp và xuất lịch sử cải thiện đã hoàn thành cho đến thời điểm đó
+- **Ghi wiki thất bại**: ghi lại lỗi, tiếp tục vòng tiếp theo (các thay đổi wiki được hạ cấp thành chưa giải quyết)
+- **Điểm vòng đầu tiên đã >= điểm mục tiêu**: kết thúc ngay lập tức, xuất báo cáo (không cần cải thiện)
+- **Tất cả các vấn đề đều thuộc Loại B/D**: không thể sửa trong vòng lặp; kết thúc và xuất danh sách các vấn đề chưa giải quyết
 
-## Dependencies
+## Phụ Thuộc
 
-### Tools（via Bash）
-- `python3 tools/research_wiki.py rebuild-context-brief wiki/` — rebuild query_pack
-- `python3 tools/research_wiki.py rebuild-open-questions wiki/` — rebuild gap_map
-- `python3 tools/research_wiki.py add-edge wiki/ ...` — add graph edge (if needed)
-- `python3 tools/research_wiki.py log wiki/ "<message>"` — append log entry
+### Công cụ (thông qua Bash)
 
-### Skills（via Skill tool）
-- `/review` — each round's review (core dependency)
+- `python3 tools/research_wiki.py rebuild-context-brief wiki/` — xây dựng lại query_pack
+- `python3 tools/research_wiki.py rebuild-open-questions wiki/` — xây dựng lại gap_map
+- `python3 tools/research_wiki.py add-edge wiki/ ...` — thêm cạnh đồ thị (nếu cần)
+- `python3 tools/research_wiki.py log wiki/ "<message>"` — thêm mục nhật ký
 
-### Claude Code Native
-- `Read` — read artifact and wiki pages
-- `Edit` — fix artifact content
-- `Glob` — find artifact and related wiki pages
+### Kỹ Năng (thông qua công cụ Skill)
 
-### Shared References
-- `.claude/skills/shared-references/cross-model-review.md` — indirect dependency via /review
+- `/review` — đánh giá mỗi vòng (phụ thuộc cốt lõi)
+
+### Claude Code Gốc
+
+- `Read` — đọc tạo tác và trang wiki
+- `Edit` — sửa nội dung tạo tác
+- `Glob` — tìm tạo tác và các trang wiki liên quan
+
+### Tài Liệu Tham Khảo Chung
+
+- `.claude/skills/shared-references/cross-model-review.md` — phụ thuộc gián tiếp thông qua /review

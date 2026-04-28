@@ -1,43 +1,43 @@
 ---
-description: Interactive API key configuration guide — checks current .env state and walks you through Semantic Scholar, DeepXiv, and Review LLM setup
+description: Hướng dẫn cấu hình khóa API tương tác — kiểm tra trạng thái .env hiện tại và hướng dẫn bạn thiết lập Semantic Scholar, DeepXiv và Review LLM
 ---
 
 # /setup
 
-> Guides you through ΩmegaWiki's optional API key configuration.
-> Reads your current `.env`, shows what is and isn't configured, and helps you
-> set up each key with clear explanations of what it does and how to get it.
-> Safe to re-run at any time — only updates keys you choose to configure.
+> Hướng dẫn bạn cấu hình khóa API tùy chọn của ΩmegaWiki.
+> Đọc tệp `.env` hiện tại của bạn, hiển thị những gì đã và chưa được cấu hình, và giúp bạn
+> thiết lập từng khóa với giải thích rõ ràng về chức năng và cách lấy chúng.
+> An toàn khi chạy lại bất kỳ lúc nào — chỉ cập nhật các khóa bạn chọn cấu hình.
 
-## Inputs
+## Đầu Vào
 
-- No arguments required
-- Reads: `.env` (current configuration state)
-- Reads: `config/setup-guide.md` (reference for what each key does)
+- Không yêu cầu đối số
+- Đọc: `.env` (trạng thái cấu hình hiện tại)
+- Đọc: `config/setup-guide.md` (tham khảo về chức năng của từng khóa)
 
-## Outputs
+## Đầu Ra
 
-- Updated `.env` with any newly configured keys
-- A summary of current configuration status
+- Đã cập nhật `.env` với bất kỳ khóa mới nào được cấu hình
+- Tóm tắt trạng thái cấu hình hiện tại
 
-## Wiki Interaction
+## Tương Tác Wiki
 
-### Reads
-- None (setup runs before any wiki exists)
+### Đọc
+- Không có (setup chạy trước khi wiki tồn tại)
 
-### Writes
-- None (does not touch the wiki)
+### Ghi
+- Không có (không chạm vào wiki)
 
-## Workflow
+## Quy Trình Làm Việc
 
-### Step 1: Read Configuration Reference
+### Bước 1: Đọc Tài Liệu Tham Khảo Cấu Hình
 
-Read `config/setup-guide.md` to load the complete reference for all configurable keys,
-including what each does, which skills use it, how to get it, and fallback behavior.
+Đọc `config/setup-guide.md` để tải tham khảo đầy đủ cho tất cả các khóa có thể cấu hình,
+bao gồm chức năng, kỹ năng sử dụng, cách lấy và hành vi dự phòng.
 
-### Step 2: Detect Current Environment
+### Bước 2: Phát Hiện Môi Trường Hiện Tại
 
-Run the following to check what is already configured:
+Chạy lệnh sau để kiểm tra những gì đã được cấu hình:
 
 ```bash
 python3 -c "
@@ -60,70 +60,70 @@ for k, label in keys.items():
 "
 ```
 
-Also detect the Python environment and `.venv` status:
+Cũng phát hiện môi trường Python và trạng thái `.venv`:
 ```bash
 ls .venv/ 2>/dev/null && echo "venv:present" || echo "venv:absent"
 python3 --version
 ```
 
-### Step 3: Show Configuration Status
+### Bước 3: Hiển Thị Trạng Thái Cấu Hình
 
-Present a clear summary to the user, grouped by status:
+Trình bày tóm tắt rõ ràng cho người dùng, nhóm theo trạng thái:
 
 ```
-ΩmegaWiki Configuration Status
+Trạng Thái Cấu Hình ΩmegaWiki
 ================================
-✓  ANTHROPIC_API_KEY      — managed by Claude Code (claude login)
+✓  ANTHROPIC_API_KEY      — được quản lý bởi Claude Code (claude login)
 
-Recommended:
-✗  Semantic Scholar        — not set  (citation expansion 3x slower — get free key)
+Được khuyến nghị:
+✗  Semantic Scholar        — chưa thiết lập  (mở rộng trích dẫn chậm hơn 3 lần — lấy khóa miễn phí)
 
-Optional:
-✗  DeepXiv                 — not set  (semantic search unavailable)
-✗  Review LLM              — not set  (cross-model review unavailable)
+Tùy chọn:
+✗  DeepXiv                 — chưa thiết lập  (tìm kiếm ngữ nghĩa không khả dụng)
+✗  Review LLM              — chưa thiết lập  (đánh giá chéo giữa các mô hình không khả dụng)
 ```
 
-Ask the user: "Which would you like to configure? (You can skip any or all.)"
+Hỏi người dùng: "Bạn muốn cấu hình cái nào? (Bạn có thể bỏ qua bất kỳ hoặc tất cả.)"
 
-### Step 4: Configure Each Key (user-directed)
+### Bước 4: Cấu Hình Từng Khóa (theo hướng dẫn của người dùng)
 
-For each key the user wants to configure, follow the specific sub-flow below.
-Always ask for user confirmation before writing to `.env`.
+Đối với mỗi khóa người dùng muốn cấu hình, thực hiện quy trình con cụ thể dưới đây.
+Luôn yêu cầu xác nhận của người dùng trước khi ghi vào `.env`.
 
 ---
 
-#### 4a: Semantic Scholar API Key
+#### 4a: Khóa API Semantic Scholar
 
-**Explain**: "Semantic Scholar gives citation data and paper search.
-Used by /ingest, /init, /novelty, /ideate. Free to get.
-**Recommended** — without it, /init runs 3x slower and citation-chain expansion is much less effective."
+**Giải thích**: "Semantic Scholar cung cấp dữ liệu trích dẫn và tìm kiếm bài báo.
+Được sử dụng bởi /ingest, /init, /novelty, /ideate. Miễn phí.
+**Được khuyến nghị** — nếu không có, /init chạy chậm hơn 3 lần và mở rộng chuỗi trích dẫn kém hiệu quả hơn nhiều."
 
-**Guide to get it**: "Go to https://www.semanticscholar.org/product/api and click 'Get API Key'. It's free."
+**Hướng dẫn lấy**: "Truy cập https://www.semanticscholar.org/product/api và nhấp vào 'Get API Key'. Nó miễn phí."
 
-**Ask**: "Do you have a Semantic Scholar API key? (paste it, or 'skip')"
+**Hỏi**: "Bạn có khóa API Semantic Scholar không? (dán vào đây, hoặc 'bỏ qua')"
 
-**If provided**, write to `.env`:
+**Nếu được cung cấp**, ghi vào `.env`:
 ```python
-# Read current .env, update or append SEMANTIC_SCHOLAR_API_KEY=<value>
+# Đọc .env hiện tại, cập nhật hoặc thêm SEMANTIC_SCHOLAR_API_KEY=<giá trị>
 ```
-Use the Edit tool to update `.env`:
-- If `SEMANTIC_SCHOLAR_API_KEY=` line exists (even empty), replace it
-- Otherwise append `SEMANTIC_SCHOLAR_API_KEY=<value>`
+Sử dụng công cụ Edit để cập nhật `.env`:
+- Nếu dòng `SEMANTIC_SCHOLAR_API_KEY=` tồn tại (ngay cả khi trống), thay thế nó
+- Nếu không, thêm `SEMANTIC_SCHOLAR_API_KEY=<giá trị>`
 
 ---
 
-#### 4b: DeepXiv Token
+#### 4b: Token DeepXiv
 
-**Explain**: "DeepXiv enables semantic paper search, AI paper summaries (TLDR),
-and trending paper detection. Used by /daily-arxiv, /novelty, /ideate, /ingest, /init.
-Without it, those skills fall back to arXiv RSS + Semantic Scholar — everything still works."
+**Giải thích**: "DeepXiv cho phép tìm kiếm bài báo theo ngữ nghĩa, tóm tắt bài báo bằng AI (TLDR),
+và phát hiện bài báo xu hướng. Được sử dụng bởi /daily-arxiv, /novelty, /ideate, /ingest, /init.
+Nếu không có, các kỹ năng này sẽ quay lại RSS arXiv + Semantic Scholar — mọi thứ vẫn hoạt động."
 
-**Offer three options**:
-1. **Auto-register** (recommended, free, instant): Run the registration inline
-2. **Paste existing token**: User provides their token
-3. **Skip**: Configure later
+**Đề xuất ba tùy chọn**:
+1. **Tự động đăng ký** (được khuyến nghị, miễn phí, tức thì): Thực hiện đăng ký trực tiếp
+2. **Dán token hiện có**: Người dùng cung cấp token của họ
+3. **Bỏ qua**: Cấu hình sau
 
-**For option 1 — auto-register**, run:
+**Đối với tùy chọn 1 — tự động đăng ký**, chạy:
 ```bash
 python3 -c "
 import sys, json
@@ -131,7 +131,7 @@ from uuid import uuid4
 try:
     import requests
 except ImportError:
-    print('ERROR: requests not installed', file=sys.stderr)
+    print('ERROR: requests chưa được cài đặt', file=sys.stderr)
     sys.exit(1)
 
 suffix = uuid4().hex[:10]
@@ -155,57 +155,57 @@ if not result.get('success'):
 token = result.get('data', {}).get('token', '')
 daily_limit = result.get('data', {}).get('daily_limit', 1000)
 if not token:
-    print('ERROR: no token in response', file=sys.stderr)
+    print('ERROR: không có token trong phản hồi', file=sys.stderr)
     sys.exit(1)
 
 print(token)
 print(f'daily_limit:{daily_limit}', file=sys.stderr)
 "
 ```
-stdout → token value; stderr → human-readable status (pass through, don't suppress).
+stdout → giá trị token; stderr → trạng thái dễ đọc (chuyển tiếp, không chặn).
 
-If registration succeeds, write the token to `.env`. If it fails, show the error and
-offer to let the user paste a token manually instead.
+Nếu đăng ký thành công, ghi token vào `.env`. Nếu thất bại, hiển thị lỗi và
+hỏi người dùng có muốn dán token thủ công không.
 
 ---
 
 #### 4c: Review LLM
 
-**Explain**: "The Review LLM connects ΩmegaWiki to a second AI model for independent
-adversarial review. It's used by /review, /novelty, /ideate, /paper-plan, /paper-draft,
-/rebuttal, /refine, /exp-eval, and /exp-design. Works with any OpenAI-compatible API.
-Without it, those skills skip the cross-model review step (everything still works)."
+**Giải thích**: "Review LLM kết nối ΩmegaWiki với mô hình AI thứ hai để đánh giá đối kháng độc lập.
+Được sử dụng bởi /review, /novelty, /ideate, /paper-plan, /paper-draft,
+/rebuttal, /refine, /exp-eval và /exp-design. Hoạt động với bất kỳ API tương thích OpenAI nào.
+Nếu không có, các kỹ năng này sẽ bỏ qua bước đánh giá chéo giữa các mô hình (mọi thứ vẫn hoạt động)."
 
-**Present the provider table** from `config/setup-guide.md` (Key 3 section).
+**Trình bày bảng nhà cung cấp** từ `config/setup-guide.md` (Mục 3).
 
-**Clarify what 'OpenAI-compatible' means** if the user asks: any API that accepts
-`POST /chat/completions` with `{"model": "...", "messages": [...]}` in the OpenAI format.
+**Giải thích 'tương thích OpenAI'** nếu người dùng hỏi: bất kỳ API nào chấp nhận
+`POST /chat/completions` với `{"model": "...", "messages": [...]}` theo định dạng OpenAI.
 
-**Ask for**:
-1. `LLM_BASE_URL` — e.g. `https://api.deepseek.com/v1`
-2. `LLM_API_KEY` — their API key for that provider
-3. `LLM_MODEL` — model name, e.g. `deepseek-chat`
+**Hỏi**:
+1. `LLM_BASE_URL` — ví dụ: `https://api.deepseek.com/v1`
+2. `LLM_API_KEY` — khóa API của họ cho nhà cung cấp đó
+3. `LLM_MODEL` — tên mô hình, ví dụ: `deepseek-chat`
 
-**Validate format**: Base URL should start with `http://` or `https://` and end with `/v1`
-(or similar path). If it looks wrong, ask for confirmation before writing.
+**Xác thực định dạng**: Base URL nên bắt đầu bằng `http://` hoặc `https://` và kết thúc bằng `/v1`
+(hoặc đường dẫn tương tự). Nếu có vẻ sai, yêu cầu xác nhận trước khi ghi.
 
-**Write all three** to `.env` once the user confirms.
+**Ghi cả ba** vào `.env` sau khi người dùng xác nhận.
 
-**After writing**: Remind the user that the Review LLM MCP server starts when Claude Code
-launches and reads `.env` at that time — changes take effect after restarting Claude Code.
-
----
-
-#### 4d: arXiv Categories (only if user asks)
-
-This key has a sensible default (`cs.LG,cs.CV,cs.CL,cs.AI,stat.ML`). Only configure
-it if the user explicitly asks, or if their research area is clearly outside ML/AI.
+**Sau khi ghi**: Nhắc người dùng rằng máy chủ MCP Review LLM khởi động khi Claude Code
+khởi chạy và đọc `.env` tại thời điểm đó — các thay đổi có hiệu lực sau khi khởi động lại Claude Code.
 
 ---
 
-### Step 5: Verify Configuration
+#### 4d: Danh mục arXiv (chỉ khi người dùng yêu cầu)
 
-After the user finishes configuring, run the verification check from `config/setup-guide.md`:
+Khóa này có giá trị mặc định hợp lý (`cs.LG,cs.CV,cs.CL,cs.AI,stat.ML`). Chỉ cấu hình
+nó nếu người dùng yêu cầu rõ ràng, hoặc nếu lĩnh vực nghiên cứu của họ rõ ràng nằm ngoài ML/AI.
+
+---
+
+### Bước 5: Xác Minh Cấu Hình
+
+Sau khi người dùng hoàn tất cấu hình, chạy kiểm tra xác minh từ `config/setup-guide.md`:
 
 ```bash
 python3 -c "
@@ -222,60 +222,60 @@ for k in keys:
 "
 ```
 
-Show a final summary. For any keys still not set, briefly note what they unlock
-and that the user can run `/setup` again anytime to add them.
+Hiển thị tóm tắt cuối cùng. Đối với bất kỳ khóa nào vẫn chưa được thiết lập, ghi chú ngắn gọn về chức năng của chúng
+và người dùng có thể chạy `/setup` lại bất kỳ lúc nào để thêm chúng.
 
-### Step 6: Next Steps
+### Bước 6: Các Bước Tiếp Theo
 
-If this is a fresh install (no `wiki/` directory):
+Nếu đây là cài đặt mới (không có thư mục `wiki/`):
 ```
-Configuration done. Next:
-  • Put your own papers in raw/papers/ (.tex or .pdf)
-  • Optional: add intent notes to raw/notes/ and saved pages to raw/web/
-  • /init and direct local /ingest will manage generated inputs under raw/discovered/ and raw/tmp/
-  • Run: /init [your-research-topic]
-```
-
-If `wiki/` already exists:
-```
-Configuration updated. Restart Claude Code for Review LLM changes to take effect.
+Cấu hình hoàn tất. Tiếp theo:
+  • Đặt các bài báo của bạn vào raw/papers/ (.tex hoặc .pdf)
+  • Tùy chọn: thêm ghi chú ý định vào raw/notes/ và các trang đã lưu vào raw/web/
+  • /init và /ingest cục bộ trực tiếp sẽ quản lý các đầu vào được tạo dưới raw/discovered/ và raw/tmp/
+  • Chạy: /init [chủ-đề-nghiên-cứu-của-bạn]
 ```
 
-## Constraints
+Nếu `wiki/` đã tồn tại:
+```
+Cấu hình đã cập nhật. Khởi động lại Claude Code để các thay đổi của Review LLM có hiệu lực.
+```
 
-- **Never overwrite existing non-empty values** without asking the user first
-- **Never expose the full key value** in output — show only the first 8 characters + `...`
-- **Write only to `.env`** — never to `~/.env` or other locations
-- **No wiki reads or writes** — this skill runs before the wiki may exist
-- **Skip gracefully**: if the user says "skip all", show the status summary and exit cleanly
+## Các Ràng Buộc
 
-## Error Handling
+- **Không bao giờ ghi đè các giá trị không trống hiện có** mà không hỏi người dùng trước
+- **Không bao giờ hiển thị toàn bộ giá trị khóa** trong đầu ra — chỉ hiển thị 8 ký tự đầu + `...`
+- **Chỉ ghi vào `.env`** — không bao giờ ghi vào `~/.env` hoặc các vị trí khác
+- **Không đọc hoặc ghi wiki** — kỹ năng này chạy trước khi wiki có thể tồn tại
+- **Bỏ qua một cách nhẹ nhàng**: nếu người dùng nói "bỏ qua tất cả", hiển thị tóm tắt trạng thái và thoát sạch sẽ
 
-- **`.env` not found**: Inform the user that `setup.sh` was not run yet. Offer to create `.env` from `.env.example`:
+## Xử Lý Lỗi
+
+- **`.env` không tìm thấy**: Thông báo cho người dùng rằng `setup.sh` chưa được chạy. Đề nghị tạo `.env` từ `.env.example`:
   ```bash
   cp config/.env.example .env
   ```
-  Then continue with configuration.
+  Sau đó tiếp tục cấu hình.
 
-- **`config/setup-guide.md` not found**: Proceed using the information in this SKILL.md directly.
+- **`config/setup-guide.md` không tìm thấy**: Tiếp tục sử dụng thông tin trong SKILL.md này trực tiếp.
 
-- **DeepXiv registration fails** (network error, server error): Show the error message clearly,
-  offer to let the user paste a token manually, or skip.
+- **Đăng ký DeepXiv thất bại** (lỗi mạng, lỗi máy chủ): Hiển thị thông báo lỗi rõ ràng,
+  đề nghị người dùng dán token thủ công, hoặc bỏ qua.
 
-- **Python environment issue** (`tools/_env.py` not found): Note that `.venv` may not be active,
-  but still read `.env` directly using shell or Python file I/O to check current state.
+- **Vấn đề môi trường Python** (`tools/_env.py` không tìm thấy): Lưu ý rằng `.venv` có thể chưa hoạt động,
+  nhưng vẫn đọc `.env` trực tiếp bằng shell hoặc I/O tệp Python để kiểm tra trạng thái hiện tại.
 
-## Dependencies
+## Phụ Thuộc
 
-### Tools (via Bash)
-- `python3 -c "import _env; ..."` — read current `.env` state
-- `python3 -c "import requests; ..."` — DeepXiv auto-registration HTTP call
+### Công cụ (qua Bash)
+- `python3 -c "import _env; ..."` — đọc trạng thái `.env` hiện tại
+- `python3 -c "import requests; ..."` — cuộc gọi HTTP đăng ký tự động DeepXiv
 
-### Files Read
-- `config/setup-guide.md` — complete reference for all configurable keys
-- `.env` — current configuration (read + write)
+### Tệp Đọc
+- `config/setup-guide.md` — tham khảo đầy đủ cho tất cả các khóa có thể cấu hình
+- `.env` — cấu hình hiện tại (đọc + ghi)
 
-### Files Written
-- `.env` — updated with newly configured keys (via Edit tool)
+### Tệp Ghi
+- `.env` — đã cập nhật với các khóa mới được cấu hình (qua công cụ Edit)
 
-### No MCP servers, no wiki, no external skills called
+### Không gọi máy chủ MCP, không gọi wiki, không gọi kỹ năng bên ngoài

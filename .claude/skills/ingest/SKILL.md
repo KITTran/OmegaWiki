@@ -1,123 +1,109 @@
 ---
-description: Ingest a paper into the wiki — creates pages (papers + concepts + people + claims) and builds all cross-references and graph edges. Trigger whenever the user says "ingest", "add this paper", drops a `.pdf` / `.tex` / arXiv URL, or asks to fold a paper into the knowledge base.
-argument-hint: <local-path-or-arXiv-URL> [--discover]
+description: Ingest một bài báo vào wiki — tạo các trang (papers + concepts + people + claims) và xây dựng tất cả các tham chiếu chéo và cạnh đồ thị. Kích hoạt bất cứ khi nào người dùng nói "ingest", "thêm bài báo này", thả `.pdf` / `.tex` / URL arXiv, hoặc yêu cầu tích hợp bài báo vào cơ sở tri thức.
+argument-hint: <đường-dẫn-cục-bộ-hoặc-URL-arXiv>
 ---
 
 # /ingest
 
-Turn one paper into a fully wired set of wiki pages. Emit well-formed entities and correct cross-references; leave semantic audits (backlink symmetry, dangling nodes, field-value policing) for `/check`.
+Biến một bài báo thành một tập hợp các trang wiki được kết nối đầy đủ. Tạo ra các thực thể có cấu trúc tốt và tham chiếu chéo chính xác; để lại các kiểm tra ngữ nghĩa (đối xứng liên kết ngược, nút treo, kiểm soát giá trị trường) cho `/check`.
 
-Use these local references on demand:
+Sử dụng các tài liệu tham khảo cục bộ này theo yêu cầu:
 
-- `references/pdf-preprocessing.md` — arXiv-ID recovery, tex fetching, prepare-paper handoff for direct PDF drops
-- `references/dedup-policy.md` — merge-vs-create decision rule for concepts and claims, and the line that separates `/ingest` shape checks from `/check` semantic audits
-- `references/cross-references.md` — forward/reverse link matrix and paper-to-paper edge-type selection
-- `references/init-mode.md` — manifest-driven handoff from `/init` and parallel-safety conventions
-- `references/error-handling.md` — source parse, API, and slug-collision fallbacks
+- `references/pdf-preprocessing.md` — khôi phục arXiv-ID, lấy tex, chuyển giao prepare-paper cho các tệp PDF thả trực tiếp
+- `references/dedup-policy.md` — quy tắc quyết định hợp nhất-so-với-tạo cho concepts và claims, và ranh giới phân tách kiểm tra hình dạng của `/ingest` với kiểm tra ngữ nghĩa của `/check`
+- `references/cross-references.md` — ma trận liên kết xuôi/ngược và lựa chọn loại cạnh paper-to-paper
+- `references/init-mode.md` — chuyển giao dựa trên manifest từ `/init` và quy ước an toàn song song
+- `references/error-handling.md` — phân tích cú pháp nguồn, API và các phương án dự phòng xung đột slug
 
-Open `docs/runtime-page-templates.en.md` before drafting any wiki page frontmatter or body sections, and `docs/runtime-support-files.en.md` for `index.md`, `log.md`, and `graph/` formats.
+Mở `docs/runtime-page-templates.vi.md` trước khi soạn thảo bất kỳ frontmatter hoặc phần nội dung trang wiki nào, và `docs/runtime-support-files.vi.md` cho định dạng `index.md`, `log.md` và `graph/`.
 
-## Inputs
+## Đầu Vào
 
-- `source`: one of — arXiv URL (e.g. `https://arxiv.org/abs/2106.09685`), local `.tex`, local `.pdf`, or a `canonical_ingest_path` handed off by `/init` via `.checkpoints/init-sources.json`(see `references/init-mode.md`)
-- `--discover` (optional, default **off**): after the final report, invoke `/discover --anchor <this-paper's-arxiv-id>` and append the shortlist to the report as "Related papers you may want to ingest next". Never auto-ingests the suggestions. Skipped automatically in INIT MODE. Treat this as a user-owned flag: do not set it based on repo state.
+- `source`: một trong số — URL arXiv (ví dụ: `https://arxiv.org/abs/2106.09685`), `.tex` cục bộ, `.pdf` cục bộ, hoặc `canonical_ingest_path` được chuyển giao bởi `/init` qua `.checkpoints/init-sources.json`
 
-## Outputs
+## Đầu Ra
 
-- One fully-wired paper page plus linked entities (concepts, claims, people)
-- Graph edges and citations appended via `tools/research_wiki.py`
-- Terminal summary with page counts and suggested follow-up ingests
+- `wiki/papers/{slug}.md` — trang bài báo mới
+- `wiki/concepts/{slug}.md`, `wiki/people/{slug}.md`, `wiki/claims/{slug}.md` — được tạo một cách tiết kiệm theo `references/dedup-policy.md`, hoặc được chỉnh sửa tại chỗ để thêm liên kết ngược
+- `wiki/topics/{slug}.md` — được chỉnh sửa để thêm các công trình nền tảng / gần đây khi bài báo rõ ràng thuộc về một chủ đề hiện có
+- `wiki/graph/edges.jsonl` — được thêm qua `tools/research_wiki.py add-edge`
+- `wiki/index.md` — các mục mới được thêm
+- `wiki/log.md` — một dòng thêm
+- `wiki/graph/context_brief.md`, `wiki/graph/open_questions.md` — được xây dựng lại (bỏ qua trong CHẾ ĐỘ INIT; `/init` cha xây dựng lại một lần tại fan-in)
 
-## Wiki Interaction
+## Tương Tác Wiki
 
-### Reads
+### Đọc
 
-- `wiki/index.md` for existing slugs and tags
-- `wiki/papers/*.md` to detect an already-ingested paper
-- `wiki/concepts/*.md` and `wiki/foundations/*.md` for dedup matches
-- `wiki/claims/*.md` for dedup matches
-- `wiki/people/*.md` for existing authors
-- `wiki/topics/*.md` to place the paper under existing topics
-- `wiki/graph/open_questions.md` to notice when the paper addresses a known gap
+- `wiki/index.md` cho các slug và tags hiện có
+- `wiki/papers/*.md` để phát hiện bài báo đã được ingest
+- `wiki/concepts/*.md` và `wiki/foundations/*.md` cho các kết quả khớp loại bỏ trùng lặp
+- `wiki/claims/*.md` cho các kết quả khớp loại bỏ trùng lặp
+- `wiki/people/*.md` cho các tác giả hiện có
+- `wiki/topics/*.md` để đặt bài báo dưới các chủ đề hiện có
+- `wiki/graph/open_questions.md` để nhận biết khi bài báo giải quyết một khoảng trống đã biết
 
-### Writes
+### Ghi
 
-- `wiki/papers/{slug}.md` — CREATE
-- `wiki/concepts/{slug}.md` — CREATE (new) or EDIT (append `key_papers`, aliases, variants)
-- `wiki/claims/{slug}.md` — CREATE (new) or EDIT (append `evidence` entry)
-- `wiki/people/{slug}.md` — CREATE (importance ≥ 4 only) or EDIT (append `Key papers`)
-- `wiki/topics/{slug}.md` — EDIT only (no CREATE from `/ingest`)
-- `wiki/graph/edges.jsonl` — APPEND via tool
-- `wiki/graph/citations.jsonl` — APPEND via tool
-- `wiki/graph/context_brief.md` — REBUILD (skipped in INIT MODE)
-- `wiki/graph/open_questions.md` — REBUILD (skipped in INIT MODE)
-- `wiki/index.md` — APPEND
-- `wiki/log.md` — APPEND via tool
+- `wiki/papers/{slug}.md` — TẠO
+- `wiki/concepts/{slug}.md` — TẠO (mới) hoặc CHỈNH SỬA (thêm `key_papers`, aliases, variants)
+- `wiki/claims/{slug}.md` — TẠO (mới) hoặc CHỈNH SỬA (thêm mục `evidence`)
+- `wiki/people/{slug}.md` — TẠO (chỉ importance ≥ 4) hoặc CHỈNH SỬA (thêm `Key papers`)
+- `wiki/topics/{slug}.md` — CHỈ CHỈNH SỬA (không TẠO từ `/ingest`)
+- `wiki/graph/edges.jsonl` — THÊM qua công cụ
+- `wiki/graph/context_brief.md` — XÂY DỰNG LẠI (bỏ qua trong CHẾ ĐỘ INIT)
+- `wiki/graph/open_questions.md` — XÂY DỰNG LẠI (bỏ qua trong CHẾ ĐỘ INIT)
+- `wiki/index.md` — THÊM
+- `wiki/log.md` — THÊM qua công cụ
 
-### Graph edges created
+### Các cạnh đồ thị được tạo
 
-- `paper → concept`: `introduces_concept` / `uses_concept` / `extends_concept` / `critiques_concept` with `confidence`
-- `paper → foundation`: `derived_from` (foundation is terminal; no reverse link)
+- `paper → concept`: `supports` / `extends`
+- `paper → foundation`: `derived_from` (foundation là điểm cuối; không có liên kết ngược)
 - `paper → claim`: `supports` / `contradicts`
-- `paper → paper`: `same_problem_as` / `similar_method_to` / `complementary_to` / `builds_on` / `compares_against` / `improves_on` / `challenges` / `surveys` with `confidence`
-- bibliographic `paper → paper`: `cites` in `graph/citations.jsonl`
+- `paper → paper`: `extends` / `supersedes` / `inspired_by` / `contradicts` (xem `references/cross-references.md` cho quy tắc lựa chọn)
 
-`tools/research_wiki.py add-edge` rejects missing confidence/evidence for
-paper-paper and paper-concept semantic edges, and rejects legacy
-paper-to-concept or paper-to-paper types on new writes.
+## Quy Trình Làm Việc
 
-## Workflow
-
-**Pre-condition**: working directory contains `wiki/`, `raw/`, and `tools/`. Resolve the Python interpreter once and reuse it:
+**Điều kiện tiên quyết**: thư mục làm việc chứa `wiki/`, `raw/` và `tools/`. Giải quyết trình thông dịch Python một lần và tái sử dụng:
 
 ```bash
-# Find the project root via git so worktree subagents can still locate .venv.
-# .venv is gitignored, so a subagent whose cwd is ../.worktrees/<branch>/
-# doesn't have one — without this lookup it falls back to system python3 and
-# misses the .env-loaded API keys plus the installed deps (deepxiv-sdk etc.).
-# git rev-parse --git-common-dir returns the main repo's .git regardless of
-# which worktree the shell is in; its parent is the project root.
-GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null || true)
-PROJECT_ROOT=""
-if [ -n "$GIT_COMMON_DIR" ]; then
-  PROJECT_ROOT=$(cd "$(dirname "$GIT_COMMON_DIR")" 2>/dev/null && pwd)
-fi
-
-if   [ -x "$PROJECT_ROOT/.venv/bin/python" ];         then PYTHON_BIN="$PROJECT_ROOT/.venv/bin/python"
-elif [ -x "$PROJECT_ROOT/.venv/Scripts/python.exe" ]; then PYTHON_BIN="$PROJECT_ROOT/.venv/Scripts/python.exe"
-elif [ -x .venv/bin/python ];                         then PYTHON_BIN=.venv/bin/python
-elif [ -x .venv/Scripts/python.exe ];                 then PYTHON_BIN=.venv/Scripts/python.exe
-else                                                       PYTHON_BIN=python3
+if [ -x .venv/bin/python ]; then
+  PYTHON_BIN=.venv/bin/python
+elif [ -x .venv/Scripts/python.exe ]; then
+  PYTHON_BIN=.venv/Scripts/python.exe
+else
+  PYTHON_BIN=python3
 fi
 export PYTHON_BIN
 ```
 
-### Step 1: Resolve the source
+### Bước 1: Giải Quyết Nguồn
 
-1. If `/init` passed a `canonical_ingest_path`, enter **INIT MODE** and consume that path verbatim. Do not rescan `raw/`. See `references/init-mode.md`.
-2. If the source is an arXiv URL, extract the arXiv ID, use `"$PYTHON_BIN" tools/fetch_s2.py paper <arxiv-id>` to recover the title when possible, then run `"$PYTHON_BIN" tools/init_discovery.py download --raw-root raw --arxiv-id <arxiv-id> --title "<title-or-arxiv-id>"`. Continue from the returned `canonical_ingest_path`. The helper tries arXiv source first and falls back to PDF; do not call `fetch_arxiv.py` for a single paper because it is RSS-only.
-3. If the source is a local `.tex`, use it directly.
-4. If the source is a local `.pdf`, run the preprocessing pipeline in `references/pdf-preprocessing.md` to produce a prepared `.tex` under `raw/tmp/` before continuing.
+1. Nếu `/init` chuyển giao `canonical_ingest_path`, vào **CHẾ ĐỘ INIT** và sử dụng đường dẫn đó nguyên văn. Không quét lại `raw/`. Xem `references/init-mode.md`.
+2. Nếu nguồn là URL arXiv, lấy `.tex` dưới `raw/discovered/` qua `"$PYTHON_BIN" tools/fetch_arxiv.py`. Quay lại PDF nếu kho lưu trữ nguồn không khả dụng.
+3. Nếu nguồn là `.tex` cục bộ, sử dụng trực tiếp.
+4. Nếu nguồn là `.pdf` cục bộ, chạy quy trình tiền xử lý trong `references/pdf-preprocessing.md` để tạo ra `.tex` đã chuẩn bị dưới `raw/tmp/` trước khi tiếp tục.
 
-Raw persistence rule: never copy or duplicate a file already under `raw/discovered/`, `raw/tmp/`, or `raw/papers/` into a different raw subtree.
+Quy tắc lưu trữ thô: không bao giờ sao chép hoặc nhân đôi tệp đã có dưới `raw/discovered/`, `raw/tmp/` hoặc `raw/papers/` vào cây con thô khác.
 
-### Step 2: Paper identity and enrichment
+### Bước 2: Danh Tính và Làm Giàu Bài Báo
 
-1. Generate the paper slug:
+1. Tạo slug bài báo:
 
    ```bash
-   "$PYTHON_BIN" tools/research_wiki.py slug "<paper-title>"
+   "$PYTHON_BIN" tools/research_wiki.py slug "<tiêu-đề-bài-báo>"
    ```
 
-2. Stop-if-exists: if `wiki/papers/{slug}.md` already exists and the arXiv ID or title matches, report and exit. If they differ, resolve the collision per `references/error-handling.md`.
-3. When an arXiv ID is available, query Semantic Scholar:
+2. Dừng-nếu-tồn-tại: nếu `wiki/papers/{slug}.md` đã tồn tại và ID arXiv hoặc tiêu đề khớp, báo cáo và thoát. Nếu khác nhau, giải quyết xung đột theo `references/error-handling.md`.
+3. Khi có ID arXiv, truy vấn Semantic Scholar:
 
    ```bash
    "$PYTHON_BIN" tools/fetch_s2.py paper <arxiv-id>
    ```
 
-   Use the result for `venue`, `year`, `s2_id`, citation count, and the evidence behind the `importance` score (1-5).
-4. Optional DeepXiv enrichment, when available. Skip silently if it fails:
+   Sử dụng kết quả cho `venue`, `year`, `s2_id`, số lượng trích dẫn và bằng chứng đằng sau điểm `importance` (1-5).
+4. Làm giàu DeepXiv tùy chọn, khi khả dụng. Bỏ qua âm thầm nếu thất bại:
 
    ```bash
    "$PYTHON_BIN" tools/fetch_deepxiv.py brief <arxiv-id>
@@ -125,143 +111,120 @@ Raw persistence rule: never copy or duplicate a file already under `raw/discover
    "$PYTHON_BIN" tools/fetch_deepxiv.py social <arxiv-id>
    ```
 
-   `brief` seeds the Key-idea section; `head` sanity-checks your tex parsing against the section structure; `social` is an auxiliary importance signal.
+   `brief` khởi tạo phần Key-idea; `head` kiểm tra phân tích tex của bạn với cấu trúc phần; `social` là tín hiệu importance phụ trợ.
 
-### Step 3: Write the paper page
+### Bước 3: Viết Trang Bài Báo
 
-Open `docs/runtime-page-templates.en.md` for the paper template. Fill every required frontmatter field; leave `cited_by` empty for now (step 5 backfills it).
+Mở `docs/runtime-page-templates.vi.md` cho mẫu paper. Điền mọi trường frontmatter bắt buộc; để `cited_by` trống hiện tại (bước 5 điền lại).
 
-Before writing, run a **shape check** on the frontmatter you are about to emit — no more than this:
+Trước khi viết, chạy **kiểm tra hình dạng** trên frontmatter bạn sắp tạo — không hơn thế này:
 
-- every required key is present and non-empty
-- `importance` ∈ {1,2,3,4,5}; `status` on claims ∈ the documented set; `maturity` on concepts ∈ the documented set; claim `confidence` ∈ [0,1]
-- YAML parses
+- mọi khóa bắt buộc đều có mặt và không trống
+- `importance` ∈ {1,2,3,4,5}; `status` trên claims ∈ tập hợp được ghi chép; `maturity` trên concepts ∈ tập hợp được ghi chép; `confidence` ∈ [0,1]
+- YAML phân tích được
 
-The shape check is intentionally narrow. Backlink symmetry, dangling-node detection, and cross-entity consistency are `/check`'s job, not this skill's.
+Kiểm tra hình dạng cố ý hẹp. Đối xứng liên kết ngược, phát hiện nút treo và tính nhất quán giữa các thực thể là công việc của `/check`, không phải kỹ năng này.
 
-Body sections to populate: Problem, Key idea, Method, Results, Limitations, Open questions, My take, Related.
+Các phần nội dung cần điền: Problem, Key idea, Method, Results, Limitations, Open questions, My take, Related.
 
-### Step 4: Concepts, claims, people
+### Bước 4: Concepts, Claims, People
 
-Follow `references/dedup-policy.md`. In short:
+Tuân theo `references/dedup-policy.md`. Tóm lại:
 
-1. For each candidate concept or claim, call the matching `find-similar-*` tool first.
-2. Prefer merging into the top result. Create a new page only when the tool returns no acceptable candidate and the paper's importance justifies it.
-3. For each entity you write or edit, write the reverse link in the same turn. The obligation matrix lives in `references/cross-references.md`.
-4. Create a `wiki/people/{slug}.md` only for papers with importance ≥ 4. Otherwise append to existing author pages only.
+1. Đối với mỗi concept hoặc claim ứng viên, gọi công cụ `find-similar-*` khớp trước.
+2. Ưu tiên hợp nhất vào kết quả hàng đầu. Chỉ tạo trang mới khi công cụ không trả về ứng viên chấp nhận được và importance của bài báo biện minh cho nó.
+3. Đối với mỗi thực thể bạn viết hoặc chỉnh sửa, viết liên kết ngược trong cùng lượt. Ma trận nghĩa vụ nằm trong `references/cross-references.md`.
+4. Chỉ tạo `wiki/people/{slug}.md` cho các bài báo có importance ≥ 4. Nếu không, chỉ thêm vào các trang tác giả hiện có.
 
-### Step 5: Paper-to-paper edges and `cited_by`
+### Bước 5: Các Cạnh Paper-to-Paper và `cited_by`
 
-Skip this whole step in INIT MODE — the parent `/init` handles it at fan-in.
+Bỏ qua toàn bộ bước này trong CHẾ ĐỘ INIT — `/init` cha xử lý nó tại fan-in.
 
 ```bash
 "$PYTHON_BIN" tools/fetch_s2.py references <arxiv-id>
 "$PYTHON_BIN" tools/fetch_s2.py citations <arxiv-id>
 ```
 
-- For each reference whose arXiv ID or title resolves to an existing `wiki/papers/{slug}.md`, add a bibliographic `cites` row to `graph/citations.jsonl`.
-- Add a semantic paper-to-paper edge in `graph/edges.jsonl` only when the source text gives a clear cue. Edge-type selection is in `references/cross-references.md`. If no semantic relation cleanly fits, keep only the `cites` row.
-- For each citation already in the wiki, append the citer's slug to this paper's `cited_by`.
-- Surface unmatched high-citation references in the final report so the user can decide whether to follow up with another `/ingest`.
+- Đối với mỗi tham chiếu có ID arXiv hoặc tiêu đề giải quyết thành `wiki/papers/{slug}.md` hiện có, thêm một cạnh paper-to-paper duy nhất. Lựa chọn loại cạnh nằm trong `references/cross-references.md`. Nếu không có bài báo wiki hiện có nào khớp, **không suy đoán** — bỏ qua.
+- Đối với mỗi trích dẫn đã có trong wiki, thêm slug của người trích dẫn vào `cited_by` của bài báo này.
+- Nổi bật các tham chiếu có trích dẫn cao không khớp trong báo cáo cuối cùng để người dùng có thể quyết định có nên theo dõi bằng `/ingest` khác không.
 
-### Step 6: Topics and index
+### Bước 6: Topics và Index
 
-1. Match the paper's domain and tags against existing `wiki/topics/*.md`. For each match:
-   - importance ≥ 4 → append to the topic's `## Seminal works`
-   - importance < 4 → append under `## SOTA tracker` or `## Recent work` by year
-   - if the paper directly addresses a listed open problem, annotate that line on the topic page
-2. Do not create new topic pages from `/ingest` — topic creation belongs to `/init` and `/edit`.
-3. Append new or edited page entries to `wiki/index.md` under their category headings. See `docs/runtime-support-files.en.md` for the exact format.
+1. Khớp lĩnh vực và tags của bài báo với `wiki/topics/*.md` hiện có. Đối với mỗi kết quả khớp:
+   - importance ≥ 4 → thêm vào `## Seminal works` của chủ đề
+   - importance < 4 → thêm dưới `## SOTA tracker` hoặc `## Recent work` theo năm
+   - nếu bài báo trực tiếp giải quyết một vấn đề mở được liệt kê, chú thích dòng đó trên trang chủ đề
+2. Không tạo trang chủ đề mới từ `/ingest` — tạo chủ đề thuộc về `/init` và `/edit`.
+3. Thêm các mục trang mới hoặc đã chỉnh sửa vào `wiki/index.md` dưới tiêu đề danh mục của chúng. Xem `docs/runtime-support-files.vi.md` cho định dạng chính xác.
 
-### Step 7: Log and rebuild
+### Bước 7: Log và Xây Dựng Lại
 
 ```bash
-"$PYTHON_BIN" tools/research_wiki.py log wiki/ "ingest | added papers/<slug> | updated: <list>"
+"$PYTHON_BIN" tools/research_wiki.py log wiki/ "ingest | added papers/<slug> | updated: <danh-sách>"
 ```
 
-Unless in INIT MODE:
+Trừ khi trong CHẾ ĐỘ INIT:
 
 ```bash
 "$PYTHON_BIN" tools/research_wiki.py rebuild-context-brief wiki/
 "$PYTHON_BIN" tools/research_wiki.py rebuild-open-questions wiki/
 ```
 
-### Step 8: Report
+### Bước 8: Báo Cáo
 
-Emit one compact summary covering: pages created, pages updated, graph edges added, contradictions surfaced (if any), and high-citation references not yet in the wiki (suggested follow-up ingests). Close with:
+Tạo một tóm tắt ngắn gọn bao gồm: các trang đã tạo, các trang đã cập nhật, các cạnh đồ thị đã thêm, các mâu thuẫn được nổi lên (nếu có), và các tham chiếu có trích dẫn cao chưa có trong wiki (đề xuất ingest tiếp theo). Kết thúc bằng:
 
 ```
 Wiki: +1 paper, +{N} claims, +{M} concepts, +{K} edges
 ```
 
-### Step 9: Optional discovery (only if `--discover` is set)
+## Các Ràng Buộc
 
-Skip this step unless the user explicitly passed `--discover`. Also skip it in INIT MODE — `/init`'s parent process decides whether to run discovery at fan-in, not individual subagents.
+- `raw/papers/`, `raw/notes/`, `raw/web/` thuộc sở hữu của người dùng và chỉ đọc. `/ingest` cục bộ trực tiếp có thể thêm các tệp tạm thời đã chuẩn bị dưới `raw/tmp/`; các ingest arXiv trực tiếp có thể ghi các tạo tác nguồn đã lấy dưới `raw/discovered/`. CHẾ ĐỘ INIT coi toàn bộ `raw/` là chỉ đọc.
+- `wiki/graph/` thuộc sở hữu của công cụ. Chỉ chỉnh sửa thông qua `tools/research_wiki.py`.
+- Slug luôn đến từ `tools/research_wiki.py slug`. Không bao giờ tự tạo.
+- Mọi liên kết xuôi viết liên kết ngược của nó trong cùng lượt — bất biến liên kết hai chiều của wiki. Ngoại lệ duy nhất là liên kết đến `wiki/foundations/`, là điểm cuối.
+- Ưu tiên nguồn: `.tex` > `.pdf` > dự phòng API thị giác. Không bao giờ ingest từ PDF khi có `.tex` khả dụng.
+- Ingest thận trọng về các thực thể mới:
+  - importance < 4: tối đa **1** concept mới và **1** claim mới mỗi bài báo
+  - importance ≥ 4: tối đa **3** concepts mới và **2** claims mới mỗi bài báo
+  - Bất kỳ ứng viên nào khác phải được hợp nhất vào kết quả `find-similar-*` gần nhất của chúng, hoặc bỏ qua để `/check` gắn cờ. Lý do và quy tắc khớp: `references/dedup-policy.md`.
+- `/ingest` chạy kiểm tra hình dạng trên đầu ra của chính nó (các khóa bắt buộc, phạm vi enum, YAML phân tích được) và dừng ở đó. Đối xứng liên kết ngược, nút treo và kiểm tra ngữ nghĩa đầy đủ thuộc về `/check`. Không triển khai lại chúng ở đây.
+- Giả sử một `/ingest` khác có thể chạy đồng thời trong worktree anh em. Tất cả các ghi tệp chia sẻ (`graph/edges.jsonl`, `index.md`, `log.md`) phải đi qua `tools/research_wiki.py` hoặc sử dụng ngữ nghĩa chỉ thêm. Xem `references/init-mode.md`.
+- Trong CHẾ ĐỘ INIT, bỏ qua `fetch_s2.py citations`, `fetch_s2.py references` và các lệnh `rebuild-*` — `/init` cha chạy chúng một lần sau fan-in.
 
-When active, invoke `/discover` with the just-ingested paper as the single anchor:
+## Xử Lý Lỗi
 
-```bash
-"$PYTHON_BIN" tools/discover.py from-anchors \
-  --id <arxiv-id-of-this-paper> \
-  --wiki-root wiki \
-  --limit 10 \
-  --output-checkpoint .checkpoints/ \
-  --markdown
-```
+Xem `references/error-handling.md`. Điểm nổi bật: thất bại phân tích cú pháp nguồn theo tầng tex → PDF → API thị giác → chuyển giao người dùng; mất kết nối S2 mặc định `importance` là 3 và bỏ qua điền lại trích dẫn; mất kết nối DeepXiv bỏ qua làm giàu âm thầm; xung đột slug thêm hậu tố số.
 
-Append the markdown output to the report under a heading like "Related papers you may want to ingest next". Do not auto-ingest anything from the shortlist — the user picks. If discovery fails (S2 outage, all channels empty), note the failure in one line and continue — a failed `/discover` must not fail an otherwise successful `/ingest`.
+## Phụ Thuộc
 
-## Constraints
-
-- `raw/papers/`, `raw/notes/`, `raw/web/` are user-owned and read-only. Direct local `/ingest` may add prepared sidecars under `raw/tmp/`; direct arXiv ingests may write fetched source artifacts under `raw/discovered/`. INIT MODE treats all of `raw/` as read-only.
-- `wiki/graph/` is tool-owned. Edit only through `tools/research_wiki.py`.
-- Slugs always come from `tools/research_wiki.py slug`. Never hand-craft.
-- Every forward link writes its reverse link in the same turn — the wiki's bidirectional-link invariant. The only exception is links to `wiki/foundations/`, which are terminal.
-- In INIT MODE, do not write reverse links into pages that already exist (created by a sibling worktree or scaffold). Record the relationship via `tools/research_wiki.py add-edge` only; the parent `/init` backfills reverse links during fan-in.
-- Source priority: `.tex` > `.pdf` > vision API fallback. Never ingest from a PDF when a usable `.tex` is available.
-- Ingest is conservative about new entities:
-  - importance < 4: at most **1** new concept and **1** new claim per paper
-  - importance ≥ 4: at most **3** new concepts and **2** new claims per paper
-  - Any further candidates must be merged into their nearest `find-similar-*` result, or left out for `/check` to flag. Rationale and matching rules: `references/dedup-policy.md`.
-- `/ingest` runs a shape check on its own output (required keys, enum ranges, YAML parses) and stops there. Backlink symmetry, dangling nodes, and full semantic audits belong to `/check`. Do not re-implement them here.
-- Assume another `/ingest` may run concurrently in a sibling worktree. All shared-file writes (`graph/edges.jsonl`, `graph/citations.jsonl`, `index.md`, `log.md`) must go through `tools/research_wiki.py` or use append-only semantics. See `references/init-mode.md`.
-- In INIT MODE, skip `fetch_s2.py citations`, `fetch_s2.py references`, and the `rebuild-*` commands — the parent `/init` runs them once after fan-in.
-
-## Error Handling
-
-See `references/error-handling.md`. Highlights: source parse failures cascade tex → PDF → vision API → user handoff; S2 outages default `importance` to 3 and skip citation backfill; DeepXiv outages skip enrichment silently; slug collisions append a numeric suffix.
-
-## Dependencies
-
-### Tools (via Bash)
+### Công cụ (qua Bash)
 
 - `"$PYTHON_BIN" tools/research_wiki.py slug "<title>"`
 - `"$PYTHON_BIN" tools/research_wiki.py find-similar-concept wiki/ "<title>" --aliases "<a,b,c>"`
 - `"$PYTHON_BIN" tools/research_wiki.py find-similar-claim wiki/ "<title>" --tags "<a,b,c>"`
-- `"$PYTHON_BIN" tools/research_wiki.py add-edge wiki/ --from <id> --to <id> --type <type> --evidence "<text>" [--confidence high|medium|low]`
-  - `--confidence high|medium|low` is required for paper-paper and paper-concept semantic edges.
-- `"$PYTHON_BIN" tools/research_wiki.py add-citation wiki/ --from papers/<citing> --to papers/<cited> --source semantic_scholar`
+- `"$PYTHON_BIN" tools/research_wiki.py add-edge wiki/ --from <id> --to <id> --type <type> --evidence "<text>"`
 - `"$PYTHON_BIN" tools/research_wiki.py log wiki/ "<message>"`
 - `"$PYTHON_BIN" tools/research_wiki.py rebuild-context-brief wiki/`
 - `"$PYTHON_BIN" tools/research_wiki.py rebuild-open-questions wiki/`
 - `"$PYTHON_BIN" tools/prepare_paper_source.py --raw-root raw --source <local-path> [--title "<recovered-title>"] [--arxiv-id "<recovered-arxiv-id>"]`
-- `"$PYTHON_BIN" tools/init_discovery.py download --raw-root raw --arxiv-id <id> --title "<title-or-id>"` — single-paper arXiv source/PDF download into `raw/discovered/`
+- `"$PYTHON_BIN" tools/fetch_arxiv.py <arxiv-id-or-url>` — tải xuống nguồn arXiv
 - `"$PYTHON_BIN" tools/fetch_s2.py paper|citations|references <arxiv-id>`
 - `"$PYTHON_BIN" tools/fetch_deepxiv.py brief|head|social <arxiv-id>`
-- `"$PYTHON_BIN" tools/discover.py from-anchors --id <arxiv-id> --wiki-root wiki --limit 10 --output-checkpoint .checkpoints/ --markdown` — only when `--discover` is set
 
-### Shared References
+### Tài Liệu Tham Khảo Chung
 
 - `.claude/skills/shared-references/citation-verification.md`
 
-### Skills
+### Kỹ Năng
 
-- `/init` — calls `/ingest` in parallel subagents via INIT MODE
-- `/check` — audits wiki state after `/ingest` completes; owns every semantic check `/ingest` intentionally does not perform
-- `/discover` — optional follow-up when `--discover` is set; produces a shortlist of related papers the user may want to ingest next
+- `/init` — gọi `/ingest` trong các tiểu tác nhân song song qua CHẾ ĐỘ INIT
+- `/check` — kiểm tra trạng thái wiki sau khi `/ingest` hoàn thành; sở hữu mọi kiểm tra ngữ nghĩa mà `/ingest` cố ý không thực hiện
 
-### External APIs
+### API Ngoại Vi
 
-- Semantic Scholar (via `tools/fetch_s2.py`)
-- DeepXiv (via `tools/fetch_deepxiv.py`, optional; graceful fallback)
-- arXiv (source download)
+- Semantic Scholar (qua `tools/fetch_s2.py`)
+- DeepXiv (qua `tools/fetch_deepxiv.py`, tùy chọn; dự phòng an toàn)
+- arXiv (tải xuống nguồn)

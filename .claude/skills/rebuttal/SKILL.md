@@ -1,344 +1,352 @@
 ---
-description: Parse review comments → atomize concerns (Rvx-Cy) → map to wiki claims → check evidence → Review LLM stress-test → generate rebuttal
-argument-hint: <review-file-or-path> [--paper-slug <slug>] [--venue <venue>] [--stress-test] [--format formal|rich]
+description: Phân tích nhận xét phản biện → phân tách mối quan ngại (Rvx-Cy) → ánh xạ đến khẳng định wiki → kiểm tra bằng chứng → kiểm tra căng thẳng bằng Review LLM → tạo phản hồi
+argument-hint: <tệp-nhận-xét-hoặc-đường-dẫn> [--paper-slug <slug>] [--venue <hội-nghị>] [--stress-test] [--format formal|rich]
 ---
 
 # /rebuttal
 
-> Parse review comments, atomize each concern (Rvx-Cy numbering) and map it to a wiki claim,
-> check whether evidence is sufficient (tracing back to wiki experiments),
-> simulate reviewer follow-up questions with Review LLM (stress-test, scored 1-5), and generate
-> a formal plain-text rebuttal and a rich-text rebuttal.
-> Safety checks ensure no fabrication, no overpromise, full coverage.
+> Phân tích nhận xét phản biện, phân tách từng mối quan ngại (đánh số Rvx-Cy) và ánh xạ đến khẳng định wiki,
+> kiểm tra xem bằng chứng có đủ không (truy ngược về các thí nghiệm wiki),
+> mô phỏng các câu hỏi tiếp theo của phản biện bằng Review LLM (kiểm tra căng thẳng, chấm điểm 1-5), và tạo
+> phản hồi chính thức dạng văn bản thuần túy và phản hồi chi tiết dạng văn bản phong phú.
+> Kiểm tra an toàn đảm bảo không bịa đặt, không hứa hẹn quá mức, và đầy đủ phạm vi.
 
-## Inputs
+## Đầu Vào
 
-- `review`: source of review comments, one of:
-  - file path (e.g. `raw/reviews/reviewer1.txt`, `raw/reviews/meta-review.md`)
-  - multiple file paths (comma-separated: `raw/reviews/R1.txt,raw/reviews/R2.txt,raw/reviews/R3.txt`)
-  - directly pasted review text
-- `--paper-slug` (optional): slug of the associated paper in wiki/outputs/, used to locate PAPER_PLAN
-- `--venue` (optional): target conference/journal (ICLR / NeurIPS / ICML / ACL / CVPR); affects rebuttal format and word limits
-- `--stress-test` (optional, enabled by default): Review LLM simulates reviewer follow-up; disable with `--no-stress-test`
-- `--format` (optional, default `formal`): output format
-  - `formal`: formal plain-text rebuttal (suitable for pasting directly into submission system)
-  - `rich`: rich-text version (with wiki [[links]], detailed analysis, improvement plan)
+- `review`: nguồn nhận xét phản biện, một trong các mục sau:
+  - đường dẫn tệp (ví dụ: `raw/reviews/reviewer1.txt`, `raw/reviews/meta-review.md`)
+  - nhiều đường dẫn tệp (phân tách bằng dấu phẩy: `raw/reviews/R1.txt,raw/reviews/R2.txt,raw/reviews/R3.txt`)
+  - văn bản nhận xét được dán trực tiếp
+- `--paper-slug` *(tùy chọn)*: slug của bài báo liên quan trong wiki/outputs/, dùng để xác định PAPER_PLAN
+- `--venue` *(tùy chọn)*: hội nghị/tạp chí mục tiêu (ICLR / NeurIPS / ICML / ACL / CVPR); ảnh hưởng đến định dạng phản hồi và giới hạn từ
+- `--stress-test` *(tùy chọn, mặc định bật)*: Review LLM mô phỏng các câu hỏi tiếp theo của phản biện; tắt bằng `--no-stress-test`
+- `--format` *(tùy chọn, mặc định `formal`)*: định dạng đầu ra
+  - `formal`: phản hồi chính thức dạng văn bản thuần túy (phù hợp để dán trực tiếp vào hệ thống nộp)
+  - `rich`: phiên bản văn bản phong phú (với [[liên kết wiki]], phân tích chi tiết, kế hoạch cải thiện)
 
-## Outputs
+## Đầu Ra
 
-- **wiki/outputs/rebuttal-{slug}.md** — rich-text rebuttal (with [[wikilinks]], evidence tracing, analysis tables)
-- **wiki/outputs/rebuttal-{slug}.txt** — formal rebuttal (plain text, suitable for pasting into submission system)
-- **wiki/claims/*.md** — if a concern exposes an evidence gap, append a suggestion to `## Open questions`
-- **wiki/log.md** — append log entry
+- **wiki/outputs/rebuttal-{slug}.md** — phản hồi chi tiết dạng văn bản phong phú (với [[liên kết wiki]], truy vết bằng chứng, bảng phân tích)
+- **wiki/outputs/rebuttal-{slug}.txt** — phản hồi chính thức (văn bản thuần túy, phù hợp để dán vào hệ thống nộp)
+- **wiki/claims/*.md** — nếu một mối quan ngại phát hiện lỗ hổng bằng chứng, thêm gợi ý vào `## Câu hỏi mở`
+- **wiki/log.md** — thêm mục nhật ký
 
-## Wiki Interaction
+## Tương Tác Wiki
 
-### Reads
-- `wiki/claims/*.md` — map concerns to claims, check evidence sufficiency
-- `wiki/experiments/*.md` — find experiment results supporting claims
-- `wiki/papers/*.md` — find citation context for referenced papers
-- `wiki/concepts/*.md` — understand the conceptual background of method-related concerns
-- `wiki/ideas/*.md` — find the motivation and pilot results for ideas
-- `wiki/outputs/PAPER_PLAN.md` — understand paper structure (from /paper-plan, if --paper-slug provided)
-- `wiki/graph/context_brief.md` — global context
-- `wiki/graph/edges.jsonl` — claim-experiment-paper relationships
-- `.claude/skills/shared-references/cross-model-review.md` — Review LLM stress-test independence
+### Đọc
 
-### Writes
-- `wiki/outputs/rebuttal-{slug}.md` — rich-text version
-- `wiki/outputs/rebuttal-{slug}.txt` — formal plain-text version
-- `wiki/claims/*.md` — append reviewer-identified gaps to `## Open questions` (do not directly modify confidence/status; add suggestions only)
-- `wiki/log.md` — append log entry
+- `wiki/claims/*.md` — ánh xạ mối quan ngại đến khẳng định, kiểm tra tính đủ của bằng chứng
+- `wiki/experiments/*.md` — tìm kết quả thí nghiệm hỗ trợ khẳng định
+- `wiki/papers/*.md` — tìm ngữ cảnh trích dẫn cho các bài báo được tham chiếu
+- `wiki/concepts/*.md` — hiểu bối cảnh khái niệm của các mối quan ngại liên quan đến phương pháp
+- `wiki/ideas/*.md` — tìm động lực và kết quả thí điểm cho các ý tưởng
+- `wiki/outputs/PAPER_PLAN.md` — hiểu cấu trúc bài báo (từ /paper-plan, nếu --paper-slug được cung cấp)
+- `wiki/graph/context_brief.md` — ngữ cảnh toàn cục
+- `wiki/graph/edges.jsonl` — mối quan hệ khẳng định-thí nghiệm-bài báo
+- `.claude/skills/shared-references/cross-model-review.md` — nguyên tắc độc lập kiểm tra căng thẳng của Review LLM
 
-### Graph edges created
-- None (rebuttal is a query operation; does not modify the knowledge graph)
+### Ghi
 
-## Workflow
+- `wiki/outputs/rebuttal-{slug}.md` — phiên bản văn bản phong phú
+- `wiki/outputs/rebuttal-{slug}.txt` — phiên bản văn bản thuần túy chính thức
+- `wiki/claims/*.md` — thêm các lỗ hổng do phản biện phát hiện vào `## Câu hỏi mở` (không trực tiếp sửa đổi độ tin cậy/trạng thái; chỉ thêm gợi ý)
+- `wiki/log.md` — thêm mục nhật ký
 
-**Precondition**:
-1. Confirm working directory is the wiki project root (containing `wiki/`, `raw/`, `tools/`)
-2. Read `cross-model-review.md` to confirm stress-test independence principle
-3. Generate slug: `python3 tools/research_wiki.py slug "{paper-slug}-rebuttal"`
+### Các cạnh đồ thị được tạo
 
-### Step 1: Parse Review Comments
+- Không có (phản hồi là thao tác truy vấn; không sửa đổi đồ thị tri thức)
 
-1. **Read review text**:
-   - If file path(s): read all specified files
-   - If direct text: use directly
-   - Merge multiple reviewers' comments, annotated by source (Reviewer 1/2/3/Meta)
+## Quy Trình Làm Việc
 
-2. **Identify structure**:
-   - Extract each reviewer's: overall score (Accept/Reject/Borderline), confidence, summary, Strengths, Weaknesses, questions
-   - If the format is non-standard (plain text), use LLM to parse into structured format
+**Điều kiện tiên quyết**:
+1. Xác nhận thư mục làm việc là thư mục gốc dự án wiki (chứa `wiki/`, `raw/`, `tools/`)
+2. Đọc `cross-model-review.md` để xác nhận nguyên tắc độc lập kiểm tra căng thẳng
+3. Tạo slug: `python3 tools/research_wiki.py slug "{paper-slug}-rebuttal"`
 
-3. **Output**: structured comments for each reviewer
+### Bước 1: Phân Tích Nhận Xét Phản Biện
 
-### Step 2: Atomize Concerns
+1. **Đọc văn bản nhận xét**:
+   - Nếu là đường dẫn tệp: đọc tất cả các tệp được chỉ định
+   - Nếu là văn bản trực tiếp: sử dụng trực tiếp
+   - Hợp nhất nhận xét của nhiều phản biện, chú thích theo nguồn (Phản biện 1/2/3/Meta)
 
-Split each weakness and question into independent atomic concerns:
+2. **Xác định cấu trúc**:
+   - Trích xuất từ mỗi phản biện: điểm tổng thể (Chấp nhận/Từ chối/Biên giới), độ tin cậy, tóm tắt, Điểm mạnh, Điểm yếu, câu hỏi
+   - Nếu định dạng không chuẩn (văn bản thuần túy), sử dụng LLM để phân tích thành định dạng có cấu trúc
 
-1. **Splitting rules**:
-   - A single weakness may be a compound sentence containing multiple independent concerns ("the method lacks ablation experiments and also does not compare with X" → split into 2 concerns)
-   - Assign each atomic concern an ID in `Rvx-Cy` format (Rv1-C1 = Reviewer 1, Concern 1; Rv1-C2 = Reviewer 1, Concern 2)
-   - Retain reviewer number to ensure traceability back to the original comment
+3. **Đầu ra**: nhận xét có cấu trúc cho mỗi phản biện
 
-2. **Classify each concern**:
-   - **evidence**: factual questions about experimental data or result interpretation
-   - **method**: methodological questions about method design or algorithmic correctness
-   - **missing**: missing experiments/analysis/comparisons/citations
-   - **clarity**: unclear expression, symbol confusion, figure issues
-   - **scope**: insufficient contribution, applicability questions
-   - **novelty**: overlap with existing work, insufficient innovation
-   - **minor**: formatting, typos, and other small issues
+### Bước 2: Phân Tách Mối Quan Ngại
 
-3. **Assess severity**: critical / major / minor
+Tách từng điểm yếu và câu hỏi thành các mối quan ngại độc lập:
 
-4. **Output**: atomized concern list, each containing {id (Rvx-Cy), reviewer, type, severity, text}
+1. **Quy tắc phân tách**:
+   - Một điểm yếu có thể là câu ghép chứa nhiều mối quan ngại độc lập ("phương pháp thiếu thí nghiệm ablation và cũng không so sánh với X" → tách thành 2 mối quan ngại)
+   - Gán cho mỗi mối quan ngại độc lập một ID theo định dạng `Rvx-Cy` (Rv1-C1 = Phản biện 1, Mối quan ngại 1; Rv1-C2 = Phản biện 1, Mối quan ngại 2)
+   - Giữ lại số phản biện để đảm bảo khả năng truy vết về nhận xét gốc
 
-### Step 3: Map Concerns to Wiki Claims
+2. **Phân loại từng mối quan ngại**:
+   - **bằng chứng**: câu hỏi thực tế về dữ liệu thí nghiệm hoặc diễn giải kết quả
+   - **phương pháp**: câu hỏi về phương pháp về thiết kế phương pháp hoặc tính đúng đắn của thuật toán
+   - **thiếu**: thiếu thí nghiệm/phân tích/so sánh/trích dẫn
+   - **rõ ràng**: diễn đạt không rõ ràng, nhầm lẫn ký hiệu, vấn đề hình ảnh
+   - **phạm vi**: đóng góp không đủ, câu hỏi về tính ứng dụng
+   - **tính mới**: trùng lặp với công trình hiện có, thiếu đổi mới
+   - **nhỏ**: định dạng, lỗi chính tả và các vấn đề nhỏ khác
 
-For each concern:
+3. **Đánh giá mức độ nghiêm trọng**: nghiêm trọng / lớn / nhỏ
 
-1. **Find associated claim**:
-   - Extract keywords from concern text
-   - Search `wiki/claims/*.md` for matching claims
-   - Read `wiki/graph/edges.jsonl` to find claim-experiment relationships
-   - If no direct match is found: annotate as "unmapped" (no direct claim correspondence)
+4. **Đầu ra**: danh sách mối quan ngại đã phân tách, mỗi mục chứa {id (Rvx-Cy), phản biện, loại, mức độ nghiêm trọng, văn bản}
 
-2. **Check Evidence Status**:
-   - Read the claim's evidence list
-   - Count strong/moderate/weak evidence
-   - Find results of associated experiments
-   - **Judgment**:
-     - Sufficient: strong >= 1 or moderate >= 2
-     - Partial: evidence exists but insufficient strength
-     - Insufficient: no evidence or only weak evidence
-     - Contradicted: evidence of invalidates type exists
+### Bước 3: Ánh Xạ Mối Quan Ngại Đến Khẳng Định Wiki
 
-3. **Output**:
+Đối với mỗi mối quan ngại:
 
-| Concern ID | Reviewer | Type | Severity | Claim mapped | Evidence Status | Strategy |
-|------------|----------|------|----------|--------------|-----------------|----------|
-| Rv1-C1 | R1 | method | critical | [[claim-slug]] | sufficient | A |
-| Rv1-C2 | R1 | missing | major | [[claim-slug]] | insufficient | B |
-| Rv2-C1 | R2 | novelty | major | unmapped | — | D |
+1. **Tìm khẳng định liên quan**:
+   - Trích xuất từ khóa từ văn bản mối quan ngại
+   - Tìm kiếm `wiki/claims/*.md` để tìm khẳng định phù hợp
+   - Đọc `wiki/graph/edges.jsonl` để tìm mối quan hệ khẳng định-thí nghiệm
+   - Nếu không tìm thấy khớp trực tiếp: chú thích là "chưa ánh xạ" (không có khẳng định tương ứng trực tiếp)
 
-### Step 4: Draft Rebuttal Responses
+2. **Kiểm Tra Trạng Thái Bằng Chứng**:
+   - Đọc danh sách bằng chứng của khẳng định
+   - Đếm bằng chứng mạnh/trung bình/yếu
+   - Tìm kết quả của các thí nghiệm liên quan
+   - **Đánh giá**:
+     - Đủ: mạnh >= 1 hoặc trung bình >= 2
+     - Một phần: bằng chứng tồn tại nhưng không đủ mạnh
+     - Không đủ: không có bằng chứng hoặc chỉ có bằng chứng yếu
+     - Mâu thuẫn: tồn tại bằng chứng loại invalidates
 
-Draft a response for each concern according to its strategy:
+3. **Đầu ra**:
 
-**Strategy A — Evidence sufficient (respond directly):**
-- Cite specific experiment results and data (annotate source, ensure traceability to wiki/experiments/)
-- Point to evidence in the wiki (convert to paper citations)
-- If the concern is based on a misunderstanding: politely clarify, point to the relevant Section in the paper
+| ID Mối Quan Ngại | Phản Biện | Loại | Mức Độ Nghiêm Trọng | Khẳng Định Ánh Xạ | Trạng Thái Bằng Chứng | Chiến Lược |
+|------------------|-----------|------|---------------------|-------------------|-----------------------|------------|
+| Rv1-C1           | R1        | phương pháp | nghiêm trọng        | [[claim-slug]]    | đủ                    | A          |
+| Rv1-C2           | R1        | thiếu      | lớn                 | [[claim-slug]]    | không đủ              | B          |
+| Rv2-C1           | R2        | tính mới   | lớn                 | chưa ánh xạ       | —                     | D          |
 
-**Strategy B — Evidence insufficient (acknowledge + concrete plan):**
-- Honestly acknowledge that current evidence is not sufficient
-- Propose a concrete supplementary experiment plan (can link to /exp-design)
-- State a specific timeline and resource requirements
-- Do not use vague commitments; only commit to concrete executable supplementary experiments
+### Bước 4: Soạn Thảo Phản Hồi
 
-**Strategy C — Clarity issue (commit to revision):**
-- Acknowledge the unclear expression
-- Provide the improved description (show the revised text directly in the rebuttal)
-- List specific Paper Edit plans
+Soạn thảo phản hồi cho từng mối quan ngại theo chiến lược của nó:
 
-**Strategy D — Scope/Novelty challenge (argue):**
-- Highlight essential differences from existing work
-- Cite novelty-check results (if available)
-- Point out differences the reviewer may have overlooked
+**Chiến lược A — Bằng chứng đủ (phản hồi trực tiếp):**
+- Trích dẫn kết quả thí nghiệm và dữ liệu cụ thể (chú thích nguồn, đảm bảo khả năng truy vết đến wiki/experiments/)
+- Chỉ đến bằng chứng trong wiki (chuyển đổi thành trích dẫn bài báo)
+- Nếu mối quan ngại dựa trên hiểu lầm: làm rõ một cách lịch sự, chỉ đến Phần liên quan trong bài báo
 
-**Format for each response**:
+**Chiến lược B — Bằng chứng không đủ (thừa nhận + kế hoạch cụ thể):**
+- Thẳng thắn thừa nhận rằng bằng chứng hiện tại không đủ
+- Đề xuất kế hoạch thí nghiệm bổ sung cụ thể (có thể liên kết đến /exp-design)
+- Nêu rõ thời gian và yêu cầu tài nguyên cụ thể
+- Không sử dụng cam kết mơ hồ; chỉ cam kết các thí nghiệm bổ sung cụ thể và có thể thực hiện được
+
+**Chiến lược C — Vấn đề rõ ràng (cam kết sửa đổi):**
+- Thừa nhận diễn đạt không rõ ràng
+- Cung cấp mô tả đã cải thiện (hiển thị văn bản đã sửa trực tiếp trong phản hồi)
+- Liệt kê kế hoạch Sửa Đổi Bài Báo cụ thể
+
+**Chiến lược D — Thách thức về phạm vi/tính mới (tranh luận):**
+- Nhấn mạnh sự khác biệt cơ bản với các công trình hiện có
+- Trích dẫn kết quả kiểm tra tính mới (nếu có)
+- Chỉ ra những điểm khác biệt mà phản biện có thể đã bỏ qua
+
+**Định dạng cho mỗi phản hồi**:
 ```markdown
-**[Rvx-Cy]** {concern summary}
+**[Rvx-Cy]** {tóm tắt mối quan ngại}
 
-{response text, 2-5 sentences, annotated sources for traceability}
+{văn bản phản hồi, 2-5 câu, chú thích nguồn để truy vết}
 ```
 
-**Safety checks (per response)**:
-- [ ] No fabrication: do not fabricate data or experiment results
-- [ ] No overpromise: only commit to specific executable supplementary experiments
-- [ ] Cited data is recorded in wiki/experiments/
-- [ ] If claim is challenged/deprecated, do not pretend it is supported
+**Kiểm tra an toàn (cho mỗi phản hồi)**:
+- [ ] Không bịa đặt: không bịa đặt dữ liệu hoặc kết quả thí nghiệm
+- [ ] Không hứa hẹn quá mức: chỉ cam kết các thí nghiệm bổ sung cụ thể và có thể thực hiện được
+- [ ] Dữ liệu được trích dẫn được ghi lại trong wiki/experiments/
+- [ ] Nếu khẳng định bị thách thức/không được chấp nhận, không giả vờ rằng nó được hỗ trợ
 
-### Step 5: Review LLM Stress-Test
+### Bước 5: Kiểm Tra Căng Thẳng Bằng Review LLM
 
-**Follow cross-model-review.md**: do not send Claude's rebuttal strategy analysis to Review LLM.
+**Tuân theo cross-model-review.md**: không gửi phân tích chiến lược phản hồi của Claude cho Review LLM.
 
-If `--stress-test` is enabled (default):
+Nếu `--stress-test` được bật (mặc định):
 
 ```
 mcp__llm-review__chat:
-  system: "You are a critical reviewer who has just read a rebuttal to your review
-           comments. You are skeptical and will push back on weak responses.
-           For each rebuttal response, assess on a scale of 1-5:
-           1 = unconvincing (deflection or fabrication suspected)
-           2 = weak (vague, no concrete evidence)
-           3 = acceptable (addresses concern but could be stronger)
-           4 = strong (concrete evidence, clear reasoning)
-           5 = fully convincing (compelling evidence, thorough response)
-           Also check for overpromise: are commitments specific and feasible?
-           Provide a follow-up question for any response scoring <= 3."
+  system: "Bạn là một phản biện nghiêm khắc vừa đọc phản hồi cho nhận xét của mình.
+           Bạn sẽ hoài nghi và phản bác lại các phản hồi yếu.
+           Đối với mỗi phản hồi, đánh giá theo thang điểm 1-5:
+           1 = không thuyết phục (nghi ngờ né tránh hoặc bịa đặt)
+           2 = yếu (mơ hồ, không có bằng chứng cụ thể)
+           3 = chấp nhận được (giải quyết mối quan ngại nhưng có thể mạnh hơn)
+           4 = mạnh (bằng chứng cụ thể, lập luận rõ ràng)
+           5 = hoàn toàn thuyết phục (bằng chứng thuyết phục, phản hồi toàn diện)
+           Ngoài ra, kiểm tra xem có hứa hẹn quá mức không: các cam kết có cụ thể và khả thi không?
+           Đưa ra câu hỏi tiếp theo cho bất kỳ phản hồi nào có điểm <= 3."
   message: |
-    ## Original Review Concerns
-    {atomic concerns list with Rvx-Cy IDs}
+    ## Nhận Xét Phản Biện Gốc
+    {danh sách mối quan ngại đã phân tách với ID Rvx-Cy}
 
-    ## Author Rebuttal
-    {drafted rebuttal responses}
+    ## Phản Hồi Của Tác Giả
+    {các phản hồi đã soạn thảo}
 
-    ## Please assess each response (score 1-5) and provide follow-up questions.
+    ## Vui lòng đánh giá từng phản hồi (điểm 1-5) và đưa ra câu hỏi tiếp theo.
 ```
 
-**Handle Review LLM feedback**:
-- **Score 4-5 (convincing)**: keep original response
-- **Score 3 (acceptable)**: strengthen response, add details suggested by Review LLM
-- **Score 1-2 (unconvincing/weak)**: rewrite response, consider switching strategy (A→B, acknowledge insufficiency)
+**Xử lý phản hồi của Review LLM**:
+- **Điểm 4-5 (thuyết phục)**: giữ nguyên phản hồi
+- **Điểm 3 (chấp nhận được)**: củng cố phản hồi, thêm chi tiết theo gợi ý của Review LLM
+- **Điểm 1-2 (không thuyết phục/yếu)**: viết lại phản hồi, cân nhắc chuyển đổi chiến lược (A→B, thừa nhận không đủ)
 
-**Second round (if any responses scored <= 2)**:
+**Vòng thứ hai (nếu có phản hồi nào có điểm <= 2)**:
 
 ```
 mcp__llm-review__chat-reply:
-  threadId: {previous thread}
+  threadId: {luồng trước}
   message: |
-    We've revised the following responses:
-    {revised responses}
-    Please re-assess (score 1-5).
+    Chúng tôi đã sửa đổi các phản hồi sau:
+    {các phản hồi đã sửa đổi}
+    Vui lòng đánh giá lại (điểm 1-5).
 ```
 
-Maximum 2 rounds of stress-test. Handle follow-up questions and update responses.
+Tối đa 2 vòng kiểm tra căng thẳng. Xử lý các câu hỏi tiếp theo và cập nhật phản hồi.
 
-### Step 6: Format Output + Safety Check
+### Bước 6: Định Dạng Đầu Ra + Kiểm Tra An Toàn
 
-**6a. Format formal rebuttal-{slug}.txt** (plain text, suitable for submission system):
+**6a. Định dạng phản hồi chính thức rebuttal-{slug}.txt** (văn bản thuần túy, phù hợp cho hệ thống nộp):
 
 ```
-We thank the reviewers for their constructive feedback. We address each concern below.
+Chúng tôi cảm ơn các phản biện đã đưa ra những nhận xét mang tính xây dựng. Chúng tôi giải quyết từng mối quan ngại dưới đây.
 
-Reviewer 1:
+Phản biện 1:
 
-[Rv1-C1] {concern summary}
-{response}
+[Rv1-C1] {tóm tắt mối quan ngại}
+{phản hồi}
 
-[Rv1-C2] {concern summary}
-{response}
+[Rv1-C2] {tóm tắt mối quan ngại}
+{phản hồi}
 
-Reviewer 2:
+Phản biện 2:
 ...
 
-Summary of Revisions:
-- {bulleted list of planned changes}
+Tóm tắt các sửa đổi:
+- {danh sách gạch đầu dòng các thay đổi dự kiến}
 
-Additional Experiments (if applicable):
-- {new experiments committed to, with timeline}
+Các thí nghiệm bổ sung (nếu có):
+- {các thí nghiệm mới cam kết, với thời gian biểu}
 ```
 
-**6b. Format rich-text rebuttal-{slug}.md**:
+**6b. Định dạng phản hồi chi tiết rebuttal-{slug}.md**:
 
 ```markdown
-# Rebuttal Analysis: {paper title}
+# Phân Tích Phản Hồi: {tiêu đề bài báo}
 
-## Coverage Summary
-| Concern ID | Type | Severity | Claim | Evidence Status | Review LLM Score | Strategy |
-|------------|------|----------|-------|-----------------|------------|----------|
-| Rv1-C1 | method | critical | [[claim-slug]] | sufficient | 4/5 | A |
-| Rv1-C2 | missing | major | [[claim-slug]] | insufficient | 3/5 | B |
+## Tóm Tắt Phạm Vi
+| ID Mối Quan Ngại | Loại | Mức Độ Nghiêm Trọng | Khẳng Định | Trạng Thái Bằng Chứng | Điểm Review LLM | Chiến Lược |
+|------------------|------|---------------------|---------------|-----------------------|-----------------|------------|
+| Rv1-C1           | phương pháp | nghiêm trọng        | [[claim-slug]] | đủ                    | 4/5            | A          |
+| Rv1-C2           | thiếu      | lớn                 | [[claim-slug]] | không đủ              | 3/5            | B          |
 
-## Responses
-### Reviewer 1
+## Phản Hồi
+### Phản biện 1
 **[Rv1-C1]** ...
 **[Rv1-C2]** ...
 
-## Evidence Gap Analysis
-| Claim | Confidence | Gap | Needed |
-|-------|-----------|-----|--------|
-| [[claim-slug]] | 0.5 | No ablation on dataset X | Run ablation experiment |
+## Phân Tích Lỗ Hổng Bằng Chứng
+| Khẳng Định | Độ Tin Cậy | Lỗ Hổng | Cần Thiết |
+|------------|------------|---------|-----------|
+| [[claim-slug]] | 0.5        | Không có ablation trên tập dữ liệu X | Thực hiện thí nghiệm ablation |
 
-## Action Items
+## Các Hành Động Cần Thực Hiện
 
-### Paper Edits
-| Section | Change | Reason |
-|---------|--------|--------|
-| Section 3.2 | Clarify notation | Rv1-C3 clarity concern |
+### Sửa Đổi Bài Báo
+| Phần | Thay Đổi | Lý Do |
+|------|----------|-------|
+| Phần 3.2 | Làm rõ ký hiệu | Mối quan ngại rõ ràng Rv1-C3 |
 
-### Wiki Updates
-| Page | Update | Reason |
-|------|--------|--------|
-| claims/{slug} | Add open question | Rv2-C1 evidence gap |
+### Cập Nhật Wiki
+| Trang | Cập Nhật | Lý Do |
+|-------|----------|-------|
+| claims/{slug} | Thêm câu hỏi mở | Lỗ hổng bằng chứng Rv2-C1 |
 
-### Suggested Experiments
-| Experiment | Target Claim | Suggested by |
-|-----------|-------------|--------------|
+### Các Thí Nghiệm Đề Xuất
+| Thí Nghiệm | Khẳng Định Mục Tiêu | Được Đề Xuất Bởi |
+|-------------|----------------------|------------------|
 | ablation-dataset-x | [[claim-slug]] | Rv1-C2 |
 
-→ Run `/exp-design ablation-dataset-x` to design follow-up
+→ Chạy `/exp-design ablation-dataset-x` để thiết kế theo dõi
 
-## Review LLM Stress-Test Summary
-- Average score: {N}/5
-- Scores 4-5: {N}/{total}
-- Scores 1-3: {N}/{total} (all revised)
+## Tóm Tắt Kiểm Tra Căng Thẳng Review LLM
+- Điểm trung bình: {N}/5
+- Điểm 4-5: {N}/{tổng}
+- Điểm 1-3: {N}/{tổng} (tất cả đã được sửa đổi)
 
-## Safety Checklist
-- [x] No fabrication: all cited data exists in wiki/experiments
-- [x] No overpromise: all committed experiments are specific and feasible
-- [x] Full coverage: {N}/{N} concerns addressed (no omissions)
-- [x] Challenged claims not presented as supported
+## Danh Sách Kiểm Tra An Toàn
+- [x] Không bịa đặt: tất cả dữ liệu được trích dẫn tồn tại trong wiki/experiments
+- [x] Không hứa hẹn quá mức: tất cả các thí nghiệm cam kết đều cụ thể và khả thi
+- [x] Đầy đủ phạm vi: {N}/{N} mối quan ngại đã được giải quyết (không bỏ sót)
+- [x] Các khẳng định bị thách thức không được trình bày như được hỗ trợ
 ```
 
-**6c. Final safety check**:
-- **Full coverage**: confirm every concern has a response (no omissions)
-- **No fabrication**: every cited data point is recorded in wiki/experiments/ (traceable)
-- **No overpromise**: supplementary experiment commitments are specific and feasible
-- **Honesty on weak claims**: if claim confidence < 0.4, do not pretend evidence is sufficient
+**6c. Kiểm tra an toàn cuối cùng**:
+- **Đầy đủ phạm vi**: xác nhận mỗi mối quan ngại đều có phản hồi (không bỏ sót)
+- **Không bịa đặt**: mọi điểm dữ liệu được trích dẫn đều được ghi lại trong wiki/experiments/ (có thể truy vết)
+- **Không hứa hẹn quá mức**: các cam kết thí nghiệm bổ sung đều cụ thể và khả thi
+- **Trung thực về các khẳng định yếu**: nếu độ tin cậy của khẳng định < 0.4, không giả vờ rằng bằng chứng là đủ
 
-**6d. Update wiki**:
-- For claims with evidence gaps: append reviewer-identified gaps to `## Open questions` in `wiki/claims/{slug}.md`
-- Append log:
+**6d. Cập nhật wiki**:
+- Đối với các khẳng định có lỗ hổng bằng chứng: thêm các lỗ hổng do phản biện phát hiện vào `## Câu hỏi mở` trong `wiki/claims/{slug}.md`
+- Thêm nhật ký:
   ```bash
   python3 tools/research_wiki.py log wiki/ \
-    "rebuttal | {N} concerns addressed | {M} evidence gaps | stress-test avg: {score}/5"
+    "rebuttal | {N} mối quan ngại đã giải quyết | {M} lỗ hổng bằng chứng | kiểm tra căng thẳng trung bình: {điểm}/5"
   ```
 
-## Constraints
+## Các Ràng Buộc
 
-- **No fabrication**: never fabricate experiment data or results. Every cited number must be traceable to wiki/experiments/ with source annotated
-- **No overpromise**: only commit to specific executable supplementary experiments. Use "we will run ablation on X with setup Y" not "we will investigate"
-- **Full coverage**: every reviewer concern (Rvx-Cy) must have a response; omissions block output
-- **Evidence traceability**: every piece of evidence cited in a response must be traceable to a wiki page with source slug annotated
-- **Do not directly modify wiki claims**: rebuttal only appends suggestions to claims' Open questions; do not modify confidence/status
-- **Review LLM independence**: during stress-test, follow cross-model-review.md; do not reveal response strategy to Review LLM
-- **Concern ID format**: strictly use Rvx-Cy format (Rv1-C1, Rv1-C2, Rv2-C1) to ensure traceability
-- **Specific commitments**: all revision commitments and experiment plans must be specific (specific Section, specific dataset, explicit metric)
-- **Output to wiki/outputs/**: rebuttal files are stored uniformly in the wiki/outputs/ directory
+- **Không bịa đặt**: không bao giờ bịa đặt dữ liệu hoặc kết quả thí nghiệm. Mọi số liệu được trích dẫn phải có thể truy vết đến wiki/experiments/ với nguồn được chú thích
+- **Không hứa hẹn quá mức**: chỉ cam kết các thí nghiệm bổ sung cụ thể và có thể thực hiện được. Sử dụng "chúng tôi sẽ thực hiện ablation trên X với thiết lập Y" thay vì "chúng tôi sẽ điều tra"
+- **Đầy đủ phạm vi**: mọi mối quan ngại của phản biện (Rvx-Cy) phải có phản hồi; bỏ sót sẽ chặn đầu ra
+- **Khả năng truy vết bằng chứng**: mọi bằng chứng được trích dẫn trong phản hồi phải có thể truy vết đến một trang wiki với nguồn slug được chú thích
+- **Không trực tiếp sửa đổi khẳng định wiki**: phản hồi chỉ thêm gợi ý vào Câu hỏi mở của khẳng định; không sửa đổi độ tin cậy/trạng thái
+- **Độc lập Review LLM**: trong quá trình kiểm tra căng thẳng, tuân theo cross-model-review.md; không tiết lộ chiến lược phản hồi cho Review LLM
+- **Định dạng ID mối quan ngại**: sử dụng nghiêm ngặt định dạng Rvx-Cy (Rv1-C1, Rv1-C2, Rv2-C1) để đảm bảo khả năng truy vết
+- **Cam kết cụ thể**: tất cả các cam kết sửa đổi và kế hoạch thí nghiệm phải cụ thể (Phần cụ thể, tập dữ liệu cụ thể, chỉ số rõ ràng)
+- **Đầu ra vào wiki/outputs/**: các tệp phản hồi được lưu trữ đồng nhất trong thư mục wiki/outputs/
 
-## Error Handling
+## Xử Lý Lỗi
 
-- **Review file not found**: report error, list available files under raw/reviews/
-- **Review format cannot be parsed**: fall back to plain-text processing; use LLM to extract concerns; annotate in report
-- **Concern cannot be mapped to a claim (unmapped)**: annotate as "unmapped"; still respond (based on paper content rather than wiki claim)
-- **Review LLM stress-test unavailable**: skip Step 5; annotate in report "stress-test skipped: Review LLM unavailable"
-- **Evidence severely insufficient**: if >50% of concerns have insufficient evidence, warn the user and suggest supplementing experiments first
-- **Wiki empty**: warn that wiki knowledge base is empty; suggest running /ingest to populate claims and experiments
-- **All responses scored 1-2 by Review LLM**: halt output, report requires re-analysis, suggest supplementing experiments first
+- **Không tìm thấy tệp nhận xét**: báo lỗi, liệt kê các tệp có sẵn trong raw/reviews/
+- **Không thể phân tích định dạng nhận xét**: chuyển sang xử lý văn bản thuần túy; sử dụng LLM để trích xuất mối quan ngại; chú thích trong báo cáo
+- **Mối quan ngại không thể ánh xạ đến khẳng định (chưa ánh xạ)**: chú thích là "chưa ánh xạ"; vẫn phản hồi (dựa trên nội dung bài báo thay vì khẳng định wiki)
+- **Kiểm tra căng thẳng Review LLM không khả dụng**: bỏ qua Bước 5; chú thích trong báo cáo "bỏ qua kiểm tra căng thẳng: Review LLM không khả dụng"
+- **Bằng chứng cực kỳ không đủ**: nếu >50% mối quan ngại có bằng chứng không đủ, cảnh báo người dùng và đề xuất bổ sung thí nghiệm trước
+- **Wiki trống**: cảnh báo rằng cơ sở tri thức wiki trống; đề xuất chạy /ingest để điền khẳng định và thí nghiệm
+- **Tất cả phản hồi đều được Review LLM chấm điểm 1-2**: dừng đầu ra, báo cáo cần phân tích lại, đề xuất bổ sung thí nghiệm trước
 
-## Dependencies
+## Phụ Thuộc
 
-### Tools（via Bash）
-- `python3 tools/research_wiki.py slug "{title}"` — generate rebuttal slug
-- `python3 tools/research_wiki.py log wiki/ "<message>"` — append log entry
+### Công cụ (thông qua Bash)
 
-### MCP Servers
-- `mcp__llm-review__chat` — Step 5 stress-test first round
-- `mcp__llm-review__chat-reply` — Step 5 stress-test subsequent rounds
+- `python3 tools/research_wiki.py slug "{title}"` — tạo slug phản hồi
+- `python3 tools/research_wiki.py log wiki/ "<message>"` — thêm mục nhật ký
 
-### Claude Code Native
-- `Read` — read review comments, wiki pages, shared references
-- `Write` — write rebuttal-{slug}.md, rebuttal-{slug}.txt
-- `Glob` — find claims, experiments
-- `Grep` — search wiki for concern keywords
+### Máy Chủ MCP
 
-### Shared References
-- `.claude/skills/shared-references/cross-model-review.md` — Review LLM stress-test independence principle
+- `mcp__llm-review__chat` — Bước 5 kiểm tra căng thẳng vòng đầu
+- `mcp__llm-review__chat-reply` — Bước 5 kiểm tra căng thẳng các vòng tiếp theo
 
-### Suggested follow-up skills
-- `/exp-design` — design supplementary experiments for concerns with insufficient evidence
-- `/paper-draft` — prepare revised paper (based on Paper Edits checklist)
+### Claude Code Gốc
+
+- `Read` — đọc nhận xét phản biện, trang wiki, tài liệu tham khảo chung
+- `Write` — ghi rebuttal-{slug}.md, rebuttal-{slug}.txt
+- `Glob` — tìm khẳng định, thí nghiệm
+- `Grep` — tìm kiếm trong wiki các từ khóa mối quan ngại
+
+### Tài Liệu Tham Khảo Chung
+
+- `.claude/skills/shared-references/cross-model-review.md` — nguyên tắc độc lập kiểm tra căng thẳng của Review LLM
+
+### Kỹ Năng Tiếp Theo Được Đề Xuất
+
+- `/exp-design` — thiết kế thí nghiệm bổ sung cho các mối quan ngại có bằng chứng không đủ
+- `/paper-draft` — chuẩn bị bài báo đã sửa đổi (dựa trên danh sách Sửa Đổi Bài Báo)

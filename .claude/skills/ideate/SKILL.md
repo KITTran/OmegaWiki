@@ -1,401 +1,284 @@
 ---
-description: Multi-phase research idea generation pipeline: landscape scan → dual-model brainstorm → first-pass filter → deep validation → write to wiki
-argument-hint: "[research-direction-or-topic] [--max-ideas N] [--skip-validation] [--auto]"
+description: Tạo ý tưởng nghiên cứu từ một hướng, khoảng trống hoặc khẳng định — quy trình 4 giai đoạn (phân kỳ → hội tụ → kiểm tra tính mới lạ → đánh giá) → các ý tưởng hàng đầu được ghi vào wiki
+argument-hint: "<hướng|khoảng-trống|slug-khẳng-định> [--count <N>] [--review] [--budget <giờ-GPU>]"
 ---
 
 # /ideate
 
-> Generates high-quality research ideas through a 5-phase pipeline, grounded in the wiki knowledge base and external search.
-> Phase 1 scans the research landscape (wiki + WebSearch + S2), Phase 2 runs a dual-model brainstorm (Claude + Review LLM independently),
-> Phase 3 applies a first-pass filter (feasibility + quick novelty check), Phase 4 performs deep validation (calls /novelty + /review),
-> Phase 5 writes to the wiki (ideas/ + graph edges), including eliminated ideas (failure reasons recorded as anti-repetition memory).
+> Tạo ý tưởng nghiên cứu từ một hướng nghiên cứu, khoảng trống kiến thức hoặc khẳng định.
+> Quy trình bốn giai đoạn: tạo ý tưởng phân kỳ → xếp hạng hội tụ → kiểm tra tính mới lạ → đánh giá Review LLM.
+> Các ý tưởng hàng đầu được ghi vào wiki/ideas/ với các cạnh đồ thị đến khoảng trống nguồn và các khẳng định liên kết.
 
-## Inputs
+## Đầu Vào
 
-- `direction` (optional): research direction, keywords, or specific problem description. If omitted, automatically selects the most valuable direction from open_questions.md.
-- `--max-ideas N` (optional, default 3): maximum number of ideas to write to the wiki
-- `--skip-validation`: skip Phase 4 deep validation (fast mode: Phase 1–3 + Phase 5 only)
-- `--auto`: fully automatic mode, no pause for user confirmation (used when called by /research)
+- `seed`: một trong các mục sau:
+  - Một hướng nghiên cứu (văn bản tự do, ví dụ: "hiệu quả suy luận LLM trên thiết bị")
+  - Một slug khoảng trống kiến thức từ wiki/graph/open_questions.md (ví dụ: `sparse-lora-for-edge-devices`)
+  - Một slug khẳng định từ wiki/claims/ (ví dụ: `sparse-lora-reduces-memory-usage`)
+- `--count <N>` *(tùy chọn, mặc định 3)*: số lượng ý tưởng hàng đầu được ghi vào wiki
+- `--review` *(tùy chọn)*: kích hoạt đánh giá Review LLM cho các ý tưởng hàng đầu (Giai đoạn 4)
+- `--budget <giờ-GPU>` *(tùy chọn, mặc định 100)*: giới hạn tổng ngân sách tính toán (giờ GPU), ảnh hưởng đến tính khả thi của ý tưởng
 
-## Outputs
+## Đầu Ra
 
-- `wiki/ideas/{slug}.md` — one page per idea (status: proposed), covering both top ideas and eliminated ideas
-- `wiki/graph/edges.jsonl` — new idea → claim/gap relationship edges
-- `wiki/graph/context_brief.md` — rebuilt compressed context
-- `wiki/graph/open_questions.md` — rebuilt knowledge gap map
-- **IDEA_REPORT** (printed to terminal) — pipeline execution summary, ranked results, novelty scores
+- `wiki/ideas/{slug}.md` — N ý tưởng hàng đầu (trạng thái: proposed)
+- `wiki/graph/edges.jsonl` — các cạnh inspired_by mới: ý tưởng → khoảng trống/khẳng định
+- `wiki/graph/context_brief.md` — xây dựng lại
+- `wiki/graph/open_questions.md` — xây dựng lại
+- `wiki/log.md` — thêm mục nhật ký
+- **IDEATION_REPORT** *(in ra terminal)* — tóm tắt quy trình, các ý tưởng hàng đầu, gợi ý bước tiếp theo
 
-## Wiki Interaction
+## Tương Tác Wiki
 
-### Reads
-- `wiki/graph/context_brief.md` — global context
-- `wiki/graph/open_questions.md` — knowledge gaps, drives idea direction
-- `wiki/ideas/*.md` — existing ideas, especially status=failed ideas and their failure_reason (banlist)
-- `wiki/claims/*.md` — current claims status, identifies weakly_supported and challenged claims
-- `wiki/papers/*.md` — existing paper methods and results
-- `wiki/concepts/*.md` — technical concepts, find cross-domain combination opportunities
-- `wiki/topics/*.md` — research direction maps, SOTA and open problems
-- `wiki/experiments/*.md` — existing experiment results, avoid duplication
+### Đọc
 
-### Writes
-- `wiki/ideas/{slug}.md` — create new idea pages
-- `wiki/graph/edges.jsonl` — add idea → claim/gap relationship edges (addresses_gap, inspired_by)
-- `wiki/graph/context_brief.md` — rebuild
-- `wiki/graph/open_questions.md` — rebuild
-- `wiki/log.md` — append operation log
+- `wiki/graph/open_questions.md` — nếu seed là slug khoảng trống, đọc mô tả khoảng trống
+- `wiki/claims/{slug}.md` — nếu seed là slug khẳng định, đọc phát biểu khẳng định và trạng thái
+- `wiki/ideas/*.md` — các ý tưởng hiện có (tránh trùng lặp, tham khảo các ý tưởng tương tự)
+- `wiki/papers/*.md` — các bài báo liên quan (hướng dẫn tạo ý tưởng)
+- `wiki/concepts/*.md` — các khái niệm liên quan (hướng dẫn tạo ý tưởng)
+- `wiki/graph/context_brief.md` — ngữ cảnh toàn cục
+- `.claude/skills/shared-references/cross-model-review.md` — Giai đoạn 4 nguyên tắc độc lập của Review LLM
 
-### Graph edges created
-- `addresses_gap`: idea → claim/topic (knowledge gap the idea targets)
-- `inspired_by`: idea → paper/concept (source of inspiration for the idea)
+### Ghi
 
-## Workflow
+- `wiki/ideas/{slug}.md` — tạo trang ý tưởng (N ý tưởng hàng đầu)
+- `wiki/graph/edges.jsonl` — thêm các cạnh inspired_by
+- `wiki/graph/context_brief.md` — xây dựng lại
+- `wiki/graph/open_questions.md` — xây dựng lại
+- `wiki/log.md` — thêm nhật ký hoạt động
 
-**Pre-conditions**:
-1. Confirm working directory is the wiki project root (directory containing `wiki/`, `raw/`, `tools/`).
-2. **Check wiki maturity**:
-   ```bash
-   python3 tools/research_wiki.py maturity wiki/ --json
+### Các cạnh đồ thị được tạo
+
+- `inspired_by`: ý tưởng → khoảng trống/khẳng định (ý tưởng được lấy cảm hứng từ khoảng trống hoặc khẳng định)
+
+## Quy Trình Làm Việc
+
+**Điều kiện tiên quyết**: xác nhận thư mục làm việc là thư mục gốc dự án wiki (thư mục chứa `wiki/`, `raw/`, `tools/`).
+
+### Giai đoạn 1: Tạo Ý Tưởng Phân Kỳ (100 ý tưởng)
+
+1. **Tải ngữ cảnh seed**:
+   - Nếu seed là slug khoảng trống: đọc `wiki/graph/open_questions.md`, trích xuất mô tả khoảng trống
+   - Nếu seed là slug khẳng định: đọc `wiki/claims/{slug}.md`, trích xuất phát biểu khẳng định, trạng thái và bằng chứng
+   - Nếu seed là văn bản tự do: sử dụng trực tiếp như hướng nghiên cứu
+2. **Tải ngữ cảnh liên quan**:
+   - Đọc `wiki/graph/context_brief.md` (ngữ cảnh toàn cục)
+   - Đọc các bài báo liên quan (từ source_papers của khẳng định hoặc các bài báo liên quan của khoảng trống)
+   - Đọc các khái niệm liên quan (từ bài báo hoặc khẳng định)
+3. **Tạo 100 ý tưởng** (tư duy phân kỳ):
+   - Sử dụng Claude để tạo 100 bản phác thảo ý tưởng một câu
+   - Mỗi ý tưởng phải cụ thể, khả thi và có thể kiểm chứng
+   - Định dạng: `{phương pháp} để {mục tiêu} cho {vấn đề}`
+   - Ví dụ: "Bộ điều hợp LoRA thưa thớt để giảm sử dụng bộ nhớ cho suy luận LLM trên thiết bị"
+4. **Loại bỏ trùng lặp**: loại bỏ các bản sao chính xác và gần giống (sử dụng độ tương đồng ngữ nghĩa)
+5. **Đầu ra**: 100 bản phác thảo ý tưởng duy nhất
+
+### Giai đoạn 2: Xếp Hạng Hội Tụ (top 10)
+
+1. **Xếp hạng ý tưởng** theo bốn tiêu chí (mỗi tiêu chí 1-5, cao hơn tốt hơn):
+   - **Tính mới lạ**: ý tưởng mới đến mức nào? (1 = gia tăng, 5 = đột phá)
+   - **Tính khả thi**: dễ triển khai đến mức nào? (1 = rất khó, 5 = dễ)
+   - **Tác động**: vấn đề quan trọng đến mức nào? (1 = ngách, 5 = quan trọng)
+   - **Sự phù hợp**: phù hợp với seed đến mức nào? (1 = lạc đề, 5 = hoàn toàn phù hợp)
+2. **Tính điểm tổng**: `novelty × impact × feasibility × alignment` (trung bình nhân để tránh điểm 0)
+3. **Chọn top 10** theo điểm tổng
+4. **Đầu ra**: top 10 ý tưởng với điểm và lý do ngắn gọn
+
+### Giai đoạn 3: Kiểm Tra Tính Mới Lạ (top 5)
+
+1. **Đối với mỗi ý tưởng trong top 10**, chạy `/novelty` song song (sử dụng công cụ Agent):
    ```
-   Adjust subsequent behavior based on maturity level:
-   - **cold**: expand Phase 1 external search (WebSearch queries from 5 to 8, S2/DeepXiv limit from 20 to 30),
-     skip wiki internal context loading (empty, no value), annotate "cold-start mode: heavier external search"
-   - **warm**: standard behavior (current default)
-   - **hot**: reduce Phase 1 external search (WebSearch queries from 5 to 2, S2/DeepXiv limit from 20 to 10),
-     raise Phase 3 gap_alignment_bonus from +2 to +3, prioritize resolving weak claims already in the wiki
-3. **Snapshot wiki state** (for the Growth Report at the end):
-   Save the JSON returned by maturity to memory variable `maturity_before`
+   Skill: novelty
+   Args: "{idea-sketch} --quick"
+   ```
+2. **Trích xuất điểm tính mới lạ** (1-5) từ mỗi báo cáo
+3. **Xếp hạng lại**: nhân điểm Giai đoạn 2 với điểm tính mới lạ (điểm có trọng số tính mới lạ)
+4. **Chọn top 5** theo điểm có trọng số tính mới lạ
+5. **Đầu ra**: top 5 ý tưởng với điểm tính mới lạ và tóm tắt công trình hiện có
 
-### Phase 1: Landscape Scan
+### Giai đoạn 4: Đánh Giá Review LLM (top N, tùy chọn)
 
-Goal: build a comprehensive view of the target domain, including existing work, knowledge gaps, and recent advances.
+Nếu `--review` được chỉ định:
 
-1. **Load wiki internal context**:
-   - Read `wiki/graph/context_brief.md` (global compressed context)
-   - Read `wiki/graph/open_questions.md` (knowledge gap list)
-   - Read all `wiki/ideas/*.md`, extract:
-     - status=failed ideas → **banlist** (with failure_reason)
-     - status=proposed/in_progress ideas → **active list** (avoid duplication)
-   - Read `wiki/claims/*.md`, find claims with status=weakly_supported or challenged → **weak claims list**
-   - If `direction` is specified, filter to the relevant subset
-
-2. **External search** (run in parallel using Agent tool):
-   - **WebSearch**: search for recent 6-month papers and advances in the target direction (3–5 queries)
-   - **Semantic Scholar**:
-     ```bash
-     python3 tools/fetch_s2.py search "<direction-keywords>" --limit 20
-     ```
-     Fetch details for the top 5 highly-cited papers
-   - **DeepXiv semantic search**:
-     ```bash
-     python3 tools/fetch_deepxiv.py search "<direction-keywords>" --mode hybrid --limit 20
-     ```
-     Fetch TLDR and keywords for top 5 most relevant results:
-     ```bash
-     python3 tools/fetch_deepxiv.py brief <arxiv_id>
-     ```
-     Semantic search supplements S2 keyword search for conceptually related papers that keyword search may miss.
-   - **DeepXiv trending papers**:
-     ```bash
-     python3 tools/fetch_deepxiv.py trending --days 14
-     ```
-     Trending papers indicate community focus areas, useful for discovering trend-driven gaps.
-   - **arXiv latest**: `site:arxiv.org <direction> 2025 2026`
-   - **If DeepXiv is unavailable**: skip DeepXiv search and trending, rely on S2 + WebSearch only (fallback to original behavior).
-
-3. **Compile landscape report** (internal use, not written to wiki):
-   - Current SOTA methods and performance
-   - Known open problems / unresolved challenges
-   - Recent trends and hot topics
-   - Knowledge gaps in the wiki (from gap_map)
-   - Prohibited directions (from banlist)
-
-### Phase 2: Dual-Model Brainstorm
-
-Goal: generate ideas independently with Claude and Review LLM, exploiting the diversity that comes from different model perspectives.
-
-**Follow `shared-references/cross-model-review.md`**: Claude and Review LLM generate independently without seeing each other's output.
-
-1. **Claude generates 6–10 ideas**:
-   - Input: landscape report + wiki gaps + weak claims + banlist
-   - Strategies:
-     - Cross-domain combination (method from Topic A + problem from Topic B)
-     - Fill gaps in the gap_map
-     - Strengthen weakly_supported claims
-     - Alternative hypotheses that challenge challenged claims
-     - Known limitations of SOTA → improvement directions
-   - Each idea includes: title, hypothesis (1–2 sentences), approach sketch (3–5 sentences), target claims, estimated feasibility (high/medium/low)
-
-2. **Review LLM independently generates 4–6 ideas** (run in parallel):
+1. **Đối với mỗi ý tưởng trong top 5**, gửi đến Review LLM để đánh giá độc lập:
    ```
    mcp__llm-review__chat:
-     system: "You are a creative ML researcher brainstorming research ideas.
-              Generate novel, concrete, and feasible ideas based on the given context.
-              For each idea, provide: title, hypothesis (1-2 sentences),
-              approach sketch (3-5 sentences), and feasibility assessment."
+     system: "Bạn là một nhà nghiên cứu ML cao cấp đang đánh giá các ý tưởng nghiên cứu.
+              Tập trung vào: tính mới lạ, tính khả thi, tác động tiềm năng và sự phù hợp với seed.
+              Đối với mỗi mối quan ngại, đề xuất một cải tiến cụ thể."
      message: |
-       ## Research Landscape
-       {landscape report from Phase 1 — gaps, SOTA, trends}
+       ## Seed
+       {mô tả seed}
 
-       ## Knowledge Gaps
-       {gap_map entries}
+       ## Ý tưởng
+       {tiêu đề và bản phác thảo ý tưởng}
 
-       ## Banlist (DO NOT revisit these)
-       {failed ideas with failure_reason}
-
-       ## Active Ideas (avoid duplicating)
-       {proposed/in_progress ideas}
-
-       Generate 4-6 novel research ideas that address the gaps above.
-       Focus on ideas that are: (1) genuinely novel, (2) feasible within 3-6 months,
-       (3) directly address a knowledge gap.
+       ## Câu hỏi đánh giá
+       1. Ý tưởng này có mới lạ không? Nếu không, công trình gần nhất là gì?
+       2. Nó có khả thi trong ngân sách hợp lý không? Những rủi ro lớn nhất là gì?
+       3. Tác động tiềm năng nếu thành công là gì?
+       4. Nó có giải quyết tốt seed không? Nếu không, làm thế nào để điều chỉnh?
+       5. Đề xuất 1-2 cải tiến cụ thể cho ý tưởng.
    ```
+2. **Tổng hợp phản hồi của Review LLM** với đánh giá của Claude:
+   - Nếu Review LLM phát hiện lỗi nghiêm trọng (ví dụ: đã được công bố), loại bỏ ý tưởng
+   - Nếu Review LLM đề xuất cải tiến, tinh chỉnh ý tưởng
+3. **Xếp hạng lại top 5** dựa trên phản hồi của Review LLM
+4. **Đầu ra**: top N ý tưởng (N = --count, mặc định 3) với phản hồi của Review LLM
 
-3. **Merge and deduplicate**:
-   - Combine Claude's and Review LLM's ideas (10–16 candidates)
-   - Remove highly similar ideas (merge ideas with the same core method, keep the more specific version)
-   - Remove ideas that overlap with the banlist
-   - Remove ideas that heavily duplicate the active list
-   - Output: 8–12 candidate ideas
+Nếu `--review` không được chỉ định, sử dụng top N ý tưởng từ Giai đoạn 3.
 
-### Phase 3: First-Pass Filter
+### Bước 5: Ghi Vào Wiki
 
-Goal: quickly eliminate ideas that are clearly infeasible or insufficiently novel.
-
-Apply the following checks to each candidate idea:
-
-1. **Feasibility check**:
-   - Are GPU/compute requirements within reasonable range? (reference experiment setups already in the wiki)
-   - Data availability (public datasets vs. private data)
-   - Implementation complexity (achievable within 3–6 months?)
-   - Label as feasibility: high/medium/low
-
-2. **Quick novelty screening** (2–3 WebSearch queries per idea):
-   - `"<idea-core-method>" + "<task>"` exact-match search
-   - `<component-1> + <component-2>` component-combination search
-   - If a highly similar published work is found → eliminate or flag
-
-3. **Wiki alignment check**:
-   - Does the idea address a known gap in the gap_map? (+score)
-   - Does the idea target a weakly_supported claim? (+score)
-   - Does the idea build on existing wiki knowledge? (+score)
-
-4. **Filter decision**:
-   - Eliminate if: feasibility=low AND quick novelty screening found similar published work
-   - Eliminate if: highly correlated with a failure_reason in the banlist
-   - Retain if: feasibility >= medium AND not eliminated
-   - Output: 4–6 surviving ideas (ranked)
-
-### Phase 4: Deep Validation
-
-(Skip if `--skip-validation` is set; proceed directly to Phase 5.)
-
-Apply deep validation to the top 3 ideas from Phase 3:
-
-1. **Call /novelty** (one at a time):
-   ```
-   For each top idea:
-   Skill: novelty
-   Args: "<idea-title-and-hypothesis>"
-   ```
-   Record novelty score (1–5) and recommendations
-
-2. **Call /review** (for top 2 ideas):
-   ```
-   Skill: review
-   Args: "<idea-full-description>" --difficulty hard --focus method
-   ```
-   Record review score (1–10) and weaknesses
-
-3. **Composite ranking**:
-   - Final score = novelty_score × 2 + review_score + gap_alignment_bonus
-   - gap_alignment_bonus: +2 if the idea directly targets a gap_map entry
-   - If novelty_score <= 2 → downgrade to "modify needed"
-   - If review_score <= 4 → downgrade to "major issues"
-
-4. **If `--auto` is not set**: display ranked results in terminal, wait for user confirmation or adjustment
-
-### Phase 5: Write to Wiki
-
-Write the validated ideas to the wiki (including eliminated ideas, with their elimination reasons recorded).
-
-1. **Write top ideas** (status: proposed):
-   For the top `--max-ideas` ideas:
+1. **Tạo trang ý tưởng**:
+   Đối với mỗi ý tưởng trong top N:
    ```bash
-   # generate slug
-   python3 tools/research_wiki.py slug "<idea-title>"
+   python3 tools/research_wiki.py slug "{tiêu-đề-ý-tưởng}"
    ```
-   Create `wiki/ideas/{slug}.md` **following the CLAUDE.md ideas template exactly** (all fields required; `lint.py` enforces `status` and `priority`):
+   Tạo `wiki/ideas/{slug}.md`:
    ```yaml
    ---
-   title: "<idea title>"
-   slug: "<idea-slug>"
+   title: "{tiêu đề ý tưởng}"
+   slug: "{slug}"
    status: proposed
-   origin: "ideate: <short description of the driving gap / weak claim / paper>"
-   origin_gaps: []           # [[claim-slug]] list — claims or topics this idea targets
-   tags: []                  # 2-5 topic tags (inherit from target claims / direction)
-   domain: ""                # NLP / CV / ML Systems / Robotics (inherit from direction)
-   priority: 3               # 1-5 — see Priority computation below
-   pilot_result: ""          # empty until /exp-eval fills it
-   failure_reason: ""        # empty for proposed ideas
-   linked_experiments: []    # empty until /exp-design creates experiments
+   origin_gaps: ["{gap-or-claim-slug}"]  # nếu seed là khoảng trống hoặc khẳng định
+   tags: []
+   domain: "{suy ra từ seed}"
+   priority: 3  # 1-5, mặc định 3
+   pilot_result: ""  # trống cho đến /exp-run
+   failure_reason: ""  # trống cho đến khi ý tưởng thất bại
+   linked_experiments: []
    date_proposed: YYYY-MM-DD
-   date_resolved: ""         # empty until validated/failed
+   date_resolved: ""  # trống cho đến khi được xác thực/thất bại
    ---
+
+   ## Động Lực
+   {tại sao ý tưởng này quan trọng}
+
+   ## Giả Thuyết
+   {khẳng định cụ thể, có thể kiểm chứng}
+
+   ## Bản Phác Thảo Cách Tiếp Cận
+   {mô tả phương pháp cấp cao}
+
+   ## Rủi Ro
+   {các cạm bẫy và thách thức tiềm ẩn}
+
+   ## Các Ý Tưởng Liên Quan
+   {liên kết đến các ý tưởng tương tự trong wiki}
+
+   ## Kiểm Tra Tính Mới Lạ
+   {tóm tắt báo cáo /novelty}
+
+   ## Phản Hồi Đánh Giá
+   {phản hồi của Review LLM (nếu --review được sử dụng)}
    ```
 
-   **Priority computation** (maps Phase 4 signals into the 1-5 scale):
-   - If `--skip-validation`: default `priority = 3`
-   - Otherwise start from `novelty_score` (1-5 from /novelty)
-   - `+1` if `gap_alignment_bonus > 0` (directly targets a gap_map entry)
-   - `-1` if `review_score <= 4` (major issues downgrade)
-   - Clamp to `[1, 5]`
-
-   **Body sections** (exactly match the CLAUDE.md template — do not rename):
-   ```markdown
-   ## Motivation
-   Which gap / weakly_supported claim / paper limitation drives this idea. Reference wiki pages via `[[slug]]`.
-
-   ## Hypothesis
-   1-2 sentences stating the testable proposition.
-
-   ## Approach sketch
-   3-5 sentences on the proposed method. Reference `[[paper-slug]]` or `[[concept-slug]]` for any component borrowed from existing work.
-
-   ## Expected outcome
-   What success looks like (metric / claim status change), plus the Phase 4 novelty & review summary:
-   - Novelty score: N/5 — <one-line reason from /novelty>
-   - Review score: M/10 — <one-line summary from /review>
-
-   ## Risks
-   Feasibility rating (high/medium/low) + top 2-3 risks. Include the main weaknesses surfaced by /review.
-
-   ## Pilot results
-   (empty — filled by /exp-eval after running the experiment)
-
-   ## Lessons learned
-   (empty — filled by /exp-eval after the idea reaches a terminal status)
-   ```
-
-2. **Write eliminated ideas** (status: failed):
-   For ideas eliminated in Phase 3/4, also create `wiki/ideas/{slug}.md` using the **same template above**, with these overrides:
-   - `status: failed`
-   - `priority: 1` (eliminated ideas never block higher-priority work)
-   - `date_resolved: YYYY-MM-DD` (today)
-   - `failure_reason: "[filter] <specific elimination reason>"` — the `[filter]` prefix distinguishes ideate-stage eliminations from post-experiment failures (which /exp-eval tags differently). Examples: `"[filter] highly similar published work exists: <paper-title>"`, `"[filter] insufficient feasibility: GPU requirements too high"`
-   - Body `## Motivation` and `## Hypothesis` should still be filled (so future banlist matching has content); `## Approach sketch` may be brief; `## Expected outcome` and `## Risks` can note why the idea was eliminated
-   - These failed ideas become the banlist for future ideate runs
-
-3. **Add graph edges**:
+2. **Thêm cạnh đồ thị**:
    ```bash
-   # for each idea
+   # Đối với mỗi ý tưởng → seed (khoảng trống hoặc khẳng định)
    python3 tools/research_wiki.py add-edge wiki/ \
-     --from "ideas/{slug}" --to "claims/{target-claim}" \
-     --type addresses_gap --evidence "Generated by ideate"
-
-   python3 tools/research_wiki.py add-edge wiki/ \
-     --from "ideas/{slug}" --to "papers/{source-paper}" \
-     --type inspired_by --evidence "Inspired by method in {paper-title}"
+     --from "ideas/{slug}" --to "{gap-or-claim-type}/{slug}" \
+     --type inspired_by --evidence "Được tạo bởi /ideate từ {seed}"
    ```
 
-4. **Rebuild derived data**:
+3. **Cập nhật index.md**: thêm mục vào danh mục ý tưởng
+
+4. **Xây dựng lại dữ liệu phái sinh**:
    ```bash
    python3 tools/research_wiki.py rebuild-context-brief wiki/
    python3 tools/research_wiki.py rebuild-open-questions wiki/
    ```
 
-5. **Append log**:
+5. **Thêm nhật ký**:
    ```bash
    python3 tools/research_wiki.py log wiki/ \
-     "ideate | {N} ideas proposed, {M} ideas filtered out | direction: {direction}"
+     "ideate | {N} ý tưởng được tạo từ {seed} | hàng đầu: {danh-sách-slug}"
    ```
 
-6. **Print IDEA_REPORT to terminal**:
+6. **In IDEATION_REPORT ra terminal**:
    ```markdown
-   # Idea Generation Report
+   # Báo Cáo Tạo Ý Tưởng: {seed}
 
-   ## Pipeline Summary
-   - Direction: {direction}
-   - Phase 1: Scanned {N} external papers, {M} wiki gaps identified
-   - Phase 2: Generated {X} candidates (Claude: {a}, Review LLM: {b})
-   - Phase 3: {Y} survived initial filter (from {X})
-   - Phase 4: Deep validation on top {Z}
-   - Phase 5: {K} ideas written to wiki
+   ## Tóm Tắt Quy Trình
+   | Giai đoạn | Đầu vào | Đầu ra | Bộ lọc |
+   |-------|-------|--------|--------|
+   | Phân kỳ | 1 seed | 100 ý tưởng | — |
+   | Hội tụ | 100 ý tưởng | 10 ý tưởng | novelty × impact × feasibility × alignment |
+   | Tính mới lạ | 10 ý tưởng | 5 ý tưởng | điểm /novelty |
+   | Đánh giá | 5 ý tưởng | {N} ý tưởng | phản hồi Review LLM |
 
-   ## Top Ideas (ranked)
+   ## Top {N} Ý Tưởng
+   | Hạng | Ý tưởng | Điểm | Tính mới lạ | Khả thi | Tác động | Sự phù hợp |
+   |------|------|-------|---------|-------------|--------|-----------|
+   | 1 | [[idea-slug]] | 4.2 | 4 | 3 | 5 | 5 |
+   | 2 | [[idea-slug]] | 3.8 | 3 | 4 | 5 | 4 |
 
-   | Rank | Idea | Novelty | Review | Gap Align | Status |
-   |------|------|---------|--------|-----------|--------|
-   | 1 | [[slug]] | 4/5 | 7/10 | +2 | proposed |
-   | 2 | [[slug]] | 3/5 | 6/10 | +0 | proposed |
-
-   ## Filtered Out
-   | Idea | Reason | Status |
-   |------|--------|--------|
-   | [[slug]] | Similar published work exists | failed |
-   | [[slug]] | GPU requirements too high | failed |
-
-   ## Suggested Next Steps
-   - Run `/exp-design {top-idea-slug}` to design experiments
-   - Run `/novelty` on any idea before investing time
-
-   ## Wiki Growth
-   | Metric | Before | After | Delta |
-   |--------|--------|-------|-------|
-   | Papers | {before} | {after} | +{delta} |
-   | Claims | {before} | {after} | +{delta} |
-   | Ideas | {before} | {after} | +{delta} |
-   | Edges | {before} | {after} | +{delta} |
-   | Maturity | {before_level} | {after_level} | {unchanged/upgraded} |
-   (Only rows with delta != 0 are shown. Data is computed by comparing `maturity_before` from the pre-condition step against a fresh `maturity --json` call here.)
+   ## Bước Tiếp Theo
+   - Chạy `/exp-design [[idea-slug]]` để thiết kế thí nghiệm cho ý tưởng hàng đầu
+   - Chạy `/ideate --review` để có ý kiến thứ hai về các ý tưởng hàng đầu
+   - Chạy `/research [[idea-slug]]` để bắt đầu quy trình nghiên cứu đầy đủ
    ```
 
-## Constraints
+## Các Ràng Buộc
 
-- **Auto-switch to cold-start mode when wiki is cold**: expand external search (WebSearch 8 queries, S2/DeepXiv limit 30), do not block execution
-- **Every idea must have wiki grounding**: each idea must reference at least 2 wiki pages (paper/concept/claim)
-- **Banlist must be loaded**: Phase 1 must read failed ideas' failure_reason; Phase 2/3 must check for overlap
-- **Review LLM independence**: in Phase 2, Review LLM does not see Claude's idea list (cross-model-review.md)
-- **Eliminated ideas are also written to wiki**: status=failed + failure_reason, as anti-repetition memory
-- **No fabrication**: all ideas must be derived from existing wiki knowledge or external search results; do not invent non-existent papers or methods
-- **Slug uniqueness**: check whether the same slug already exists in wiki/ideas/ before creating
-- **Graph edges via tools/research_wiki.py**: do not manually edit edges.jsonl
+- **Ý tưởng phải cụ thể và có thể kiểm chứng**: tránh các ý tưởng mơ hồ như "cải thiện hiệu suất mô hình" — phải chỉ rõ cách thức
+- **Các cạnh đồ thị thông qua tools/research_wiki.py**: không chỉnh sửa thủ công edges.jsonl
+- **Tính độc lập của Review LLM**: tuân thủ nghiêm ngặt cross-model-review.md — không gửi đánh giá trước của Claude đến Review LLM
+- **Kiểm tra tính mới lạ là bắt buộc**: không thể bỏ qua Giai đoạn 3
+- **Top N giới hạn ở 5**: --count không thể vượt quá 5
+- **Trạng thái ý tưởng bắt đầu là proposed**: chỉ /exp-eval mới có thể chuyển sang validated/failed
+- **failure_reason là bộ nhớ chống lặp lại**: phải được viết rõ ràng khi một ý tưởng thất bại
+- **Không sửa đổi các ý tưởng hiện có**: chỉ tạo trang ý tưởng mới
+- **Loại bỏ trùng lặp nghiêm ngặt**: loại bỏ các ý tưởng gần giống để tránh ý tưởng dư thừa
 
-## Error Handling
+## Xử Lý Lỗi
 
-- **Wiki is empty**: proceed with external search (Phase 1 sources B/C/D), but skip wiki internal context; prompt user to build the knowledge base first
-- **WebSearch unavailable**: skip external search, generate ideas from wiki internal knowledge only (degraded mode, noted in report)
-- **Semantic Scholar API unavailable**: skip S2 search, rely on DeepXiv + WebSearch for compensation
-- **DeepXiv API unavailable**: skip DeepXiv search and trending, fall back to S2 + WebSearch (original behavior)
-- **Review LLM unavailable**: Phase 2 uses Claude only (no dual-model diversity, noted in report)
-- **/novelty fails**: if novelty fails for a single idea in Phase 4, mark "novelty unverified" and continue
-- **/review fails**: if review fails in Phase 4, mark "unreviewed" and continue; recommend user manually runs /review
-- **Slug conflict**: if the same slug already exists in wiki/ideas/, append a numeric suffix (e.g. `sparse-lora-v2`)
-- **All ideas eliminated**: still write to wiki (status: failed); report recommends user broaden the search direction or /ingest more papers
+- **Không tìm thấy seed**: nhắc người dùng kiểm tra slug, liệt kê các ứng viên trong wiki/graph/open_questions.md hoặc wiki/claims/
+- **Không tạo được ý tưởng**: báo lỗi, đề xuất nới lỏng seed hoặc thử hướng khác
+- **Review LLM không khả dụng** (chế độ --review): bỏ qua Giai đoạn 4, ghi chú "chưa được đánh giá — Review LLM không khả dụng" trong báo cáo
+- **Kiểm tra tính mới lạ thất bại** (Giai đoạn 3): bỏ qua ý tưởng, tiếp tục với ý tưởng tiếp theo, ghi chú trong báo cáo
+- **Xung đột slug**: thêm hậu tố số (ví dụ: `sparse-lora-v2`)
+- **Wiki trống**: tiến hành bình thường, nhưng việc tạo ý tưởng sẽ ít thông tin hơn
+- **Ngân sách quá thấp**: cảnh báo người dùng rằng điểm tính khả thi có thể lạc quan
 
-## Dependencies
+## Phụ Thuộc
 
-### Tools（via Bash）
-- `python3 tools/research_wiki.py maturity wiki/ --json` — check wiki maturity + Growth Report
-- `python3 tools/research_wiki.py slug "<title>"` — generate slug
-- `python3 tools/research_wiki.py add-edge wiki/ ...` — add graph edge
-- `python3 tools/research_wiki.py rebuild-context-brief wiki/` — rebuild query_pack
-- `python3 tools/research_wiki.py rebuild-open-questions wiki/` — rebuild gap_map
-- `python3 tools/research_wiki.py log wiki/ "<message>"` — append log
-- `python3 tools/fetch_s2.py search "<query>" --limit 20` — Semantic Scholar search
-- `python3 tools/fetch_deepxiv.py search "<query>" --mode hybrid --limit 20` — DeepXiv semantic search
-- `python3 tools/fetch_deepxiv.py brief <arxiv_id>` — fetch paper TLDR
-- `python3 tools/fetch_deepxiv.py trending --days 14` — trending paper trends
+### Kỹ Năng (thông qua công cụ Skill)
 
-### Skills（via Skill tool）
-- `/novelty` — Phase 4 deep novelty validation
-- `/review` — Phase 4 cross-model review
+- `/novelty` — Giai đoạn 3 kiểm tra tính mới lạ (gọi song song)
 
-### MCP Servers
-- `mcp__llm-review__chat` — Phase 2 Review LLM independent brainstorm
+### Công cụ (thông qua Bash)
 
-### Claude Code Native
-- `WebSearch` — Phase 1 external search, Phase 3 quick novelty screening
-- `Agent` tool — Phase 1 parallel search, Phase 2 parallel brainstorm
+- `python3 tools/research_wiki.py slug "<title>"` — tạo slug
+- `python3 tools/research_wiki.py add-edge wiki/ ...` — thêm cạnh đồ thị
+- `python3 tools/research_wiki.py rebuild-context-brief wiki/` — xây dựng lại query_pack
+- `python3 tools/research_wiki.py rebuild-open-questions wiki/` — xây dựng lại gap_map
+- `python3 tools/research_wiki.py log wiki/ "<message>"` — thêm nhật ký
 
-### Shared References
-- `.claude/skills/shared-references/cross-model-review.md` — Phase 2 Review LLM independence principle
+### Máy Chủ MCP
+
+- `mcp__llm-review__chat` — Giai đoạn 4 đánh giá độc lập của Review LLM (tùy chọn)
+
+### Claude Code Gốc
+
+- `Read` — đọc các trang wiki
+- `Glob` — tìm các ý tưởng hiện có
+- `Agent` — gọi /novelty song song trong Giai đoạn 3
+
+### Tài Liệu Tham Khảo Chung
+
+- `.claude/skills/shared-references/cross-model-review.md` — Giai đoạn 4 nguyên tắc độc lập của Review LLM (bắt buộc đọc)
+
+### Được Gọi Bởi
+
+- `/research` Giai đoạn 1 (giai đoạn tạo ý tưởng)
+- Người dùng trực tiếp
+
+### Gọi Đến
+
+- `/novelty` (Giai đoạn 3) — kiểm tra tính mới lạ song song
+- `/exp-design` (được đề xuất trong báo cáo) — thiết kế thí nghiệm cho các ý tưởng hàng đầu
+- `/research` (được đề xuất trong báo cáo) — bắt đầu quy trình nghiên cứu đầy đủ
+- `/ideate --review` (được đề xuất trong báo cáo) — có ý kiến thứ hai về các ý tưởng

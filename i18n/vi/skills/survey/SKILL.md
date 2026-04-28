@@ -40,7 +40,7 @@ argument-hint: <câu-hỏi-nghiên-cứu-hoặc-slug-khẳng-định> [--format 
 - `wiki/ideas/*.md` — Động lực (hiểu định vị của bài báo này)
 - `wiki/index.md` — danh mục nội dung, được lọc theo tầm quan trọng
 - `wiki/graph/context_brief.md` — ngữ cảnh toàn cục
-- `wiki/graph/edges.jsonl` — mối quan hệ giữa các bài báo (extends, contradicts, supersedes)
+- `wiki/graph/edges.jsonl` — mối quan hệ ngữ nghĩa giữa các bài báo (same_problem_as, similar_method_to, complementary_to, builds_on, compares_against, improves_on, challenges, surveys)
 - `.claude/skills/shared-references/academic-writing.md` — quy tắc viết Công trình liên quan
 - `.claude/skills/shared-references/citation-verification.md` — kỷ luật trích dẫn
 

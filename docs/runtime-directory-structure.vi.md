@@ -19,6 +19,7 @@ wiki/
 ├── outputs/           ← tạo tác được tạo (Công trình liên quan, bản thảo bài báo)
 └── graph/             ← tự động tạo (không chỉnh sửa)
     ├── edges.jsonl
+    ├── citations.jsonl
     ├── context_brief.md
     └── open_questions.md
 

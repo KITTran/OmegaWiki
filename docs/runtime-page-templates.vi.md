@@ -1,4 +1,4 @@
-# Mẫu Trang Wiki Runtime
+# Mẫu Trang Runtime
 
 > Tài liệu tham khảo theo yêu cầu cho các mẫu trang wiki đầy đủ. Xem `docs/runtime-support-files.vi.md` để biết các tệp phái sinh từ đồ thị cùng với `index.md` và `log.md`.
 
@@ -60,7 +60,7 @@ key_people: []
 
 Các phần nội dung: `## Tổng quan` / `## Dòng thời gian` / `## Công trình nền tảng` / `## Theo dõi SOTA` / `## Vấn đề mở` / `## Vị trí của tôi` / `## Khoảng trống nghiên cứu` / `## Nhân vật chính`
 
-### people/{tên-đệm-tên}.md
+### people/{họ-tên}.md
 
 ```yaml
 ---

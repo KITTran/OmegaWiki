@@ -4,6 +4,6 @@
 # Chỉ chạy khi có thay đổi trong thư mục wiki hoặc các thư mục con
 
 # Thực hiện đồng bộ hóa
-rsync -avz --exclude='.git/' --exclude='.claude/worktrees/' --exclude='*.tmp' \
+rsync -avz --delete --exclude='.claude/worktrees/' --exclude='*.tmp' \
     "/home/tuank/mac_folder/pinnWiki/" \
     "tuank@100.125.70.98:/Users/tuank/Documents/Projects/pinnWiki/"

@@ -16,9 +16,6 @@ build/
 # Claude Code local settings (contains MCP server permissions, may contain API keys)
 .claude/settings.local.json
 
-#Claude skill
-.claude/
-
 # IDE
 .vscode/
 .idea/

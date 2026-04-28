@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_response.filePath // .tool_input.file_path' | { read -r file; if [[ \"$file\" == *.md ]]; then sed -i 's/\\[\\[/$$/g; s/\\]\\]/$$/g; s/\\[/(/g; s/\\]/)/g' \"$file\"; sed -i 's/\\\\\\\\(/\\$/g; s/\\\\\\\\)/$/g' \"$file\"; fi; } 2>/dev/null || true",
+            "statusMessage": "Enforcing LaTeX equation style"
+          }
+        ]
+      }
+    ]
+  }
+}

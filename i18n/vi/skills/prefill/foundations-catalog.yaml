@@ -1,0 +1,77 @@
+domains:
+  general:
+    - slug: gradient-descent
+      title: "Gradient Descent"
+      summary: "Họ các thuật toán tối ưu bậc nhất, cập nhật tham số theo hướng ngược lại với gradient của hàm mất mát"
+    - slug: backpropagation
+      title: "Backpropagation"
+      summary: "Thuật toán tính toán hiệu quả gradient của các tham số trong mạng nơ-ron bằng quy tắc dây chuyền"
+    - slug: regularization
+      title: "Regularization"
+      summary: "Họ các kỹ thuật ngăn ngừa quá khớp, bao gồm L1/L2 regularization, dropout, early stopping, v.v."
+    - slug: cross-validation
+      title: "Cross-Validation"
+      summary: "Phương pháp chia dữ liệu thành tập huấn luyện và tập kiểm tra để đánh giá khả năng tổng quát của mô hình"
+    - slug: optimization
+      title: "Optimization"
+      summary: "Phương pháp luận tối thiểu hóa hàm mất mát trong học máy, bao gồm các bộ tối ưu như SGD, Adam, v.v."
+
+  NLP:
+    - slug: transformer
+      title: "Transformer"
+      summary: "Kiến trúc mô hình hóa chuỗi dựa trên cơ chế tự chú ý, thay thế RNN trở thành phương pháp chủ đạo trong NLP"
+    - slug: attention-mechanism
+      title: "Attention Mechanism"
+      summary: "Cơ chế cho phép mô hình tập trung động vào các phần khác nhau của đầu vào"
+    - slug: recurrent-neural-networks
+      title: "Recurrent Neural Networks"
+      summary: "Kiến trúc mạng nơ-ron xử lý dữ liệu chuỗi bằng trạng thái ẩn, hiện đã bị Transformer thay thế phần lớn"
+    - slug: word-embeddings
+      title: "Word Embeddings"
+      summary: "Phương pháp học biểu diễn ánh xạ từ ngữ rời rạc sang không gian vector liên tục"
+    - slug: sequence-to-sequence
+      title: "Sequence-to-Sequence Models"
+      summary: "Kiến trúc mã hóa-giải mã, dùng để ánh xạ từ đầu vào có độ dài thay đổi sang đầu ra có độ dài thay đổi"
+    - slug: language-model
+      title: "Language Model"
+      summary: "Mô hình học phân phối xác suất của văn bản, là nền tảng cho các mô hình tiền huấn luyện như GPT/BERT"
+    - slug: tokenization
+      title: "Tokenization"
+      summary: "Phương pháp phân chia văn bản thành các đơn vị cơ bản mà mô hình có thể xử lý"
+    - slug: pre-training
+      title: "Pre-training"
+      summary: "Mô hình huấn luyện học biểu diễn chung trên dữ liệu không gán nhãn quy mô lớn"
+
+  CV:
+    - slug: convolutional-neural-networks
+      title: "Convolutional Neural Networks"
+      summary: "Kiến trúc mạng nơ-ron sử dụng phép tích chập để trích xuất đặc trưng không gian"
+    - slug: residual-connections
+      title: "Residual Connections"
+      summary: "Kỹ thuật giảm thiểu vấn đề gradient biến mất trong mạng sâu bằng cách sử dụng kết nối nhảy bậc"
+    - slug: batch-normalization
+      title: "Batch Normalization"
+      summary: "Kỹ thuật chuẩn hóa giá trị kích hoạt của các lớp trung gian để tăng tốc độ huấn luyện"
+    - slug: generative-adversarial-networks
+      title: "Generative Adversarial Networks"
+      summary: "Khung mô hình sinh dựa trên sự đối kháng giữa bộ sinh và bộ phân biệt"
+    - slug: data-augmentation
+      title: "Data Augmentation"
+      summary: "Kỹ thuật tăng đa dạng dữ liệu bằng cách áp dụng các biến đổi lên dữ liệu huấn luyện"
+    - slug: image-classification
+      title: "Image Classification"
+      summary: "Nhiệm vụ thị giác máy tính phân loại hình ảnh vào các lớp đã định nghĩa trước"
+
+  RL:
+    - slug: markov-decision-process
+      title: "Markov Decision Process"
+      summary: "Khung toán học của học tăng cường, định nghĩa trạng thái, hành động, chuyển đổi và phần thưởng"
+    - slug: policy-gradient
+      title: "Policy Gradient Methods"
+      summary: "Họ các phương pháp học tăng cường tối ưu trực tiếp hàm chính sách"
+    - slug: q-learning
+      title: "Q-Learning"
+      summary: "Thuật toán học tăng cường không mô hình học hàm giá trị trạng thái-hành động"
+    - slug: reward-shaping
+      title: "Reward Shaping"
+      summary: "Kỹ thuật thiết kế tín hiệu phần thưởng phụ để hướng dẫn agent học tăng cường học tập"

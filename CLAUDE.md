@@ -1,160 +1,158 @@
-# ΩmegaWiki — Runtime Schema
+# ΩmegaWiki — Sơ Đồ Runtime
 
-> CS/AI ΩmegaWiki. Powered by Claude Code.
-> This file is the wiki's runtime entry point: defines page structure, link conventions, and workflow constraints.
+> CS/AI ΩmegaWiki. Được hỗ trợ bởi Claude Code.
+> Tệp này là điểm nhập runtime của wiki: định nghĩa cấu trúc trang, quy ước liên kết và các ràng buộc quy trình làm việc.
 
-> **Maintenance note**: Managed under `i18n/`. Edit `i18n/en/CLAUDE.md` (not the active copy at the root). Run `./setup.sh --lang <current>` to sync.
-
----
-
-## Repository Layout
-
-Open `docs/runtime-directory-structure.en.md` only when you need the full repo tree.
-
-Keep this mental map in immediate context:
-
-### `wiki/` is the main product surface
-
-- `wiki/index.md` is the catalog of all wiki pages
-- `wiki/log.md` is the append-only activity log
-- `wiki/papers/` holds paper summaries
-- `wiki/concepts/`, `wiki/topics/`, and `wiki/foundations/` hold reusable knowledge structure
-- `wiki/people/`, `wiki/ideas/`, `wiki/experiments/`, and `wiki/claims/` hold research actors, hypotheses, tests, and assertions
-- `wiki/Summary/` holds area-level syntheses
-- `wiki/outputs/` holds generated artifacts
-- `wiki/graph/` is derived state; do not edit it manually
-
-### Formatting guardrail
-
-- Open `docs/runtime-page-templates.en.md` before drafting or repairing wiki page structure, YAML, or body sections
-- Open `docs/runtime-support-files.en.md` when you need graph-derived file details or `index.md` / `log.md` format
-- `SKILL.md` is the immediate entrypoint for a skill; some larger skills may also provide local on-demand reference files under their skill directory
-- `/init` is the first concrete example of this pattern: read `skills/init/SKILL.md` first, then open `skills/init/references/*` only when needed
-
-### `raw/` and `config/`
-
-- `raw/papers/`, `raw/notes/`, and `raw/web/` are user-owned inputs
-- `raw/discovered/` stores externally fetched papers from `/init` and `/daily-arxiv`
-- `raw/tmp/` stores generated prepared local sidecars for `/init` and direct local `/ingest`
-- `config/` holds environment and remote-server templates
+> **Ghi chú bảo trì**: Được quản lý dưới `i18n/`. Chỉnh sửa `i18n/vi/CLAUDE.md` (không chỉnh sửa bản sao hoạt động tại thư mục gốc). Chạy `./setup.sh --lang vi` để đồng bộ.
 
 ---
 
-## 9 Page Types
+## Cấu Trúc Kho Lưu Trữ
+
+Chỉ mở `docs/runtime-directory-structure.vi.md` khi bạn cần cây thư mục đầy đủ.
+
+Hãy ghi nhớ sơ đồ này trong ngữ cảnh tức thì:
+
+### `wiki/` là bề mặt sản phẩm chính
+
+- `wiki/index.md` là danh mục của tất cả các trang wiki
+- `wiki/log.md` là nhật ký hoạt động chỉ được thêm vào
+- `wiki/overview.md` là tổng quan về chủ đề nghiên cứu và giả thuyết
+- `wiki/open-questions.md` theo dõi các câu hỏi mở và vấn đề chưa giải quyết
+- `wiki/papers/` chứa các bản tóm tắt bài báo
+- `wiki/concepts/`, `wiki/topics/`, và `wiki/foundations/` chứa cấu trúc kiến thức có thể tái sử dụng
+- `wiki/people/`, `wiki/ideas/`, `wiki/experiments/`, và `wiki/claims/` chứa các tác nhân nghiên cứu, giả thuyết, thử nghiệm và khẳng định
+- `wiki/Summary/` chứa các tổng hợp theo lĩnh vực
+- `wiki/outputs/` chứa các tạo tác được tạo ra
+- `wiki/graph/` là trạng thái phái sinh; không chỉnh sửa thủ công
+
+### Quy tắc định dạng
+
+- Mở `docs/runtime-page-templates.vi.md` trước khi soạn thảo hoặc sửa chữa cấu trúc trang wiki, YAML hoặc các phần nội dung
+- Mở `docs/runtime-support-files.vi.md` khi bạn cần chi tiết tệp phái sinh từ đồ thị hoặc định dạng `index.md` / `log.md`
+- `SKILL.md` là điểm nhập tức thì cho một kỹ năng; một số kỹ năng lớn hơn cũng có thể cung cấp các tệp tham khảo cục bộ theo yêu cầu trong thư mục kỹ năng của chúng
+- `/init` là ví dụ cụ thể đầu tiên của mẫu này: đọc `skills/init/SKILL.md` trước, sau đó mở `skills/init/references/*` chỉ khi cần thiết
+
+### `raw/` và `config/`
+
+- `raw/papers/`, `raw/notes/`, và `raw/web/` là đầu vào do người dùng sở hữu
+- `raw/discovered/` lưu trữ các bài báo được lấy từ bên ngoài từ `/init` và `/daily-arxiv`
+- `raw/tmp/` lưu trữ các tệp tạm thời được tạo ra cho `/init` và `/ingest` cục bộ trực tiếp
+- `config/` chứa các mẫu môi trường và máy chủ từ xa
+
+---
+
+## 9 Loại Trang
 
 `papers`, `concepts`, `topics`, `people`, `ideas`, `experiments`, `claims`, `Summary`, `foundations`.
 
-Open `docs/runtime-page-templates.en.md` for page templates and `docs/runtime-support-files.en.md` for graph/index/log references.
+Mở `docs/runtime-page-templates.vi.md` để biết mẫu trang và `docs/runtime-support-files.vi.md` để biết tham chiếu đồ thị/ chỉ mục/ nhật ký.
 
 ---
 
-## Link Syntax
+## Cú Pháp Liên Kết
 
-All internal links use Obsidian wikilinks:
+Tất cả các liên kết nội bộ sử dụng wikilinks theo kiểu Obsidian:
 
 ```markdown
-[[slug]]                    ← link to any page in this wiki
-[[lora-low-rank-adaptation]] ← links to papers/lora-low-rank-adaptation.md
-[[flash-attention]]          ← links to concepts/flash-attention.md
+[[slug]]                    ← liên kết đến bất kỳ trang nào trong wiki này
+[[lora-low-rank-adaptation]] ← liên kết đến papers/lora-low-rank-adaptation.md
+[[flash-attention]]          ← liên kết đến concepts/flash-attention.md
 ```
 
-**Naming convention**: all lowercase, hyphen-separated, no spaces.
+**Quy ước đặt tên**: tất cả chữ thường, phân tách bằng dấu gạch ngang, không có khoảng trắng.
 
 ---
 
-## Cross-Reference Rules
+## Quy Tắc Liên Kết Chéo
 
-When writing a forward link, **always write the reverse link simultaneously**:
+Khi viết một liên kết xuôi, **luôn viết liên kết ngược đồng thời**:
 
-| Forward action | Required reverse action |
-|----------------|------------------------|
-| papers/A writes `Related: [[concept-B]]` | concepts/B appends A to `key_papers` |
-| papers/A writes `[[researcher-C]]` | people/C appends A to `Key papers` |
-| papers/A writes `supports: [[claim-D]]` | claims/D appends `{source: A, type: supports}` to `evidence` |
-| topics/T writes `key_people: [[person-D]]` | people/D appends T to `Research areas` |
-| concepts/K writes `key_papers: [[paper-E]]` | papers/E appends K to `Related` |
-| concepts/K writes part_of `[[topic-F]]` | topics/F appends K to overview paragraph |
-| ideas/I writes `origin_gaps: [[claim-C]]` | claims/C appends I to `## Linked ideas` |
-| experiments/E writes `target_claim: [[claim-C]]` | claims/C appends `{source: E, type: tested_by}` to `evidence` |
-| claims/C writes `source_papers: [[paper-P]]` | papers/P appends C to `## Related` |
-| any page links to `[[foundation-X]]` | **no reverse link** — foundations are terminal: they receive inward links from papers/concepts/etc. but never write `key_papers` or any back-reference field |
+| Hành động xuôi | Hành động ngược bắt buộc |
+|----------------|--------------------------|
+| papers/A viết `Related: [[concept-B]]` | concepts/B thêm A vào `key_papers` |
+| papers/A viết `[[researcher-C]]` | people/C thêm A vào `Key papers` |
+| papers/A viết `supports: [[claim-D]]` | claims/D thêm `{source: A, type: supports}` vào `evidence` |
+| topics/T viết `key_people: [[person-D]]` | people/D thêm T vào `Research areas` |
+| concepts/K viết `key_papers: [[paper-E]]` | papers/E thêm K vào `Related` |
+| concepts/K viết part_of `[[topic-F]]` | topics/F thêm K vào đoạn tổng quan |
+| ideas/I viết `origin_gaps: [[claim-C]]` | claims/C thêm I vào `## Linked ideas` |
+| experiments/E viết `target_claim: [[claim-C]]` | claims/C thêm `{source: E, type: tested_by}` vào `evidence` |
+| claims/C viết `source_papers: [[paper-P]]` | papers/P thêm C vào `## Related` |
+| bất kỳ trang nào liên kết đến `[[foundation-X]]` | **không có liên kết ngược** — foundations là điểm cuối: chúng nhận liên kết vào từ papers/concepts/etc. nhưng không bao giờ viết `key_papers` hoặc bất kỳ trường tham chiếu ngược nào |
 
 ---
 
-## Graph Rules
+## Quy Tắc Đồ Thị
 
-- `graph/` is auto-generated; do not edit it manually
-- core derived files are `edges.jsonl`, `citations.jsonl`, `context_brief.md`, and `open_questions.md`
-- semantic edge types include paper-paper (`same_problem_as`, `similar_method_to`, `complementary_to`, `builds_on`, `compares_against`, `improves_on`, `challenges`, `surveys`), paper-concept (`introduces_concept`, `uses_concept`, `extends_concept`, `critiques_concept`), and existing claim/experiment/provenance types (`supports`, `contradicts`, `tested_by`, `invalidates`, `addresses_gap`, `derived_from`, `inspired_by`)
-- `/ingest` paper-paper and paper-concept semantic edges must include `confidence: high|medium|low`
-- symmetric paper-paper edges are stored once with sorted endpoints and `symmetric: true`
-- bibliographic citations live in `citations.jsonl` as `type: cites`
-- use `tools/research_wiki.py add-edge`, `add-citation`, `rebuild-context-brief`, and `rebuild-open-questions`
+- `graph/` được tạo tự động; không chỉnh sửa thủ công
+- Các tệp phái sinh cốt lõi là `edges.jsonl`, `context_brief.md`, và `open_questions.md`
+- Các loại cạnh hợp lệ là `extends`, `contradicts`, `supports`, `inspired_by`, `tested_by`, `invalidates`, `supersedes`, `addresses_gap`, và `derived_from`
+- Sử dụng `tools/research_wiki.py add-edge`, `rebuild-context-brief`, và `rebuild-open-questions`
 
-## log.md Format
+## Định Dạng log.md
 
-Standard log line:
+Dòng nhật ký chuẩn:
 
 ```markdown
-## [YYYY-MM-DD] skill | details
+## [YYYY-MM-DD] skill | chi tiết
 ```
 
 ---
 
-## Python Environment
+## Môi Trường Python
 
-- prefer `.venv/bin/python` (Unix/macOS) or `.venv/Scripts/python.exe` (Windows) when `.venv/` exists
-- otherwise use the active conda env if present
-- otherwise fall back to `python3` (Unix/macOS) or `python` (Windows)
-- Python tools auto-load API keys from `~/.env` and project-root `.env` via `tools/_env.py`
-
----
-
-## Constraints
-
-- **`raw/papers/`, `raw/notes/`, `raw/web/` are user-owned**: treat them as authoritative inputs. `/init` and `/daily-arxiv` may add externally fetched papers only under `raw/discovered/`. `/init` and direct local `/ingest` may add generated prepared local sidecars under `raw/tmp/` (additions only — never overwrite an existing user-owned file). `/edit` may add raw sources only when the user explicitly asked for it. `/init` subagents running `/ingest` in INIT MODE still treat `raw/` as strictly read-only and must consume the handed-off canonical path directly.
-- **User-facing skill parameters are user-owned**: flags and values shown in a skill's `argument-hint` belong to the user's command, not to agent strategy. Do not invent, flip, or drop those parameters from repository state alone. If the user omitted a parameter, only use a default or derived value when that skill explicitly documents omission behavior; otherwise leave it unset or ask the user. Internal derived settings that are not user-facing parameters may still be inferred by the skill.
-- **INIT MODE handoff is manifest-driven**: when `/init` writes `.checkpoints/init-sources.json`, that manifest becomes the single source of truth for ingest order and canonical source paths. Prepared local inputs should point to `raw/tmp/`; introduced external papers should point to `raw/discovered/`.
-- **graph/ is auto-generated**: never manually edit files in `graph/` — only via `tools/research_wiki.py`.
-- **Bidirectional links**: always write the reverse link when writing a forward link.
-- **tex priority**: .tex > .pdf; fallback chain: tex fails → PDF parse, PDF fails → vision API.
-- **index.md updated on every ingest**; log.md is append-only.
-- **lint default is report-only**: `--fix` auto-fixes deterministic issues (xref backlinks, missing field defaults); `--suggest` outputs suggestions for non-deterministic issues; `--fix --dry-run` previews fixes.
-- **Slug generation rule**: paper title keywords, hyphen-joined, all lowercase.
-- **Importance scoring**: 1 = niche, 2 = useful, 3 = field-standard, 4 = influential, 5 = seminal.
-- **Failed ideas must record reason**: `failure_reason` is anti-repetition memory — prevents re-exploring known dead ends.
-- **Claim confidence range**: 0.0-1.0; re-evaluate every time evidence changes.
-- **Experiments must link to a claim**: every experiment requires `target_claim`; results must be written back to the claim's evidence.
-- **Experiment code goes in experiments/code/{slug}/**: `/exp-run` writes code to this path (`train.py`, `config.yaml`, `run.sh`, `requirements.txt`) — not to the project root or elsewhere.
-- **DeepXiv token**: `DEEPXIV_TOKEN` env variable. If unset, the SDK auto-registers (writes to `~/.env`). Free tier: 10,000 requests/day. When DeepXiv is unavailable, all skills fall back to S2+RSS mode.
+- Ưu tiên `.venv/bin/python` (Unix/macOS) hoặc `.venv/Scripts/python.exe` (Windows) khi `.venv/` tồn tại
+- Nếu không, sử dụng môi trường conda đang hoạt động nếu có
+- Nếu không, sử dụng `python3` (Unix/macOS) hoặc `python` (Windows)
+- Các công cụ Python tự động tải khóa API từ `~/.env` và `.env` trong thư mục gốc dự án thông qua `tools/_env.py`
 
 ---
 
-## Skills
+## Các Ràng Buộc
 
-| Skill | File | Trigger |
+- **`raw/papers/`, `raw/notes/`, `raw/web/` thuộc sở hữu của người dùng**: coi chúng là đầu vào có thẩm quyền. `/init` và `/daily-arxiv` chỉ có thể thêm các bài báo được lấy từ bên ngoài vào `raw/discovered/`. `/init` và `/ingest` cục bộ trực tiếp chỉ có thể thêm các tệp tạm thời được tạo ra vào `raw/tmp/` (chỉ thêm — không bao giờ ghi đè lên tệp do người dùng sở hữu). `/edit` chỉ có thể thêm nguồn thô khi người dùng yêu cầu rõ ràng. Các tiểu tác nhân `/init` chạy `/ingest` trong CHẾ ĐỘ INIT vẫn coi `raw/` là chỉ đọc và phải sử dụng đường dẫn chính tắc được chuyển giao trực tiếp.
+- **Các tham số kỹ năng hướng tới người dùng thuộc sở hữu của người dùng**: các cờ và giá trị hiển thị trong `argument-hint` của một kỹ năng thuộc về lệnh của người dùng, không phải chiến lược của tác nhân. Không tự ý tạo, thay đổi hoặc bỏ qua các tham số này chỉ dựa trên trạng thái kho lưu trữ. Nếu người dùng bỏ qua một tham số, chỉ sử dụng giá trị mặc định hoặc giá trị phái sinh khi kỹ năng đó ghi rõ hành vi bỏ qua; nếu không, hãy để nó không được đặt hoặc hỏi người dùng. Các cài đặt phái sinh nội bộ không phải là tham số hướng tới người dùng vẫn có thể được suy ra bởi kỹ năng.
+- **Việc chuyển giao trong CHẾ ĐỘ INIT được điều khiển bởi manifest**: khi `/init` ghi `.checkpoints/init-sources.json`, manifest đó trở thành nguồn sự thật duy nhất cho thứ tự ingest và đường dẫn nguồn chính tắc. Các đầu vào cục bộ đã chuẩn bị nên trỏ đến `raw/tmp/`; các bài báo từ bên ngoài được giới thiệu nên trỏ đến `raw/discovered/`.
+- **graph/ được tạo tự động**: không bao giờ chỉnh sửa thủ công các tệp trong `graph/` — chỉ thông qua `tools/research_wiki.py`.
+- **Liên kết hai chiều**: luôn viết liên kết ngược khi viết liên kết xuôi.
+- **Ưu tiên tex**: .tex > .pdf; chuỗi dự phòng: tex thất bại → phân tích PDF, PDF thất bại → API thị giác.
+- **index.md được cập nhật sau mỗi ingest**; log.md là chỉ thêm vào.
+- **Mặc định lint là chỉ báo cáo**: `--fix` tự động sửa các vấn đề xác định (liên kết ngược xref, giá trị mặc định trường bị thiếu); `--suggest` đưa ra gợi ý cho các vấn đề không xác định; `--fix --dry-run` xem trước các sửa chữa.
+- **Quy tắc tạo slug**: từ khóa tiêu đề bài báo, nối bằng dấu gạch ngang, tất cả chữ thường.
+- **Điểm quan trọng**: 1 = ngách, 2 = hữu ích, 3 = tiêu chuẩn lĩnh vực, 4 = có ảnh hưởng, 5 = nền tảng.
+- **Các ý tưởng thất bại phải ghi lại lý do**: `failure_reason` là bộ nhớ chống lặp lại — ngăn chặn việc khám phá lại các ngõ cụt đã biết.
+- **Phạm vi độ tin cậy của khẳng định**: 0.0-1.0; đánh giá lại mỗi khi bằng chứng thay đổi.
+- **Các thí nghiệm phải liên kết đến một khẳng định**: mọi thí nghiệm đều yêu cầu `target_claim`; kết quả phải được ghi lại vào bằng chứng của khẳng định.
+- **Mã thí nghiệm nằm trong experiments/code/{slug}/**: `/exp-run` ghi mã vào đường dẫn này (`train.py`, `config.yaml`, `run.sh`, `requirements.txt`) — không ghi vào thư mục gốc dự án hoặc nơi khác.
+- **Token DeepXiv**: biến môi trường `DEEPXIV_TOKEN`. Nếu không được đặt, SDK sẽ tự động đăng ký (ghi vào `~/.env`). Gói miễn phí: 10,000 yêu cầu/ngày. Khi DeepXiv không khả dụng, tất cả các kỹ năng sẽ chuyển sang chế độ S2+RSS.
+
+---
+
+## Kỹ Năng
+
+| Kỹ năng | Tệp | Kích hoạt |
 |-------|------|---------|
-| `/setup` | `skills/setup/SKILL.md` | manual (first-time config) |
-| `/reset` | `skills/reset/SKILL.md` | manual (`--scope wiki\|raw\|log\|checkpoints\|all`) |
-| `/init` | `skills/init/SKILL.md` | manual |
-| `/prefill` | `skills/prefill/SKILL.md` | manual (`[domain] [--add concept]`) |
-| `/ingest` | `skills/ingest/SKILL.md` | manual |
-| `/discover` | `skills/discover/SKILL.md` | manual / internal (called by `/ingest --discover`) |
-| `/ask` | `skills/ask/SKILL.md` | manual |
-| `/edit` | `skills/edit/SKILL.md` | manual |
-| `/check` | `skills/check/SKILL.md` | biweekly/manual |
-| `/daily-arxiv` | `skills/daily-arxiv/SKILL.md` | cron 08:00 / manual |
-| `/novelty` | `skills/novelty/SKILL.md` | manual |
-| `/review` | `skills/review/SKILL.md` | manual |
-| `/ideate` | `skills/ideate/SKILL.md` | manual |
-| `/exp-design` | `skills/exp-design/SKILL.md` | manual |
-| `/exp-run` | `skills/exp-run/SKILL.md` | manual (`<slug> [--collect] [--full] [--env local\|remote]`) |
-| `/exp-status` | `skills/exp-status/SKILL.md` | manual (`[--pipeline <slug>] [--collect-ready] [--auto-advance]`) |
-| `/exp-eval` | `skills/exp-eval/SKILL.md` | manual |
-| `/refine` | `skills/refine/SKILL.md` | manual |
-| `/paper-plan` | `skills/paper-plan/SKILL.md` | manual |
-| `/paper-draft` | `skills/paper-draft/SKILL.md` | manual |
-| `/paper-compile` | `skills/paper-compile/SKILL.md` | manual |
-| `/survey` | `skills/survey/SKILL.md` | manual |
-| `/research` | `skills/research/SKILL.md` | manual |
-| `/rebuttal` | `skills/rebuttal/SKILL.md` | manual |
+| `/setup` | `skills/setup/SKILL.md` | thủ công (cấu hình lần đầu) |
+| `/reset` | `skills/reset/SKILL.md` | thủ công (`--scope wiki|raw|log|checkpoints|all`) |
+| `/init` | `skills/init/SKILL.md` | thủ công |
+| `/prefill` | `skills/prefill/SKILL.md` | thủ công (`[domain] [--add concept]`) |
+| `/ingest` | `skills/ingest/SKILL.md` | thủ công |
+| `/ask` | `skills/ask/SKILL.md` | thủ công |
+| `/edit` | `skills/edit/SKILL.md` | thủ công |
+| `/check` | `skills/check/SKILL.md` | hai tuần một lần/thủ công |
+| `/daily-arxiv` | `skills/daily-arxiv/SKILL.md` | cron 08:00 / thủ công |
+| `/novelty` | `skills/novelty/SKILL.md` | thủ công |
+| `/review` | `skills/review/SKILL.md` | thủ công |
+| `/ideate` | `skills/ideate/SKILL.md` | thủ công |
+| `/exp-design` | `skills/exp-design/SKILL.md` | thủ công |
+| `/exp-run` | `skills/exp-run/SKILL.md` | thủ công (`<slug> [--collect] [--full] [--env local|remote]`) |
+| `/exp-status` | `skills/exp-status/SKILL.md` | thủ công (`[--pipeline <slug>] [--collect-ready] [--auto-advance]`) |
+| `/exp-eval` | `skills/exp-eval/SKILL.md` | thủ công |
+| `/refine` | `skills/refine/SKILL.md` | thủ công |
+| `/paper-plan` | `skills/paper-plan/SKILL.md` | thủ công |
+| `/paper-draft` | `skills/paper-draft/SKILL.md` | thủ công |
+| `/paper-compile` | `skills/paper-compile/SKILL.md` | thủ công |
+| `/survey` | `skills/survey/SKILL.md` | thủ công |
+| `/research` | `skills/research/SKILL.md` | thủ công |
+| `/rebuttal` | `skills/rebuttal/SKILL.md` | thủ công |

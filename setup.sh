@@ -49,7 +49,7 @@ for i in "${!_ARGS[@]}"; do
   esac
 done
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
-[[ "$LANG_CODE" == "en" || "$LANG_CODE" == "zh" ]] || { fail "Unknown lang: $LANG_CODE (use 'en' or 'zh')"; exit 1; }
+[[ "$LANG_CODE" == "en" || "$LANG_CODE" == "vi" ]] || { fail "Unknown lang: $LANG_CODE (use 'en' or 'vi')"; exit 1; }
 I18N_DIR="$PROJECT_ROOT/i18n/$LANG_CODE"
 [ -d "$I18N_DIR" ] || { fail "i18n/$LANG_CODE not found — run from the project root"; exit 1; }
 cd "$PROJECT_ROOT"

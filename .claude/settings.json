@@ -6,12 +6,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/tuank/mac_folder/pinnWiki/.claude/hooks/PostToolUse.sh",
+            "command": "./.claude/hooks/PostToolUse.sh",
             "statusMessage": "Enforcing LaTeX equation style"
           },
           {
             "type": "command",
-            "command": "/home/tuank/mac_folder/pinnWiki/.claude/hooks/PostSync.sh",
+            "command": "./.claude/hooks/PostSync.sh",
             "statusMessage": "Syncing changes to Mac"
           }
         ]

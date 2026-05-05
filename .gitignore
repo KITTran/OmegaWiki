@@ -31,6 +31,12 @@ Thumbs.db
 
 # Raw data (large files managed separately)
 raw/papers/*.pdf
+raw/**
+!raw/**/.gitkeep
+
+# Wiki data (large files managed separately)
+wiki/**
+!wiki/**/.gitkeep
 
 # Obsidian settings
 .obsidian/

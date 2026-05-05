@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # SmartSync hook - tự động phát hiện máy đang chạy và sync đúng hướng
-# Sync chỉ các file không được Git quản lý để tránh tạo unstaged changes trên máy kia.
+# Sync file không được Git quản lý và raw/wiki, vì raw/wiki được đồng bộ qua rsync.
 
 set -euo pipefail
 
@@ -32,7 +32,7 @@ __pycache__/
 EOF
 
     if git -C "$source_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        git -C "$source_dir" ls-files >> "$exclude_file"
+        git -C "$source_dir" ls-files | grep -Ev '^(raw|wiki)/' >> "$exclude_file"
     fi
 }
 

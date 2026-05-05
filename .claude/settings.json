@@ -6,13 +6,20 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./.claude/hooks/PostToolUse.sh",
+            "command": "./.claude/hooks/StandardEq.sh",
             "statusMessage": "Enforcing LaTeX equation style"
-          },
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
           {
             "type": "command",
-            "command": "./.claude/hooks/PostSync.sh",
-            "statusMessage": "Syncing changes to Mac"
+            "command": "./.claude/hooks/SmartSync.sh",
+            "statusMessage": "Syncing changes between machines",
+            "timeout": 60
           }
         ]
       }

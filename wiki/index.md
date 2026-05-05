@@ -1,7 +1,0 @@
-papers: []
-
-concepts: []
-
-topics: []
-
-people: []

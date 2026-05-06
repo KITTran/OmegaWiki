@@ -1,160 +1,162 @@
 --- 
-description: Technical translation engine that preserves context, meaning, tone, and technical keywords across languages (en/vi/zh). Translates skill documentation, shared references, and wiki content while maintaining consistency with existing terminology and project conventions.
+description: Engine dịch thuật kỹ thuật giúp bảo toàn ngữ cảnh, ý nghĩa, giọng văn và từ khóa kỹ thuật giữa các ngôn ngữ (en/vi/zh). Dịch tài liệu skill, shared references và nội dung wiki trong khi duy trì nhất quán với thuật ngữ hiện có và quy ước của dự án.
 argument-hint: <source-path> <target-lang> [--dry-run] [--force]
 ---
 
 # /translated-engine
 
-> Technical translation engine for ΩmegaWiki. Translates skill documentation, shared references, and wiki content while preserving:
-> - Context and domain-specific meaning
-> - Technical tone and academic rigor
-> - Keywords that must remain untranslated (commands, flags, paths, API names, field names)
-> - Markdown structure and code blocks
-> - Cross-language consistency with existing translations
+> Engine dịch thuật kỹ thuật cho ΩmegaWiki. Dịch tài liệu skill, shared references và nội dung wiki trong khi bảo toàn:
+> - Ngữ cảnh và ý nghĩa chuyên ngành
+> - Giọng văn kỹ thuật và tính nghiêm túc học thuật
+> - Từ khóa không được dịch (commands, flags, paths, tên API, tên field)
+> - Cấu trúc Markdown và code blocks
+> - Nhất quán giữa các ngôn ngữ với các bản dịch hiện có
 
-## Inputs
+## Đầu Vào
 
-- `source-path`: path to the source file to translate (must be within `i18n/en/`, `i18n/vi/`, or `i18n/zh/`)
-- `target-lang`: target language code (`en`, `vi`, or `zh`)
-- `--dry-run` (optional): preview translation without writing to disk
-- `--force` (optional): overwrite existing target file without confirmation
+- `source-path`: đường dẫn đến file nguồn cần dịch (phải nằm trong `i18n/en/`, `i18n/vi/` hoặc `i18n/zh/`)
+- `target-lang`: mã ngôn ngữ đích (`en`, `vi` hoặc `zh`)
+- `--dry-run` (tùy chọn): xem trước bản dịch mà không ghi vào đĩa
+- `--force` (tùy chọn): ghi đè file đích hiện có mà không cần xác nhận
 
-## Outputs
+## Đầu Ra
 
-- Translated file written to the corresponding path in the target language directory
-- Translation report (printed to terminal) containing:
-  - List of preserved technical terms (commands, flags, paths, API names, field names)
-  - Markdown structure validation results
-  - Consistency warnings (if any terminology conflicts with existing translations)
+- File đã dịch được ghi vào đường dẫn tương ứng trong thư mục ngôn ngữ đích
+- Báo cáo dịch thuật (in ra terminal) bao gồm:
+  - Danh sách các thuật ngữ kỹ thuật được giữ nguyên (commands, flags, paths, tên API, tên field)
+  - Kết quả kiểm tra cấu trúc Markdown
+  - Cảnh báo nhất quán (nếu có xung đột thuật ngữ với các bản dịch hiện có)
 
-## Wiki Interaction
+## Tương Tác Wiki
 
-### Reads
-- Source file specified in `source-path`
-- All existing files in the target language directory (`i18n/<target-lang>/`) for consistency checking
-- `i18n/en/CLAUDE.md`, `i18n/vi/CLAUDE.md`, and `i18n/zh/CLAUDE.md` for project conventions
-- `docs/runtime-page-templates.md` for Markdown structure rules
+### Đọc
+- File nguồn được chỉ định trong `source-path`
+- Tất cả các file hiện có trong thư mục ngôn ngữ đích (`i18n/<target-lang>/`) để kiểm tra nhất quán
+- `i18n/en/CLAUDE.md`, `i18n/vi/CLAUDE.md` và `i18n/zh/CLAUDE.md` cho các quy ước dự án
+- `docs/runtime-page-templates.md` cho các quy tắc cấu trúc Markdown
 
-### Writes
-- Translated file to `i18n/<target-lang>/<relative-path>` (only if not in `--dry-run` mode)
-- No modifications to wiki content or graph files
+### Ghi
+- File đã dịch vào `i18n/<target-lang>/<relative-path>` (chỉ khi không ở chế độ `--dry-run`)
+- Không sửa đổi nội dung wiki hoặc các file graph
 
-## Workflow
+## Quy Trình
 
-### Step 1: Pre-Translation Analysis
-1. **Validate inputs**:
-   - Confirm `source-path` exists and is within an i18n directory
-   - Confirm `target-lang` is one of `en`, `vi`, or `zh`
-   - Check if target file already exists (unless `--force` is specified)
+### Bước 1: Phân Tích Trước Khi Dịch
 
-2. **Extract technical keywords**:
-   - Identify all commands (e.g., `/ingest`, `/exp-run`)
-   - Identify all flags (e.g., `--discover`, `--full`)
-   - Identify all paths (e.g., `wiki/papers/`, `raw/discovered/`)
-   - Identify all API names, field names, and enum values (e.g., `DEEPXIV_TOKEN`, `supports`, `contradicts`)
-   - Identify all wikilinks (e.g., `[[slug]]`, `[[flash-attention]]`)
-   - Identify all code blocks and inline code
+1. **Kiểm tra đầu vào**:
+   - Xác nhận `source-path` tồn tại và nằm trong thư mục i18n
+   - Xác nhận `target-lang` là một trong các giá trị `en`, `vi` hoặc `zh`
+   - Kiểm tra xem file đích đã tồn tại chưa (trừ khi chỉ định `--force`)
 
-3. **Consistency check**:
-   - Compare identified keywords against existing translations in `i18n/<target-lang>/`
-   - Flag any inconsistencies with existing terminology
-   - Generate a list of terms that must remain untranslated
+2. **Trích xuất từ khóa kỹ thuật**:
+   - Xác định tất cả commands (ví dụ: `/ingest`, `/exp-run`)
+   - Xác định tất cả flags (ví dụ: `--discover`, `--full`)
+   - Xác định tất cả paths (ví dụ: `wiki/papers/`, `raw/discovered/`)
+   - Xác định tất cả tên API, tên field và enum values (ví dụ: `DEEPXIV_TOKEN`, `supports`, `contradicts`)
+   - Xác định tất cả wikilinks (ví dụ: `[[slug]]`, `[[flash-attention]]`)
+   - Xác định tất cả code blocks và inline code
 
-### Step 2: Translation
+3. **Kiểm tra nhất quán**:
+   - So sánh các từ khóa đã xác định với các bản dịch hiện có trong `i18n/<target-lang>/`
+   - Đánh dấu các bất nhất với thuật ngữ hiện có
+   - Tạo danh sách các thuật ngữ phải giữ nguyên không dịch
 
-1. **Preserve structure**:
-   - Maintain all Markdown elements (headings, lists, tables, blockquotes, code fences)
-   - Preserve YAML frontmatter exactly as-is
-   - Preserve all technical keywords identified in Step 1
+### Bước 2: Dịch Thuật
 
-2. **Context-aware translation**:
-   - For each paragraph/section, analyze surrounding context to determine:
-     - Domain (ML research, experiment design, paper writing, etc.)
-     - Tone (technical, academic, instructional)
-     - Intended audience (researchers, developers)
-   - Apply domain-specific translation rules:
-     | Domain | Translation Approach |
-     |--------|----------------------|
-     | Commands/Flags | Keep original (e.g., `/ingest --discover` → `/ingest --discover`) |
-     | Technical Terms | Keep original if established in field (e.g., "LoRA", "attention mechanism") |
-     | Academic Writing | Adapt to target language academic conventions |
-     | Error Messages | Translate while preserving technical precision |
+1. **Bảo toàn cấu trúc**:
+   - Giữ nguyên tất cả các thành phần Markdown (headings, lists, tables, blockquotes, code fences)
+   - Giữ nguyên YAML frontmatter
+   - Giữ nguyên tất cả từ khóa kỹ thuật đã xác định ở Bước 1
 
-3. **Handle special cases**:
-   - **Wikilinks**: Preserve slug format, only translate display text if appropriate
+2. **Dịch theo ngữ cảnh**:
+   - Với mỗi đoạn/phần, phân tích ngữ cảnh xung quanh để xác định:
+     - Lĩnh vực (nghiên cứu ML, thiết kế thí nghiệm, viết bài báo, v.v.)
+     - Giọng văn (kỹ thuật, học thuật, hướng dẫn)
+     - Đối tượng (nhà nghiên cứu, lập trình viên)
+   - Áp dụng quy tắc dịch thuật theo lĩnh vực:
+     | Lĩnh vực | Cách tiếp cận dịch thuật |
+     |----------|--------------------------|
+     | Commands/Flags | Giữ nguyên (ví dụ: `/ingest --discover` → `/ingest --discover`) |
+     | Thuật ngữ kỹ thuật | Giữ nguyên nếu đã được thiết lập trong lĩnh vực (ví dụ: "LoRA", "attention mechanism") |
+     | Văn học thuật | Điều chỉnh theo quy ước học thuật của ngôn ngữ đích |
+     | Thông báo lỗi | Dịch trong khi đảm bảo độ chính xác kỹ thuật |
+
+3. **Xử lý các trường hợp đặc biệt**:
+   - **Wikilinks**: Giữ nguyên định dạng slug, chỉ dịch display text khi phù hợp
      ```markdown
-     [[flash-attention]] → [[flash-attention]] (unchanged)
-     [[lora-low-rank-adaptation|LoRA]] → [[lora-low-rank-adaptation|LoRA]] (unchanged)
+     [[flash-attention]] → [[flash-attention]] (giữ nguyên)
+     [[lora-low-rank-adaptation|LoRA]] → [[lora-low-rank-adaptation|LoRA]] (giữ nguyên)
      ```
-   - **Code blocks**: Preserve exactly as-is, including comments
-   - **JSON/YAML**: Preserve all keys and enum values, only translate string values when appropriate
-   - **Tables**: Translate content while maintaining alignment and formatting
-   - **Placeholders**: Preserve all placeholders (e.g., `{slug}`, `{date}`)
+   - **Code blocks**: Giữ nguyên hoàn toàn, bao gồm cả comments
+   - **JSON/YAML**: Giữ nguyên tất cả keys và enum values, chỉ dịch string values khi phù hợp
+   - **Tables**: Dịch nội dung trong khi giữ nguyên căn chỉnh và định dạng
+   - **Placeholders**: Giữ nguyên tất cả placeholders (ví dụ: `{slug}`, `{date}`)
 
-### Step 3: Post-Translation Validation
+### Bước 3: Kiểm Tra Sau Khi Dịch
 
-1. **Markdown validation**:
-   - Verify all headings have matching levels
-   - Verify all lists are properly indented
-   - Verify all code fences are properly closed
-   - Verify all tables are properly formatted
+1. **Kiểm tra Markdown**:
+   - Xác minh tất cả headings có cấp độ phù hợp
+   - Xác minh tất cả lists được thụt lề đúng
+   - Xác minh tất cả code fences được đóng đúng
+   - Xác minh tất cả tables được định dạng đúng
 
-2. **Consistency validation**:
-   - Re-check all preserved keywords against existing translations
-   - Verify no accidental translations of technical terms
-   - Verify all wikilinks use correct slug format
+2. **Kiểm tra nhất quán**:
+   - Kiểm tra lại tất cả từ khóa được giữ nguyên với các bản dịch hiện có
+   - Xác minh không có thuật ngữ kỹ thuật nào bị dịch nhầm
+   - Xác minh tất cả wikilinks dùng định dạng slug đúng
 
-3. **Context validation**:
-   - Sample key sections to ensure meaning and tone are preserved
-   - Verify that technical instructions remain actionable
-   - Verify that academic arguments maintain their logical flow
+3. **Kiểm tra ngữ cảnh**:
+   - Lấy mẫu các phần quan trọng để đảm bảo ý nghĩa và giọng văn được bảo toàn
+   - Xác minh các hướng dẫn kỹ thuật vẫn có thể thực hiện được
+   - Xác minh các lập luận học thuật duy trì được mạch logic
 
-### Step 4: Output
+### Bước 4: Xuất Kết Quả
 
-1. If `--dry-run` is specified:
-   - Print the translated content to terminal
-   - Print the translation report
-   - Do not write to disk
+1. Nếu chỉ định `--dry-run`:
+   - In nội dung đã dịch ra terminal
+   - In báo cáo dịch thuật
+   - Không ghi vào đĩa
 
-2. If `--dry-run` is not specified:
-   - Write translated content to target path
-   - Print the translation report to terminal
-   - If target file existed, create backup with `.bak` extension
+2. Nếu không chỉ định `--dry-run`:
+   - Ghi nội dung đã dịch vào đường dẫn đích
+   - In báo cáo dịch thuật ra terminal
+   - Nếu file đích đã tồn tại, tạo bản sao lưu với đuôi `.bak`
 
-## Translation Rules
+## Quy Tắc Dịch Thuật
 
-### Must Keep Untranslated
-- Commands: `/ingest`, `/exp-run`, `/paper-draft`, etc.
-- Flags: `--discover`, `--full`, `--env`, `--difficulty`, etc.
-- Paths: `wiki/papers/`, `raw/discovered/`, `experiments/code/`, etc.
-- API names: `DEEPXIV_TOKEN`, `SEMANTIC_SCHOLAR_API_KEY`, etc.
-- Field names: `target_claim`, `evidence`, `confidence`, `slug`, etc.
-- Edge types: `supports`, `contradicts`, `tested_by`, `invalidates`, etc.
-- Enum values: `ready`, `needs-work`, `major-revision`, `rethink`, etc.
-- File extensions: `.md`, `.tex`, `.pdf`, `.jsonl`, etc.
-- Code identifiers: variable names, function names, class names
-- Wikilinks: `[[slug]]` format must be preserved
-- Placeholders: `{slug}`, `{date}`, `{score}`, etc.
+### Phải Giữ Nguyên Không Dịch
+- Commands: `/ingest`, `/exp-run`, `/paper-draft`, v.v.
+- Flags: `--discover`, `--full`, `--env`, `--difficulty`, v.v.
+- Paths: `wiki/papers/`, `raw/discovered/`, `experiments/code/`, v.v.
+- Tên API: `DEEPXIV_TOKEN`, `SEMANTIC_SCHOLAR_API_KEY`, v.v.
+- Tên field: `target_claim`, `evidence`, `confidence`, `slug`, v.v.
+- Loại cạnh: `supports`, `contradicts`, `tested_by`, `invalidates`, v.v.
+- Enum values: `ready`, `needs-work`, `major-revision`, `rethink`, v.v.
+- Phần mở rộng file: `.md`, `.tex`, `.pdf`, `.jsonl`, v.v.
+- Code identifiers: tên biến, tên hàm, tên class
+- Wikilinks: định dạng `[[slug]]` phải được bảo toàn
+- Placeholders: `{slug}`, `{date}`, `{score}`, v.v.
 
-### Must Translate
-- Descriptive text explaining concepts, instructions, or arguments
-- Academic phrases and transitions
-- Error messages and user prompts
-- Section headings and list items
-- Table content (while preserving formatting)
-- Blockquote content
+### Phải Dịch
+- Văn bản mô tả giải thích khái niệm, hướng dẫn hoặc lập luận
+- Cụm từ học thuật và các từ chuyển tiếp
+- Thông báo lỗi và lời nhắc người dùng
+- Tiêu đề phần và các mục danh sách
+- Nội dung bảng (trong khi giữ nguyên định dạng)
+- Nội dung blockquote
 
-### Conditional Translation
-- **Technical terms**: Only translate if there is an established, widely-accepted translation in the target language. Otherwise, keep original.
-  - Example (English → Vietnamese):
-    - "attention mechanism" → "cơ chế attention" (keep English)
-    - "gradient descent" → "hạ gradient" (translate)
-- **Acronyms**: Keep original if commonly used in the field (e.g., "LoRA", "SOTA"), otherwise expand and translate.
-- **Citations**: Keep citation keys untranslated, but translate surrounding text if appropriate.
+### Dịch Có Điều Kiện
+- **Thuật ngữ khoa học và kỹ thuật**: Giữ nguyên tiếng Anh. Cộng đồng khoa học Việt Nam dùng trực tiếp các thuật ngữ gốc (gradient descent, attention mechanism, loss function, backpropagation, v.v.) — dịch ra sẽ gây khó hiểu hơn.
+  - Ví dụ (Tiếng Anh → Tiếng Việt):
+    - "attention mechanism" → "attention mechanism" (giữ nguyên)
+    - "gradient descent" → "gradient descent" (giữ nguyên)
+    - "loss function" → "loss function" (giữ nguyên)
+- **Từ viết tắt**: Giữ nguyên nếu thường dùng trong lĩnh vực (ví dụ: "LoRA", "SOTA"), ngược lại mở rộng và dịch.
+- **Citations**: Giữ nguyên citation keys không dịch, nhưng dịch văn bản xung quanh nếu phù hợp.
 
-## Consistency Enforcement
+## Đảm Bảo Nhất Quán
 
-1. **Terminology database**: Maintain an internal database of translated terms that updates with each translation:
+1. **Cơ sở dữ liệu thuật ngữ**: Duy trì cơ sở dữ liệu nội bộ về các thuật ngữ đã dịch, cập nhật với mỗi lần dịch:
    ```json
    {
      "commands": {
@@ -172,104 +174,104 @@ argument-hint: <source-path> <target-lang> [--dry-run] [--force]
    }
    ```
 
-2. **Consistency checking**: Before translating any term, check against the terminology database:
-   - If term exists in database, use the established translation
-   - If term doesn't exist, determine whether it should be translated or preserved, then add to database
-   - Flag any conflicts with existing translations
+2. **Kiểm tra nhất quán**: Trước khi dịch bất kỳ thuật ngữ nào, kiểm tra với cơ sở dữ liệu thuật ngữ:
+   - Nếu thuật ngữ đã có trong cơ sở dữ liệu, dùng bản dịch đã thiết lập
+   - Nếu thuật ngữ chưa có, xác định nên dịch hay giữ nguyên, sau đó thêm vào cơ sở dữ liệu
+   - Đánh dấu bất kỳ xung đột nào với các bản dịch hiện có
 
-3. **Project-wide consistency**:
-   - When translating a term for the first time, search all existing files in the target language for potential conflicts
-   - Maintain consistency with terms already established in:
+3. **Nhất quán toàn dự án**:
+   - Khi dịch một thuật ngữ lần đầu tiên, tìm kiếm tất cả các file hiện có trong ngôn ngữ đích để phát hiện xung đột tiềm ẩn
+   - Duy trì nhất quán với các thuật ngữ đã được thiết lập trong:
      - `i18n/<lang>/CLAUDE.md`
      - `docs/runtime-page-templates.md`
-     - Existing skill documentation
+     - Tài liệu skill hiện có
 
-## Error Handling
+## Xử Lý Lỗi
 
-- **Source file not found**: List similar files in the source directory
-- **Invalid target language**: List valid language codes (`en`, `vi`, `zh`)
-- **Target file exists**: Prompt for confirmation unless `--force` is specified
-- **Markdown parsing error**: Attempt to recover structure, flag problematic sections
-- **Terminology conflict**: Flag conflict and suggest resolution options
-- **Translation service unavailable**: Fall back to local translation with warning
+- **File nguồn không tìm thấy**: Liệt kê các file tương tự trong thư mục nguồn
+- **Mã ngôn ngữ không hợp lệ**: Liệt kê các mã hợp lệ (`en`, `vi`, `zh`)
+- **File đích đã tồn tại**: Nhắc xác nhận trừ khi chỉ định `--force`
+- **Lỗi phân tích Markdown**: Cố gắng khôi phục cấu trúc, đánh dấu các phần có vấn đề
+- **Xung đột thuật ngữ**: Đánh dấu xung đột và đề xuất các lựa chọn giải quyết
+- **Dịch vụ dịch thuật không khả dụng**: Dùng bản dịch cục bộ với cảnh báo
 
-## Dependencies
+## Phụ Thuộc
 
-### Tools (via Bash)
-- `grep` - for searching existing translations
-- `diff` - for comparing with existing files
+### Công Cụ (qua Bash)
+- `grep` — tìm kiếm các bản dịch hiện có
+- `diff` — so sánh với các file hiện có
 
 ### Claude Code Native
-- `Read` - read source files and existing translations
-- `Write` - write translated files
-- `Glob` - search for existing translations
+- `Read` — đọc file nguồn và các bản dịch hiện có
+- `Write` — ghi file đã dịch
+- `Glob` — tìm kiếm các bản dịch hiện có
 
 ### Shared References
-- None
+- Không có
 
-## Constraints
+## Ràng Buộc
 
-- **Preservation requirements**:
-  - Never translate commands, flags, paths, API names, field names, or enum values
-  - Never modify Markdown structure or code blocks
-  - Never change the meaning or technical accuracy of the content
-  - Never break existing functionality or references
+- **Yêu cầu bảo toàn**:
+  - Không bao giờ dịch commands, flags, paths, tên API, tên field hoặc enum values
+  - Không bao giờ sửa đổi cấu trúc Markdown hoặc code blocks
+  - Không bao giờ thay đổi ý nghĩa hoặc độ chính xác kỹ thuật của nội dung
+  - Không bao giờ phá vỡ các chức năng hoặc tham chiếu hiện có
 
-- **Consistency requirements**:
-  - Maintain consistency with existing translations in the target language
-  - Update terminology database with new translations
-  - Flag any conflicts with existing terminology
+- **Yêu cầu nhất quán**:
+  - Duy trì nhất quán với các bản dịch hiện có trong ngôn ngữ đích
+  - Cập nhật cơ sở dữ liệu thuật ngữ với các bản dịch mới
+  - Đánh dấu bất kỳ xung đột nào với thuật ngữ hiện có
 
-- **Safety requirements**:
-  - Always create backup before overwriting existing files
-  - Never modify files outside the i18n directory structure
-  - Never translate files that aren't skill documentation or shared references
+- **Yêu cầu an toàn**:
+  - Luôn tạo bản sao lưu trước khi ghi đè file hiện có
+  - Không bao giờ sửa đổi file ngoài cấu trúc thư mục i18n
+  - Không bao giờ dịch file không phải là tài liệu skill hoặc shared references
 
-- **Performance requirements**:
-  - For large files (>50KB), translate in chunks to avoid context window limits
-  - Cache terminology database between translations
-  - Provide progress updates for large translations
+- **Yêu cầu hiệu suất**:
+  - Với các file lớn (>50KB), dịch theo từng phần để tránh giới hạn context window
+  - Cache cơ sở dữ liệu thuật ngữ giữa các lần dịch
+  - Cung cấp cập nhật tiến trình cho các bản dịch lớn
 
-## Example Usage
+## Ví Dụ Sử Dụng
 
 ```bash
-# Translate the ingest skill to Vietnamese
+# Dịch skill ingest sang tiếng Việt
 /translated-engine i18n/en/skills/ingest/SKILL.md vi
 
-# Preview translation of experiment design skill to Chinese without writing
+# Xem trước bản dịch skill exp-design sang tiếng Trung mà không ghi
 /translated-engine i18n/en/skills/exp-design/SKILL.md zh --dry-run
 
-# Force overwrite existing Vietnamese translation of review skill
+# Ghi đè bản dịch tiếng Việt hiện có của skill review
 /translated-engine i18n/en/skills/review/SKILL.md vi --force
 ```
 
-## Example Translation Report
+## Ví Dụ Báo Cáo Dịch Thuật
 
 ```
-Translation Report: i18n/en/skills/ingest/SKILL.md → i18n/vi/skills/ingest/SKILL.md
+Báo cáo dịch thuật: i18n/en/skills/ingest/SKILL.md → i18n/vi/skills/ingest/SKILL.md
 
-Preserved Terms (24):
+Thuật ngữ giữ nguyên (24):
 - Commands: /ingest, /discover
 - Flags: --discover, --full, --env
 - Paths: wiki/papers/, raw/discovered/, experiments/code/
 - APIs: DEEPXIV_TOKEN, SEMANTIC_SCHOLAR_API_KEY
 - Fields: target_claim, evidence, confidence, slug
-- Edge types: supports, contradicts, tested_by
+- Loại cạnh: supports, contradicts, tested_by
 - Wikilinks: [[slug]], [[flash-attention]]
 
-Markdown Validation:
+Kiểm tra Markdown:
 - Headings: OK (5/5)
 - Lists: OK (12/12)
 - Tables: OK (2/2)
 - Code blocks: OK (4/4)
 
-Consistency Warnings (1):
-- Term "confidence" previously translated as "độ tin cậy" in i18n/vi/skills/exp-eval/SKILL.md
-  → Using established translation
+Cảnh báo nhất quán (1):
+- Thuật ngữ "confidence" trước đây được dịch là "độ tin cậy" trong i18n/vi/skills/exp-eval/SKILL.md
+  → Sử dụng bản dịch đã thiết lập
 
-Translation Summary:
-- Words translated: 1,248
-- Technical terms preserved: 24
-- Markdown elements preserved: 38
-- Translation time: 42s
+Tóm tắt dịch thuật:
+- Từ đã dịch: 1.248
+- Thuật ngữ kỹ thuật giữ nguyên: 24
+- Thành phần Markdown giữ nguyên: 38
+- Thời gian dịch: 42s
 ```

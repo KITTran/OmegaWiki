@@ -70,18 +70,18 @@ git commit -m "fix(<skill-name>): <mô tả thay đổi> [<lang>]"
 
 ### Bước 3: Dịch sang các ngôn ngữ còn lại
 
-Dùng skill `/translated-engine` để dịch file vừa sửa sang các ngôn ngữ còn lại:
+Với mỗi ngôn ngữ khác (`en`, `vi`, `zh`):
 
-```
-/translated-engine i18n/<lang>/skills/<skill-name>/SKILL.md en
-/translated-engine i18n/<lang>/skills/<skill-name>/SKILL.md zh
-```
-
-`/translated-engine` tự động bảo toàn commands, flags, paths, thuật ngữ khoa học và cấu trúc Markdown. Xem `skills/translated-engine/SKILL.md` để biết các quy tắc dịch thuật chi tiết.
-
-Sau đó commit:
+- Sao chép nội dung kỹ thuật (commands, code blocks, field names) giữ nguyên
+- Dịch phần prose, mô tả, ràng buộc sang ngôn ngữ đích
+- Lưu ý: một số file trong `i18n/` được viết bằng tiếng Anh dù nằm trong thư mục `vi/` hoặc `zh/` — giữ nguyên ngôn ngữ đã có nếu file gốc là tiếng Anh
 
 ```bash
+mkdir -p i18n/en/skills/<skill-name>
+# ... chỉnh sửa i18n/en/skills/<skill-name>/SKILL.md
+mkdir -p i18n/zh/skills/<skill-name>
+# ... chỉnh sửa i18n/zh/skills/<skill-name>/SKILL.md
+
 git add i18n/en/skills/<skill-name>/ i18n/zh/skills/<skill-name>/
 git commit -m "fix(<skill-name>): translate to en and zh"
 ```
@@ -170,11 +170,7 @@ git checkout -b fix/init-worktree-flow main
 # Sửa i18n/vi/skills/init/SKILL.md và references/parallel-ingest.md
 git add i18n/vi/skills/init/
 git commit -m "fix(init): add two-turn scaffold commit rule [vi]"
-# Dịch sang en và zh bằng translated-engine
-/translated-engine i18n/vi/skills/init/SKILL.md en
-/translated-engine i18n/vi/skills/init/references/parallel-ingest.md en
-/translated-engine i18n/vi/skills/init/SKILL.md zh
-/translated-engine i18n/vi/skills/init/references/parallel-ingest.md zh
+# Dịch sang en và zh
 git add i18n/en/skills/init/ i18n/zh/skills/init/
 git commit -m "fix(init): translate two-turn commit rule to en and zh"
 ./setup.sh --lang vi

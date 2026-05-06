@@ -1,28 +1,28 @@
-# /discover wiki dedup
+# /discover khử trùng lặp wiki
 
-`tools/discover.py` deduplicates candidates against the existing wiki when `--wiki-root wiki` is passed. This document explains what the dedup does and does not catch, so the user-facing report is accurate.
+`tools/discover.py` khử trùng lặp các ứng viên so với wiki hiện có khi truyền `--wiki-root wiki`. Tài liệu này giải thích dedup phát hiện và không phát hiện những gì, để báo cáo hướng tới người dùng được chính xác.
 
-## What it catches
+## Những gì nó phát hiện
 
-For each candidate, `tools/discover.py` extracts the `arxiv_id` from the candidate record (S2's `externalIds.ArXiv`, DeepXiv's `arxiv_id`, etc.) and checks whether any existing `wiki/papers/*.md` page has a matching `arxiv` (or legacy `arxiv_id`) in its frontmatter. Matches are dropped from the shortlist before scoring; the count is reported as `wiki_dedup_count`.
+Với mỗi ứng viên, `tools/discover.py` trích xuất `arxiv_id` từ bản ghi ứng viên (S2's `externalIds.ArXiv`, DeepXiv's `arxiv_id`, v.v.) và kiểm tra xem có trang `wiki/papers/*.md` hiện có nào có `arxiv` (hoặc `arxiv_id` legacy) khớp trong frontmatter của nó hay không. Các mục khớp bị loại khỏi shortlist trước khi chấm điểm; số lượng được báo cáo là `wiki_dedup_count`.
 
-This catches the typical case: an already-ingested paper bubbles up as a recommendation again. Surfacing such a paper would waste the user's review attention; dropping it is correct.
+Điều này bắt được trường hợp điển hình: một bài báo đã được ingest lại nổi lên thành khuyến nghị. Hiển thị bài báo như vậy sẽ lãng phí sự chú ý rà soát của người dùng; loại bỏ nó là đúng.
 
-## What it does not catch
+## Những gì nó không phát hiện
 
-- **Title-only matches**: a paper in the wiki without `arxiv` or `arxiv_id` (e.g., a journal article ingested via `/edit`) will not match a candidate by title alone. This is intentional — fuzzy title matching produces false positives that hide legitimate candidates.
-- **arXiv version skew**: `2106.09685` and `2106.09685v3` should both be treated as the same paper. The frontmatter scanner strips `arxiv:`/`ARXIV:` prefixes but does not currently strip `vN` suffixes. If you find duplicates leaking through, normalise the version suffix in the candidate's `arxiv_id` before comparison.
-- **Cross-source duplicates within the candidate set**: the dedup pass before wiki filtering uses `_candidate_key` (arxiv → S2 paperId → title-slug) which catches most cross-source duplicates from S2 and DeepXiv. Fully missing IDs and titles are dropped silently.
+- **Khớp chỉ theo tiêu đề**: một bài báo trong wiki không có `arxiv` hoặc `arxiv_id` (ví dụ: một bài báo tạp chí được ingest qua `/edit`) sẽ không khớp với một ứng viên chỉ bằng tiêu đề. Đây là chủ ý — khớp tiêu đề mờ tạo ra false positive che khuất các ứng viên hợp lệ.
+- **Lệch phiên bản arXiv**: `2106.09685` và `2106.09685v3` đều nên được coi là cùng một bài báo. Bộ quét frontmatter loại bỏ các tiền tố `arxiv:`/`ARXIV:` nhưng hiện chưa loại bỏ hậu tố `vN`. Nếu bạn thấy các bản trùng lặp lọt qua, hãy chuẩn hóa hậu tố phiên bản trong `arxiv_id` của ứng viên trước khi so sánh.
+- **Trùng lặp giữa các nguồn trong tập ứng viên**: lượt khử trùng lặp trước khi lọc theo wiki dùng `_candidate_key` (arxiv → S2 paperId → title-slug), bắt được hầu hết các bản trùng lặp giữa các nguồn từ S2 và DeepXiv. Các mục thiếu hoàn toàn ID và tiêu đề bị loại âm thầm.
 
-## What to do with a "high dedup" report
+## Cần làm gì với báo cáo "high dedup"
 
-If `wiki_dedup_count` is high relative to `candidates_total` (e.g., 30 / 50), the wiki is already well-covered for these anchors. Two interpretations:
+Nếu `wiki_dedup_count` cao so với `candidates_total` (ví dụ: 30 / 50), wiki đã bao phủ khá tốt các anchor này. Có hai cách diễn giải:
 
-1. The user is looking for breadth and should switch to a different seed (different anchor, broader topic, or `--from-wiki` to explore adjacent papers).
-2. The recommendation channel is genuinely saturated — there is little new to recommend in this neighborhood.
+1. Người dùng đang tìm độ phủ rộng và nên chuyển sang seed khác (anchor khác, chủ đề rộng hơn, hoặc `--from-wiki` để khám phá các bài báo lân cận).
+2. Kênh khuyến nghị thực sự đã bão hòa — có rất ít nội dung mới để khuyến nghị trong vùng lân cận này.
 
-The skill should mention high dedup in the user-facing report; do not hide it.
+Kỹ năng nên đề cập high dedup trong báo cáo hướng tới người dùng; không được che giấu nó.
 
-## What dedup does not do
+## Những gì dedup không làm
 
-`/discover` never modifies the wiki to "fix" a duplicate. If the candidate's metadata seems richer than what is currently in the wiki, that is a `/edit` or `/check` concern, not a `/discover` concern.
+`/discover` không bao giờ sửa đổi wiki để "sửa" một bản trùng lặp. Nếu metadata của ứng viên có vẻ phong phú hơn những gì hiện có trong wiki, đó là mối quan tâm của `/edit` hoặc `/check`, không phải mối quan tâm của `/discover`.

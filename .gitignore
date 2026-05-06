@@ -29,7 +29,7 @@ Thumbs.db
 # Virtual environment
 .venv/
 
-# Raw data (large files managed separately)
+# Raw data — PDF papers are large binaries; track everything else
 raw/papers/*.pdf
 
 # Obsidian settings

@@ -153,6 +153,7 @@ Hợp đồng ingest song song:
 
 - lưu trữ các tệp bẩn không liên quan trước khi fan-out, sau đó ghi lại `stash_ref`, `base_branch` và `base_commit` trong siêu dữ liệu checkpoint
 - commit khung và các manifest init mới tạo trước khi fan-out để `BASE_COMMIT` thực sự chứa các trang, manifest và siêu dữ liệu chuyển giao mà các tiểu tác nhân phải phân nhánh từ
+- thực hiện commit scaffold và xác minh `git ls-tree` trong một lượt assistant riêng; chỉ launch Agent fan-out ở lượt kế tiếp để tránh worktree chụp `HEAD` cũ
 - xác minh `.gitattributes` chứa `merge=union` cho `wiki/log.md`, `wiki/graph/edges.jsonl` và `wiki/index.md` trước khi tạo worktree
 - chế độ worktree `/init` phải chạy từ một nhánh có tên, không phải HEAD tách rời
 - tạo mỗi worktree từ `BASE_COMMIT`, không phải từ `BASE_BRANCH` đã checkout

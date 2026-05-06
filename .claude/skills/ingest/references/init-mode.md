@@ -1,50 +1,58 @@
 # /ingest INIT MODE and Parallel Safety
 
-Open this reference when `/ingest` is invoked by `/init` as a parallel subagent, or any time you need to understand what concurrent ingests may be doing to shared files.
+Mở reference này khi `/ingest` được `/init` invoke như một parallel subagent, hoặc bất kỳ lúc nào bạn cần hiểu các concurrent ingests có thể đang làm gì với shared files.
 
-## When INIT MODE is active
+## Khi INIT MODE active
 
-INIT MODE is active for any `/ingest` invocation whose source path originates from `.checkpoints/init-sources.json`. The parent `/init` runs one `/ingest` per paper in an isolated `git worktree`, following the contract in `skills/init/references/parallel-ingest.md`.
+INIT MODE active cho mọi `/ingest` invocation có source path xuất phát từ `.checkpoints/init-sources.json`. Parent `/init` chạy một `/ingest` cho mỗi paper trong một `git worktree` cô lập, theo contract trong `skills/init/references/parallel-ingest.md`.
 
-In INIT MODE:
+Trong INIT MODE:
 
-- the source is always a `canonical_ingest_path` already prepared by `/init` (a `raw/tmp/...` path for user-owned papers, or a `raw/discovered/...` path for introduced papers)
-- `raw/` is strictly read-only — do not write to `raw/tmp/`, `raw/discovered/`, or anywhere else under `raw/`
-- `fetch_s2.py citations <arxiv-id>` and `fetch_s2.py references <arxiv-id>` are **skipped** — the parent `/init` does a unified citation sweep at fan-in
-- `rebuild-context-brief` and `rebuild-open-questions` are **skipped** — the parent runs them once after all subagents merge
-- conflict-prone topic writes are **skipped** — if multiple parallel ingests all try to append to the same topic, they will merge-conflict. Let the parent handle topic updates after fan-in, or defer them to `/edit`.
+- source luôn là `canonical_ingest_path` đã được `/init` prepare (một `raw/tmp/...` path cho user-owned papers, hoặc một `raw/discovered/...` path cho introduced papers)
+- `raw/` strictly read-only — không ghi vào `raw/tmp/`, `raw/discovered/`, hoặc bất kỳ đâu dưới `raw/`
+- `fetch_s2.py citations <arxiv-id>` và `fetch_s2.py references <arxiv-id>` được **skip** — parent `/init` làm unified citation sweep tại fan-in
+- `rebuild-context-brief` và `rebuild-open-questions` được **skip** — parent chạy chúng một lần sau khi tất cả subagents merge
+- conflict-prone topic writes được **skip** — nếu nhiều parallel ingests đều append vào cùng topic, chúng sẽ merge-conflict. Để parent xử lý topic updates sau fan-in, hoặc defer chúng cho `/edit`.
+- **skip reverse-link edits to existing pages** — không append `key_papers` vào existing concept page, không append vào `## Key papers` hoặc `## Related` của existing paper page, và không append vào existing people page. Thay vào đó, ghi relationship qua `tools/research_wiki.py add-edge`. Parent `/init` rebuild backlinks này trong fan-in.
 
-Everything else — paper page creation, concept/claim dedup via `find-similar-*`, people page creation, paper `## Related` links, graph edges for concept/claim/foundation — still runs per subagent.
+Mọi thứ khác — paper page creation, concept/claim dedup qua `find-similar-*`, people page creation, paper `## Related` links, graph edges cho concept/claim/foundation — vẫn chạy trong từng subagent.
 
-## Detecting INIT MODE
+## Detect INIT MODE
 
-`/init` passes the canonical path in the subagent prompt. A `/ingest` invocation can recognize INIT MODE by either of:
+`/init` truyền canonical path trong subagent prompt. Một `/ingest` invocation có thể nhận biết INIT MODE bằng một trong hai tín hiệu:
 
-- the source path starts with `raw/tmp/` or `raw/discovered/` **and** the `.checkpoints/init-sources.json` manifest references it
-- the subagent prompt explicitly states "INIT MODE"
+- source path bắt đầu bằng `raw/tmp/` hoặc `raw/discovered/` **và** manifest `.checkpoints/init-sources.json` reference tới nó
+- subagent prompt explicit ghi "INIT MODE"
 
-When both signals are absent, treat the invocation as a direct user call and run the full workflow (including citations, rebuilds, and any `raw/tmp/` preparation needed).
+Khi cả hai tín hiệu đều vắng mặt, coi invocation là direct user call và chạy full workflow (bao gồm citations, rebuilds, và mọi `raw/tmp/` preparation cần thiết).
 
 ## Parallel-safe writes
 
-Even outside INIT MODE, assume another `/ingest` may be running concurrently — batch ingest is already on the roadmap. Three rules make concurrent writes safe:
+Ngay cả ngoài INIT MODE, giả định một `/ingest` khác có thể đang chạy concurrent — batch ingest đã nằm trên roadmap. Ba rules giúp concurrent writes an toàn:
 
-1. **Every shared-file write goes through a tool.** `graph/edges.jsonl`, `index.md`, and `log.md` are written via `tools/research_wiki.py add-edge`, index updates, and `log`. The tool layer uses append semantics and the repository's `.gitattributes` declares `merge=union` for these paths, so parallel worktrees can merge without conflict.
-2. **Slugs are allocated deterministically.** `tools/research_wiki.py slug "<title>"` produces the same slug from the same title regardless of which worktree runs it. Collisions are resolved by numeric suffix via the tool, not by ad-hoc renaming.
-3. **Never lock or in-place-rewrite a shared file.** Rewriting `wiki/index.md` or `wiki/graph/edges.jsonl` as a block replaces parallel peers' work when the worktrees merge. Use the tool commands, which append.
+1. **Mọi shared-file write đi qua tool.** `graph/edges.jsonl`, `graph/citations.jsonl`, `index.md`, và `log.md` được ghi qua `tools/research_wiki.py add-edge`, `add-citation`, index updates, và `log`. Tool layer dùng append semantics và `.gitattributes` của repository khai báo `merge=union` cho các paths này, nên parallel worktrees có thể merge không conflict.
+2. **Slugs được allocate deterministically.** `tools/research_wiki.py slug "<title>"` tạo cùng slug từ cùng title bất kể worktree nào chạy nó. Collisions được resolve bằng numeric suffix qua tool, không phải ad-hoc renaming.
+3. **Không bao giờ lock hoặc in-place-rewrite shared file.** Rewriting `wiki/index.md`, `wiki/graph/edges.jsonl`, hoặc `wiki/graph/citations.jsonl` thành một block sẽ replace work của parallel peers khi worktrees merge. Dùng tool commands, vốn append.
 
-## Creating a new page in parallel
+## Tạo page mới song song
 
-When two sibling `/ingest` subagents both need a new concept page with the same slug, both will try to create it and the fan-in merge will fail. Mitigations:
+Khi hai sibling `/ingest` subagents đều cần concept page mới với cùng slug, cả hai sẽ cố tạo nó và fan-in merge sẽ fail. Mitigations:
 
-- the per-paper creation limit (`references/dedup-policy.md`) keeps the collision surface small
-- the `/init` parent merges worktree branches sequentially; when the second worktree's ingest writes the same slug, the sequential merge resolves it as a conflict that the parent handles by picking the earlier write and re-running `find-similar-concept` on the later one at fan-in
-- do not try to coordinate across worktrees during ingest — worktrees are isolated by design
+- per-paper creation limit (`references/dedup-policy.md`) giữ collision surface nhỏ
+- parent `/init` merge worktree branches tuần tự; khi ingest của worktree thứ hai ghi cùng slug, sequential merge resolve nó như conflict mà parent xử lý bằng cách chọn write sớm hơn và re-run `find-similar-concept` trên write muộn hơn tại fan-in
+- không cố coordinate giữa worktrees trong ingest — worktrees cô lập theo thiết kế
 
-If you do notice a slug collision during a direct (non-INIT) ingest — i.e. the paper page already exists with a different arXiv ID — stop and report, per `references/error-handling.md`. Do not write through.
+Nếu bạn nhận thấy slug collision trong direct (non-INIT) ingest — tức paper page đã tồn tại với arXiv ID khác — dừng và báo cáo, theo `references/error-handling.md`. Không write-through.
 
-## What `/ingest` does not do for `/init`
+## `/ingest` không làm gì cho `/init`
 
-- It does not commit. Committing the worktree is the parent's responsibility (see `skills/init/references/parallel-ingest.md`).
-- It does not stash or switch branches.
-- It does not merge worktrees or run `dedup-edges`, `rebuild-index`, or `lint.py --fix`. Those are fan-in operations owned by `/init`.
+- Nó không stash hoặc switch branches.
+- Nó không merge worktrees hoặc chạy `dedup-edges`, `rebuild-index`, hoặc `lint.py --fix`. Đó là fan-in operations thuộc sở hữu của `/init`.
+
+Trong INIT MODE, `/ingest` **phải** commit work của nó bên trong worktree trước khi thoát, nhưng chỉ khi ingest hoàn thành thành công:
+- stage mọi file bạn tạo hoặc sửa dưới `wiki/`
+- trước khi commit, chạy `git branch --show-current` và xác minh branch name là worktree branch (chứa `init-`), không phải base branch. Nếu bạn đang ở base branch, dừng và báo cáo thay vì commit
+- chạy `git commit -m "ingest: <paper-title>"` (hoặc message mô tả tương tự)
+- không push; parent `/init` sẽ merge branch trong fan-in
+
+Nếu ingest fail giữa chừng (partial failure), **không** commit incomplete state. Để parent `/init` xử lý failed worktree tại fan-in.

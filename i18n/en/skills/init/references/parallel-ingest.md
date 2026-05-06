@@ -8,14 +8,17 @@ Use this reference when `/init` is handing sources to parallel `/ingest` subagen
 - Treat files under `wiki/`, `raw/papers/`, `raw/tmp/`, `raw/discovered/`, and `.checkpoints/init-*.json` as scaffold files.
 - Stash unrelated dirty files outside those paths.
 - Verify `.gitattributes` contains `merge=union` for `wiki/log.md`, `wiki/graph/edges.jsonl`, `wiki/graph/citations.jsonl`, and `wiki/index.md`.
-- Commit the scaffold before fan-out so `BASE_COMMIT` contains the generated pages and manifests that every worktree must inherit:
+- Commit the scaffold before fan-out so `BASE_COMMIT` contains the generated pages, `raw/tmp/` / `raw/discovered/` sources, and manifests that every worktree must inherit. Because isolated Agent worktrees can capture `HEAD` at tool-call start, the scaffold commit must happen in **its own assistant turn**. Do not launch Agent fan-out in the same response that creates the scaffold commit.
 
 ```bash
-git add wiki/ raw/papers/ raw/tmp/ raw/discovered/ .checkpoints/init-prepare.json .checkpoints/init-plan.json .checkpoints/init-sources.json
-git commit -m "init: scaffold before parallel ingest" --no-gpg-sign
+git add wiki/ raw/tmp/ raw/discovered/ .checkpoints/init-pdf-titles.json .checkpoints/init-prepare.json .checkpoints/init-plan.json .checkpoints/init-sources.json
+git commit -m "init: scaffold before parallel ingest"
 BASE_COMMIT=$(git rev-parse HEAD)
+git ls-tree -r "$BASE_COMMIT" raw/tmp/ raw/discovered/ .checkpoints/init-sources.json | head
 ```
 
+- If the `git ls-tree` verification does not show the canonical source paths from `.checkpoints/init-sources.json`, stop and fix staging before fan-out.
+- After the scaffold commit is verified, end the assistant turn. Launch Agent fan-out only on the next user/assistant turn, using `BASE_COMMIT=$(git rev-parse HEAD)` from the already-committed scaffold.
 - Record `stash_ref`, `base_branch`, and `base_commit` with `tools/research_wiki.py checkpoint-set-meta`.
 - `/init` worktree mode requires a named branch; stop on detached HEAD.
 

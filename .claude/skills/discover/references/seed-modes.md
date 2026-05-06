@@ -1,48 +1,48 @@
-# /discover seed modes
+# Các chế độ seed của /discover
 
-Pick exactly one mode per invocation. The decision is based on what the user (or calling skill) actually said, not on what the wiki contains.
+Chọn đúng một chế độ cho mỗi lần gọi. Quyết định dựa trên những gì người dùng (hoặc kỹ năng gọi) thực sự đã nói, không dựa trên nội dung wiki đang có.
 
-## Anchor mode (`from-anchors`)
+## Chế độ anchor (`from-anchors`)
 
-Use when the user named one or more specific papers, or when this is a post-`/ingest` `--discover` follow-up.
+Sử dụng khi người dùng nêu tên một hoặc nhiều bài báo cụ thể, hoặc khi đây là bước tiếp nối `--discover` sau `/ingest`.
 
-Triggers:
+Kích hoạt:
 
 - "find papers similar to LoRA"
 - "what's related to this one I just ingested"
-- one or more arXiv URLs / IDs / wiki paper slugs in the request
-- `/ingest --discover` invocation (anchor = the just-ingested paper's arXiv ID)
+- một hoặc nhiều URL / ID arXiv / slug bài báo wiki trong yêu cầu
+- lần gọi `/ingest --discover` (anchor = arXiv ID của bài báo vừa được ingest)
 
-Anchor mode is the strongest signal channel — Semantic Scholar's recommendations endpoint returns semantically similar papers based on its trained model, which is more useful than keyword search when the user has a concrete reference point.
+Chế độ anchor là kênh tín hiệu mạnh nhất — endpoint recommendations của Semantic Scholar trả về các bài báo tương tự về mặt ngữ nghĩa dựa trên mô hình đã huấn luyện của nó, hữu ích hơn tìm kiếm từ khóa khi người dùng có một điểm tham chiếu cụ thể.
 
-If the user supplies negatives ("not these", "different from X"), pass them via `--negative`. The S2 recommendations endpoint pushes the result distribution away from negative anchors, which is useful when the user wants to escape a sub-area they already know.
+Nếu người dùng cung cấp các phủ định ("not these", "different from X"), hãy truyền chúng qua `--negative`. Endpoint recommendations của S2 đẩy phân phối kết quả ra xa các anchor âm, điều này hữu ích khi người dùng muốn thoát khỏi một tiểu lĩnh vực mà họ đã biết.
 
-## Topic mode (`from-topic`)
+## Chế độ topic (`from-topic`)
 
-Use when the user gave a topic, direction, or set of keywords without naming specific papers.
+Sử dụng khi người dùng đưa ra một chủ đề, hướng nghiên cứu, hoặc tập từ khóa mà không nêu tên bài báo cụ thể.
 
-Triggers:
+Kích hoạt:
 
 - "find papers about diffusion model fine-tuning"
 - "what's been written on retrieval augmented generation"
-- a domain phrase with no anchors
+- một cụm lĩnh vực không có anchor
 
-Topic mode runs S2 search and (when available) DeepXiv search, then ranks. It is a lighter alternative to `/init`'s planner: useful for exploration but **not** a replacement for `/init`'s broader bootstrap workflow. If the user wants to seed a fresh wiki with a topic, route them to `/init` instead of bulking up `/discover`.
+Chế độ topic chạy S2 search và (khi khả dụng) DeepXiv search, sau đó xếp hạng. Đây là một phương án nhẹ hơn so với planner của `/init`: hữu ích cho khám phá nhưng **không** thay thế quy trình bootstrap rộng hơn của `/init`. Nếu người dùng muốn seed một wiki mới bằng một chủ đề, hãy điều hướng họ tới `/init` thay vì làm phình to `/discover`.
 
-## Wiki mode (`from-wiki`)
+## Chế độ wiki (`from-wiki`)
 
-Use when the user asked open-ended "what should I read next" with no anchor and no topic.
+Sử dụng khi người dùng hỏi mở kiểu "what should I read next" mà không có anchor và không có topic.
 
-Triggers:
+Kích hoạt:
 
 - "give me the next batch of papers to read"
 - "what's a good follow-up to my current wiki"
-- explicit `--from-wiki` flag
+- flag `--from-wiki` rõ ràng
 
-Wiki mode picks the wiki's most recently modified paper pages, extracts their arXiv IDs, and uses them as anchors. This implicitly biases discovery toward whatever the user has been working on lately — usually the desired behavior.
+Chế độ wiki chọn các trang bài báo được sửa đổi gần đây nhất trong wiki, trích xuất arXiv ID của chúng, và dùng chúng làm anchor. Điều này ngầm thiên lệch việc khám phá về phía những gì người dùng đang làm gần đây — thường là hành vi mong muốn.
 
-If `wiki/papers/` is empty or no papers carry an `arxiv` or `arxiv_id` frontmatter field, wiki mode cannot run. Tell the user the wiki is too sparse and suggest topic mode (or `/init`).
+Nếu `wiki/papers/` trống hoặc không có bài báo nào mang trường frontmatter `arxiv` hoặc `arxiv_id`, chế độ wiki không thể chạy. Hãy nói với người dùng rằng wiki còn quá thưa thớt và đề xuất chế độ topic (hoặc `/init`).
 
-## What if the user gave both an anchor and a topic?
+## Nếu người dùng đưa ra cả anchor và topic thì sao?
 
-Prefer anchor mode. Anchors are a much stronger signal than a topic string. Mention the topic in the user-facing report so they know it was noted, but the discovery itself runs through `from-anchors`.
+Ưu tiên chế độ anchor. Anchor là tín hiệu mạnh hơn nhiều so với chuỗi topic. Nhắc đến topic trong báo cáo hướng tới người dùng để họ biết rằng nó đã được ghi nhận, nhưng bản thân quá trình khám phá chạy qua `from-anchors`.

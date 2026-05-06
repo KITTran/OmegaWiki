@@ -1,57 +1,57 @@
 # /ingest Error Handling
 
-Open this reference when a step fails. `/ingest` prefers to degrade gracefully: record what happened, continue with what remains, and surface the gap in the final report.
+Mở reference này khi một bước thất bại. `/ingest` ưu tiên degrade gracefully: ghi lại chuyện đã xảy ra, tiếp tục với phần còn lại, và nêu gap trong final report.
 
 ## Source parsing
 
-- **`.tex` parse fails**: fall back to the PDF if one is available in the same source directory.
-- **PDF text extraction fails**: fall back to a vision-API pass on the first few pages to recover the title and abstract, then run the preprocessing pipeline in `references/pdf-preprocessing.md` with the recovered title.
-- **No readable source at all**: stop and report. Do not create a paper page from a title alone — a paper page without grounded content is noise.
-- **INIT MODE input unreadable**: do not attempt to re-prepare the source (INIT MODE is read-only on `raw/`). Stop, record the failure, and let the parent `/init` retry or skip the paper at fan-in.
+- **`.tex` parse fails**: fall back sang PDF nếu có PDF trong cùng source directory.
+- **PDF text extraction fails**: fall back sang một vision-API pass trên vài trang đầu để khôi phục title và abstract, rồi chạy preprocessing pipeline trong `references/pdf-preprocessing.md` với recovered title.
+- **No readable source at all**: dừng và báo cáo. Không tạo paper page chỉ từ một title — paper page không có grounded content là noise.
+- **INIT MODE input unreadable**: không thử re-prepare source (INIT MODE là read-only trên `raw/`). Dừng, ghi failure, và để parent `/init` retry hoặc skip paper tại fan-in.
 
 ## External APIs
 
-- **Semantic Scholar unavailable** (`fetch_s2.py paper` errors): skip S2 enrichment, default `importance` to 3, and note in the report that the paper's importance is provisional. Skip the citation backfill step entirely for this ingest.
-- **DeepXiv unavailable** (`fetch_deepxiv.py` errors): skip enrichment silently. DeepXiv is optional; its absence is not degraded ingest, just plainer ingest. Do not surface this in the user report unless the user asked about DeepXiv specifically.
-- **arXiv source fetch fails**: if the paper is on arXiv but the source archive does not exist or times out, fall through to the PDF path. Record a warning in the final report.
+- **Semantic Scholar unavailable** (`fetch_s2.py paper` lỗi): skip S2 enrichment, đặt mặc định `importance` là 3, và ghi chú trong report rằng importance của paper là provisional. Skip toàn bộ citation backfill step cho ingest này.
+- **DeepXiv unavailable** (`fetch_deepxiv.py` lỗi): skip enrichment âm thầm. DeepXiv là optional; thiếu nó không phải degraded ingest, chỉ là ingest ít enrichment hơn. Không nêu điều này trong user report trừ khi user hỏi riêng về DeepXiv.
+- **arXiv source fetch fails**: nếu paper nằm trên arXiv nhưng source archive không tồn tại hoặc timeout, chuyển tiếp sang PDF path. Ghi warning trong final report.
 
 ## Slug collisions
 
-- **Generated slug matches an existing page with a different arXiv ID or title**: stop and report. Do not append a numeric suffix silently — a collision between two different papers at the same slug is a signal the wiki has a naming problem that the user should resolve.
-- **Generated slug matches an existing page with the same paper**: the paper is already ingested. Report and exit.
-- **Within a single ingest, a generated concept or claim slug collides with a different existing page**: append a numeric suffix (`-2`, `-3`, ...) via the tool's built-in collision handling. This is the one case where suffixing is correct — it happens when two genuinely different ideas produce the same slug under the deterministic rule.
+- **Generated slug khớp một page hiện có với arXiv ID hoặc title khác**: dừng và báo cáo. Không âm thầm thêm numeric suffix — collision giữa hai papers khác nhau ở cùng slug là tín hiệu wiki có naming problem cần user xử lý.
+- **Generated slug khớp một page hiện có với cùng paper**: paper đã được ingest. Báo cáo và thoát.
+- **Trong một ingest duy nhất, generated concept hoặc claim slug collide với một existing page khác**: thêm numeric suffix (`-2`, `-3`, ...) qua built-in collision handling của tool. Đây là trường hợp duy nhất suffixing là đúng — nó xảy ra khi hai ideas thật sự khác nhau tạo cùng slug theo deterministic rule.
 
 ## Wiki not initialized
 
-If `wiki/` is missing or empty, run:
+Nếu `wiki/` thiếu hoặc trống, chạy:
 
 ```bash
 "$PYTHON_BIN" tools/research_wiki.py init wiki/
 ```
 
-Then retry `/ingest`. Do not attempt to create pages in a non-initialized wiki; `index.md` and `graph/` scaffolding must exist first.
+Sau đó retry `/ingest`. Không cố tạo pages trong wiki chưa initialized; `index.md` và `graph/` scaffolding phải tồn tại trước.
 
 ## Partial failure mid-ingest
 
-If an ingest fails after some writes have landed (paper page written, but concept dedup or graph edge fails):
+Nếu ingest thất bại sau khi một số writes đã landed (paper page đã ghi, nhưng concept dedup hoặc graph edge thất bại):
 
-- do not roll back the writes that succeeded
-- append a log entry via `tools/research_wiki.py log` describing which steps completed and which are incomplete
-- surface the incomplete steps in the user report so the user can run `/edit` or `/check --fix` to finish the job
-- in INIT MODE, let the parent `/init` fan-in merge catch the partial state; do not self-commit
+- không roll back các writes đã thành công
+- append một log entry qua `tools/research_wiki.py log` mô tả bước nào đã hoàn thành và bước nào incomplete
+- nêu incomplete steps trong user report để user có thể chạy `/edit` hoặc `/check --fix` hoàn tất công việc
+- trong INIT MODE, nếu ingest hoàn thành thành công, commit bên trong worktree trước khi thoát (xem `references/init-mode.md`). Nếu ingest partial failed, **không** commit incomplete state; để parent `/init` xử lý failed worktree tại fan-in
 
-## When to stop vs. continue
+## Khi nào dừng vs. tiếp tục
 
-Stop outright when:
+Dừng hẳn khi:
 
-- no source can be read at all
-- the paper is already ingested (slug + arXiv ID match an existing page)
-- a slug collision would silently overwrite a different existing paper
+- không đọc được source nào
+- paper đã được ingest (slug + arXiv ID khớp existing page)
+- slug collision sẽ âm thầm overwrite một existing paper khác
 
-Continue with a warning when:
+Tiếp tục với warning khi:
 
-- one enrichment source (S2 or DeepXiv) is down
-- the reference list cannot be parsed (skip step 5; paper ingest still works)
-- a single concept or claim dedup call fails transiently (retry once; if it still fails, skip that candidate and note it)
+- một enrichment source (S2 hoặc DeepXiv) bị down
+- reference list không parse được (skip step 5; paper ingest vẫn hoạt động)
+- một concept hoặc claim dedup call đơn lẻ thất bại tạm thời (retry một lần; nếu vẫn fail, skip candidate đó và ghi chú)
 
-The guiding principle: a partial ingest that preserves a well-shaped paper page is more useful than a clean abort that leaves the wiki unchanged. Partial state is recoverable via `/check` and `/edit`. Lost partial state is not.
+Nguyên tắc dẫn đường: một partial ingest giữ lại well-shaped paper page hữu ích hơn một clean abort khiến wiki không đổi. Partial state có thể recover qua `/check` và `/edit`. Partial state bị mất thì không.

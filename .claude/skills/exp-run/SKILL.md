@@ -104,9 +104,9 @@ argument-hint: "<slug-thí-nghiệm> [--review] [--collect] [--full] [--env loca
    ```
    mcp__llm-review__chat:
      system: "Bạn là một kỹ sư ML cao cấp đang đánh giá mã thí nghiệm.
-              Tập trung vào: tính đúng đắn của vòng lặp huấn luyện, giao thức đánh giá đúng đắn,
+              Tập trung vào: tính đúng đắn của vòng lặp huấn luyện, giao thức đánh giá chính xác,
               so sánh baseline công bằng, tính tái lập (seed, tính xác định),
-              tính toán chỉ số đúng đắn, và các lỗi phổ biến (rò rỉ dữ liệu,
+              tính toán chỉ số chính xác, và các lỗi phổ biến (rò rỉ dữ liệu,
               phân chia sai, lỗi tích lũy gradient)."
      message: |
        ## Thí Nghiệm
@@ -118,7 +118,7 @@ argument-hint: "<slug-thí-nghiệm> [--review] [--collect] [--full] [--env loca
        ## Hành Vi Mong Đợi
        {chi tiết thiết lập từ trang wiki}
 
-       Đánh giá tính đúng đắn và các vấn đề tiềm ẩn.
+       Đánh giá tính chính xác và các vấn đề tiềm ẩn.
    ```
    Sửa mã dựa trên phản hồi của Review LLM.
 

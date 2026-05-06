@@ -1,34 +1,34 @@
 # /ingest PDF Preprocessing
 
-Open this reference when `/ingest` receives a local `.pdf` and needs to convert it into a prepared `.tex` before ingest can proceed. Skip it in INIT MODE — `/init` already ran an equivalent batch preprocessing pass and handed off a canonical path.
+Mở reference này khi `/ingest` nhận một local `.pdf` và cần chuyển nó thành prepared `.tex` trước khi ingest có thể tiếp tục. Skip trong INIT MODE — `/init` đã chạy equivalent batch preprocessing pass và chuyển giao canonical path.
 
-## Why preprocessing exists
+## Vì sao cần preprocessing
 
-A PDF on its own is a poor ingest source: text extraction quality varies, equations and captions are easy to miss, and the reference list is often unreliable. When the paper is on arXiv we can do much better by resolving it to an arXiv ID and fetching the original TeX source. If no arXiv source is available we still normalize the PDF into a synthetic `.tex` so the rest of `/ingest` works from one uniform input shape.
+Một PDF tự thân là ingest source kém: chất lượng text extraction thay đổi, equations và captions dễ bị mất, và reference list thường không đáng tin cậy. Khi paper nằm trên arXiv, ta có thể làm tốt hơn nhiều bằng cách resolve nó thành arXiv ID và fetch original TeX source. Nếu không có arXiv source, ta vẫn normalize PDF thành synthetic `.tex` để phần còn lại của `/ingest` làm việc từ một input shape thống nhất.
 
-This mirrors the pipeline `tools/init_discovery.py prepare` runs internally when `/init` batch-processes local PDFs. You are doing the same thing for a single paper, inline.
+Điều này phản chiếu pipeline `tools/init_discovery.py prepare` chạy nội bộ khi `/init` batch-process local PDFs. Bạn đang làm cùng việc đó cho một paper đơn lẻ, inline.
 
 ## Recovery order
 
-Follow this exact order. Stop at the first step that produces a confident result.
+Theo đúng thứ tự này. Dừng ở bước đầu tiên tạo ra confident result.
 
 1. **Agent inspection of the PDF itself.**
-   Before invoking any tool, open the PDF and record:
-   - a confident paper title (from the first-page title, not from PDF metadata — metadata is often wrong)
-   - a confident arXiv ID if one is visibly printed on the first page or in a header
-   Either or both may be empty. Do not guess.
+   Trước khi invoke bất kỳ tool nào, mở PDF và ghi lại:
+   - confident paper title (từ first-page title, không từ PDF metadata — metadata thường sai)
+   - confident arXiv ID nếu nó được in rõ trên trang đầu hoặc header
+   Một trong hai hoặc cả hai có thể rỗng. Không đoán.
 2. **Filename / path arXiv ID extraction.**
-   `prepare_paper_source.py` already regex-matches an arXiv ID embedded in the filename or containing folder. You do not need to do this yourself; just pass the PDF path through.
+   `prepare_paper_source.py` đã regex-match arXiv ID nhúng trong filename hoặc folder chứa. Bạn không cần tự làm việc này; chỉ pass PDF path qua.
 3. **Title-based Semantic Scholar lookup.**
-   Only runs when the agent supplied a confident title. `prepare_paper_source.py` handles it internally when `--title` is passed.
+   Chỉ chạy khi agent cung cấp confident title. `prepare_paper_source.py` xử lý nội bộ khi `--title` được truyền.
 4. **arXiv source fetch.**
-   When an arXiv ID is known (from step 1 or 2), the helper downloads the TeX source under `raw/tmp/papers/.../<slug>-arxiv-src/` and uses it as the prepared source.
+   Khi biết arXiv ID (từ step 1 hoặc 2), helper download TeX source dưới `raw/tmp/papers/.../<slug>-arxiv-src/` và dùng nó làm prepared source.
 5. **Synthetic `.tex` fallback.**
-   If none of the above produces an arXiv match, the helper writes a synthetic `.tex` distilled from the PDF text under `raw/tmp/`. The synthetic file is good enough for ingest but clearly marked as a fallback.
+   Nếu không bước nào ở trên tạo ra arXiv match, helper ghi một synthetic `.tex` được distill từ PDF text dưới `raw/tmp/`. Synthetic file đủ tốt cho ingest nhưng được đánh dấu rõ là fallback.
 
 ## Invocation
 
-Once you have the title and/or arXiv ID (possibly both empty), run:
+Khi bạn đã có title và/hoặc arXiv ID (có thể cả hai đều rỗng), chạy:
 
 ```bash
 "$PYTHON_BIN" tools/prepare_paper_source.py \
@@ -38,21 +38,21 @@ Once you have the title and/or arXiv ID (possibly both empty), run:
   [--arxiv-id "<agent-recovered-arxiv-id>"]
 ```
 
-- Pass `--title` only when the agent is confident. Do not pass a title derived from PDF metadata or from the filename — the helper sanitizes those on its own and treating them as authoritative poisons the Semantic Scholar lookup.
-- Pass `--arxiv-id` only when the agent read it off the page. Filename-embedded IDs are picked up automatically.
-- Omit both flags when neither is confident. The helper will fall back cleanly.
+- Chỉ truyền `--title` khi agent confident. Không truyền title lấy từ PDF metadata hoặc filename — helper tự sanitize chúng và coi chúng là authoritative sẽ poison Semantic Scholar lookup.
+- Chỉ truyền `--arxiv-id` khi agent đọc nó từ trang. Filename-embedded IDs được tự động pick up.
+- Bỏ qua cả hai flags khi không có cái nào confident. Helper sẽ fallback sạch.
 
-The helper writes a prepared entry under `raw/tmp/` and prints a JSON record with `prepared_path`, `title`, `arxiv_id`, and any warnings. Use `prepared_path` as the source for the rest of `/ingest`.
+Helper ghi một prepared entry dưới `raw/tmp/` và in JSON record với `prepared_path`, `title`, `arxiv_id`, và mọi warnings. Dùng `prepared_path` làm source cho phần còn lại của `/ingest`.
 
 ## Title authority
 
-When the agent supplied a confident title, treat that title as authoritative for the paper page's `title` field. Titles sanitized out of fetched TeX or PDF metadata are fallback display strings only; do not let them overwrite the agent title. This matters because the agent-recovered title is what drove the successful S2 lookup; letting a parsed-TeX title overwrite it creates subtle identity drift.
+Khi agent cung cấp confident title, coi title đó là authoritative cho field `title` của paper page. Titles được sanitize từ fetched TeX hoặc PDF metadata chỉ là fallback display strings; không để chúng overwrite agent title. Điều này quan trọng vì agent-recovered title là thứ đã dẫn đến S2 lookup thành công; để parsed-TeX title overwrite nó tạo ra identity drift tinh vi.
 
 ## Output
 
-A successful preprocessing pass produces exactly one prepared source entry under `raw/tmp/`:
+Một preprocessing pass thành công tạo đúng một prepared source entry dưới `raw/tmp/`:
 
-- if an arXiv source was fetched: a directory like `raw/tmp/papers/<slug>-arxiv-src/` containing the original `.tex` tree
-- otherwise: a synthetic `raw/tmp/papers/<slug>.tex` distilled from the PDF
+- nếu arXiv source được fetch: một directory như `raw/tmp/papers/<slug>-arxiv-src/` chứa original `.tex` tree
+- nếu không: một synthetic `raw/tmp/papers/<slug>.tex` distill từ PDF
 
-From this point on, treat the prepared entry exactly the same as you would treat a user-provided local `.tex`. Do not re-copy the PDF into `raw/papers/`; the original path remains the user-owned artifact.
+Từ lúc này, coi prepared entry giống hệt như một user-provided local `.tex`. Không re-copy PDF vào `raw/papers/`; original path vẫn là user-owned artifact.

@@ -146,10 +146,11 @@ argument-hint: <source-path> <target-lang> [--dry-run] [--force]
 - Nội dung blockquote
 
 ### Dịch Có Điều Kiện
-- **Thuật ngữ kỹ thuật**: Chỉ dịch nếu có bản dịch đã được thiết lập và chấp nhận rộng rãi trong ngôn ngữ đích. Nếu không, giữ nguyên.
+- **Thuật ngữ khoa học và kỹ thuật**: Giữ nguyên tiếng Anh. Cộng đồng khoa học Việt Nam dùng trực tiếp các thuật ngữ gốc (gradient descent, attention mechanism, loss function, backpropagation, v.v.) — dịch ra sẽ gây khó hiểu hơn.
   - Ví dụ (Tiếng Anh → Tiếng Việt):
-    - "attention mechanism" → "cơ chế attention" (giữ tiếng Anh)
-    - "gradient descent" → "hạ gradient" (dịch)
+    - "attention mechanism" → "attention mechanism" (giữ nguyên)
+    - "gradient descent" → "gradient descent" (giữ nguyên)
+    - "loss function" → "loss function" (giữ nguyên)
 - **Từ viết tắt**: Giữ nguyên nếu thường dùng trong lĩnh vực (ví dụ: "LoRA", "SOTA"), ngược lại mở rộng và dịch.
 - **Citations**: Giữ nguyên citation keys không dịch, nhưng dịch văn bản xung quanh nếu phù hợp.
 

@@ -70,18 +70,18 @@ git commit -m "fix(<skill-name>): <变更描述> [<lang>]"
 
 ### 第 3 步：翻译到其余语言
 
-对每种其他语言（`en`、`vi`、`zh`）：
+使用 `/translated-engine` skill 将刚编辑的文件翻译为其他语言：
 
-- 保留所有技术内容原文不变（命令、代码块、字段名）
-- 将 prose、描述、约束翻译为目标语言
-- 注意：`i18n/` 下某些文件即使位于 `vi/` 或 `zh/` 目录，仍以英文书写 — 若原文为英文，则保持英文不变
+```
+/translated-engine i18n/<lang>/skills/<skill-name>/SKILL.md en
+/translated-engine i18n/<lang>/skills/<skill-name>/SKILL.md zh
+```
+
+`/translated-engine` 自动保留 commands、flags、paths、科学术语和 Markdown 结构。详细翻译规则见 `skills/translated-engine/SKILL.md`。
+
+然后提交：
 
 ```bash
-mkdir -p i18n/en/skills/<skill-name>
-# ... 编辑 i18n/en/skills/<skill-name>/SKILL.md
-mkdir -p i18n/zh/skills/<skill-name>
-# ... 编辑 i18n/zh/skills/<skill-name>/SKILL.md
-
 git add i18n/en/skills/<skill-name>/ i18n/zh/skills/<skill-name>/
 git commit -m "fix(<skill-name>): translate to en and zh"
 ```
@@ -171,7 +171,11 @@ git checkout -b fix/init-worktree-flow main
 # 编辑 i18n/vi/skills/init/SKILL.md 和 references/parallel-ingest.md
 git add i18n/vi/skills/init/
 git commit -m "fix(init): add two-turn scaffold commit rule [vi]"
-# 翻译到 en 和 zh
+# 使用 translated-engine 翻译到 en 和 zh
+/translated-engine i18n/vi/skills/init/SKILL.md en
+/translated-engine i18n/vi/skills/init/references/parallel-ingest.md en
+/translated-engine i18n/vi/skills/init/SKILL.md zh
+/translated-engine i18n/vi/skills/init/references/parallel-ingest.md zh
 git add i18n/en/skills/init/ i18n/zh/skills/init/
 git commit -m "fix(init): translate two-turn commit rule to en and zh"
 ./setup.sh --lang vi

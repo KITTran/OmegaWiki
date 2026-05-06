@@ -70,18 +70,18 @@ git commit -m "fix(<skill-name>): <description of change> [<lang>]"
 
 ### Step 3: Translate to the remaining languages
 
-For each of the other languages (`en`, `vi`, `zh`):
+Use the `/translated-engine` skill to translate the file you just edited into the other languages:
 
-- Keep all technical content verbatim (commands, code blocks, field names)
-- Translate prose, descriptions, and constraints into the target language
-- Note: some files under `i18n/` are written in English even though they sit in a `vi/` or `zh/` folder — preserve the existing language if the original file is in English
+```
+/translated-engine i18n/<lang>/skills/<skill-name>/SKILL.md en
+/translated-engine i18n/<lang>/skills/<skill-name>/SKILL.md zh
+```
+
+`/translated-engine` automatically preserves commands, flags, paths, scientific terms, and Markdown structure. See `skills/translated-engine/SKILL.md` for detailed translation rules.
+
+Then commit:
 
 ```bash
-mkdir -p i18n/en/skills/<skill-name>
-# ... edit i18n/en/skills/<skill-name>/SKILL.md
-mkdir -p i18n/zh/skills/<skill-name>
-# ... edit i18n/zh/skills/<skill-name>/SKILL.md
-
 git add i18n/en/skills/<skill-name>/ i18n/zh/skills/<skill-name>/
 git commit -m "fix(<skill-name>): translate to en and zh"
 ```
@@ -171,7 +171,11 @@ git checkout -b fix/init-worktree-flow main
 # Edit i18n/vi/skills/init/SKILL.md and references/parallel-ingest.md
 git add i18n/vi/skills/init/
 git commit -m "fix(init): add two-turn scaffold commit rule [vi]"
-# Translate to en and zh
+# Translate to en and zh using translated-engine
+/translated-engine i18n/vi/skills/init/SKILL.md en
+/translated-engine i18n/vi/skills/init/references/parallel-ingest.md en
+/translated-engine i18n/vi/skills/init/SKILL.md zh
+/translated-engine i18n/vi/skills/init/references/parallel-ingest.md zh
 git add i18n/en/skills/init/ i18n/zh/skills/init/
 git commit -m "fix(init): translate two-turn commit rule to en and zh"
 ./setup.sh --lang vi

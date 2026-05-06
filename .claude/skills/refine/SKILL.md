@@ -1,14 +1,14 @@
 ---
-description: Cải thiện lặp đi lặp lại đa vòng đa năng — liên tục gọi /review trên bất kỳ tạo tác nghiên cứu nào, phân tích phản hồi, áp dụng sửa chữa, cập nhật wiki, cho đến khi đạt được điểm mục tiêu
-argument-hint: <tạo-tác-slug-hoặc-đường-dẫn> [--max-rounds N] [--target-score N] [--difficulty standard|hard|adversarial] [--focus method|evidence|writing|completeness]
+description: Vòng lặp cải thiện đa vòng mục đích chung — gọi /review liên tục trên bất kỳ thực thể nghiên cứu nào, phân tích phản hồi, áp dụng sửa chữa, cập nhật wiki, cho tới khi đạt được điểm mục tiêu
+argument-hint: <artifact-slug-or-path> [--max-rounds N] [--target-score N] [--difficulty standard|hard|adversarial] [--focus method|evidence|writing|completeness]
 ---
 
 # /refine
 
-> Vòng lặp cải thiện lặp đi lặp lại đa năng cho bất kỳ tạo tác nghiên cứu nào
+> Vòng lặp cải thiện đa vòng mục đích chung cho bất kỳ thực thể nghiên cứu nào
 > (ý tưởng, đề xuất, kế hoạch thí nghiệm, bản thảo bài báo).
-> Mỗi vòng gọi /review để lấy phản hồi có cấu trúc → phân tích các mục có thể thực hiện → Claude sửa chữa tạo tác →
-> cập nhật các thực thể wiki → đánh giá lại, cho đến khi đạt được điểm mục tiêu hoặc hết số vòng tối đa.
+> Mỗi vòng gọi /review để lấy phản hồi có cấu trúc → trích xuất các mục hành động → Claude sửa đổi thực thể →
+> cập nhật các thực thể wiki → đánh giá lại, cho đến khi điểm đạt mục tiêu hoặc hết số vòng tối đa.
 > Xuất ra lịch sử cải thiện và điểm đánh giá cuối cùng.
 
 ## Đầu Vào

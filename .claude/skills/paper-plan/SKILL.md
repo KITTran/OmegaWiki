@@ -1,6 +1,6 @@
 ---
 description: Biên soạn đề cương bài báo từ đồ thị khẳng định — bản đồ bằng chứng → cấu trúc tường thuật → kế hoạch phần + kế hoạch hình ảnh + kế hoạch trích dẫn, đánh giá Review LLM là bắt buộc
-argument-hint: "<slug-khẳng-định...> --venue <ICLR|NeurIPS|ICML|ACL|CVPR|IEEE> [--title <tiêu-đề-làm-việc>]"
+argument-hint: <claim-slugs...> --venue <ICLR|NeurIPS|ICML|ACL|CVPR|IEEE> [--title <working-title>]
 ---
 
 # /paper-plan
@@ -14,14 +14,14 @@ argument-hint: "<slug-khẳng-định...> --venue <ICLR|NeurIPS|ICML|ACL|CVPR|IE
 > Điểm khác biệt chính: đề cương được điều khiển bởi đồ thị khẳng định — mỗi phần tồn tại vì nó hỗ trợ một khẳng định,
 > không phải vì quy ước bài báo yêu cầu phần đó.
 
-## Đầu Vào
+## Đầu vào
 
 - `claims`: danh sách các slug khẳng định mục tiêu (phân tách bằng khoảng trắng)
   - mỗi khẳng định nên có trạng thái `supported` hoặc `weakly_supported`
   - nếu bao gồm các khẳng định `proposed` hoặc `challenged`, cảnh báo nhưng vẫn tiếp tục
-- `--venue` *(bắt buộc)*: hội nghị mục tiêu, xác định giới hạn trang và yêu cầu định dạng
+- `--venue` (bắt buộc): hội nghị mục tiêu, xác định giới hạn số trang và yêu cầu định dạng
   - hỗ trợ: `ICLR` / `NeurIPS` / `ICML` / `ACL` / `CVPR` / `IEEE`
-- `--title` *(tùy chọn)*: tiêu đề làm việc; nếu bỏ qua, sẽ được tạo từ các khẳng định mục tiêu
+- `--title` (tùy chọn): tiêu đề làm việc; nếu bỏ qua, sẽ được tạo từ các khẳng định mục tiêu
 
 ## Đầu Ra
 

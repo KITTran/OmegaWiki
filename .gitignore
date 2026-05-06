@@ -33,6 +33,10 @@ Thumbs.db
 raw/papers/*.pdf
 raw/**
 !raw/**/.gitkeep
+!raw/tmp/
+!raw/tmp/**
+!raw/discovered/
+!raw/discovered/**
 
 # Wiki data (large files managed separately)
 wiki/**

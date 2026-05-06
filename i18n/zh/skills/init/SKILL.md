@@ -159,6 +159,7 @@ Provisional note: seeded from raw/notes or raw/web during /init; pending validat
 
 - fan-out 前先 stash 无关脏文件，再把 `stash_ref`、`base_branch`、`base_commit` 写入 checkpoint metadata
 - fan-out 前必须先提交刚创建的 scaffold 与 init manifests，确保 `BASE_COMMIT` 真的包含后续子代理要继承的页面、manifest 与 handoff metadata
+- scaffold commit 的创建与 `git ls-tree` 验证必须在单独的 assistant 轮次完成；只在下一轮 launch Agent fan-out，避免 worktree 捕获旧的 `HEAD`
 - 创建 worktree 前先验证 `.gitattributes` 对 `wiki/log.md`、`wiki/graph/edges.jsonl`、`wiki/graph/citations.jsonl`、`wiki/index.md` 使用了 `merge=union`
 - `/init` 的 worktree 模式必须运行在一个命名分支上，不能处于 detached HEAD
 - 每个 worktree 都必须从 `BASE_COMMIT` 拉出，而不是复用已经签出的 `BASE_BRANCH`

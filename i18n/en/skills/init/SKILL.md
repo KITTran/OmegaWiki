@@ -159,6 +159,7 @@ Parallel ingest contract:
 
 - stash unrelated dirty files before fan-out, then record `stash_ref`, `base_branch`, and `base_commit` in checkpoint metadata
 - commit the freshly created scaffold and init manifests before fan-out so `BASE_COMMIT` actually contains the pages, manifests, and handoff metadata that subagents must branch from
+- create and verify the scaffold commit in a separate assistant turn; launch Agent fan-out only on the next turn to avoid worktrees capturing stale `HEAD`
 - verify `.gitattributes` contains `merge=union` for `wiki/log.md`, `wiki/graph/edges.jsonl`, `wiki/graph/citations.jsonl`, and `wiki/index.md` before creating worktrees
 - `/init` worktree mode must run from a named branch, not detached HEAD
 - create each worktree from `BASE_COMMIT`, not from the already checked-out `BASE_BRANCH`

@@ -8,14 +8,17 @@
 - 将 `wiki/`、`raw/papers/`、`raw/tmp/`、`raw/discovered/` 与 `.checkpoints/init-*.json` 视作 scaffold 文件。
 - 先 stash 这些路径之外的无关脏文件。
 - 先验证 `.gitattributes` 对 `wiki/log.md`、`wiki/graph/edges.jsonl`、`wiki/graph/citations.jsonl`、`wiki/index.md` 使用了 `merge=union`。
-- fan-out 前先提交 scaffold，确保 `BASE_COMMIT` 真的包含所有生成的页面与 manifests：
+- fan-out 前先提交 scaffold，确保 `BASE_COMMIT` 真的包含所有生成页面、`raw/tmp/` / `raw/discovered/` source，以及每个 worktree 都必须继承的 manifests。由于隔离的 Agent worktree 可能在 tool-call 开始时捕获 `HEAD`，scaffold commit 必须在**单独的 assistant 轮次**完成。不要在创建 scaffold commit 的同一个 response 中 launch Agent fan-out。
 
 ```bash
-git add wiki/ raw/papers/ raw/tmp/ raw/discovered/ .checkpoints/init-prepare.json .checkpoints/init-plan.json .checkpoints/init-sources.json
-git commit -m "init: scaffold before parallel ingest" --no-gpg-sign
+git add wiki/ raw/tmp/ raw/discovered/ .checkpoints/init-pdf-titles.json .checkpoints/init-prepare.json .checkpoints/init-plan.json .checkpoints/init-sources.json
+git commit -m "init: scaffold before parallel ingest"
 BASE_COMMIT=$(git rev-parse HEAD)
+git ls-tree -r "$BASE_COMMIT" raw/tmp/ raw/discovered/ .checkpoints/init-sources.json | head
 ```
 
+- 如果 `git ls-tree` 验证没有显示 `.checkpoints/init-sources.json` 中的 canonical source paths，停止并修复 staging 后再 fan-out。
+- scaffold commit 验证通过后，结束当前 assistant 轮次。只在下一轮 user/assistant 交互中 launch Agent fan-out，并使用已经提交好的 scaffold 上的 `BASE_COMMIT=$(git rev-parse HEAD)`。
 - 用 `tools/research_wiki.py checkpoint-set-meta` 记录 `stash_ref`、`base_branch`、`base_commit`。
 - `/init` 的 worktree 模式要求当前位于一个命名分支上；detached HEAD 必须先停止。
 

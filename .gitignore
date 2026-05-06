@@ -29,18 +29,8 @@ Thumbs.db
 # Virtual environment
 .venv/
 
-# Raw data (large files managed separately)
+# Raw data — PDF papers are large binaries; track everything else
 raw/papers/*.pdf
-raw/**
-!raw/**/.gitkeep
-!raw/tmp/
-!raw/tmp/**
-!raw/discovered/
-!raw/discovered/**
-
-# Wiki data (large files managed separately)
-wiki/**
-!wiki/**/.gitkeep
 
 # Obsidian settings
 .obsidian/

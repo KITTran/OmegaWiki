@@ -27,14 +27,15 @@ argument-hint: "<skill-name> [--new]"
 
 ## Workflow
 
-### Bước 1: Tạo fix branch từ `origin/main`
+### Bước 1: Tạo fix branch từ `main`
 
 ```bash
-git fetch origin
-git checkout -b fix/<skill-name> origin/main
+git checkout -b fix/<skill-name> main
 ```
 
-- Luôn tạo từ `origin/main`, không tạo từ branch research hoặc branch local `main` (có thể đã chứa wiki database)
+- Luôn tạo từ `main` — branch này chỉ chứa skills/config, không chứa wiki database
+- Không tạo từ `origin/main` vì người dùng có thể chưa push code lên server
+- Không tạo từ branch research (chứa wiki database không liên quan đến skill)
 - Đặt tên theo pattern `fix/<skill-name>` hoặc `fix/<skill-name>-<mô-tả-ngắn>`
 
 ### Bước 2: Sửa skill trong source ngôn ngữ hiện tại
@@ -145,7 +146,7 @@ Sau đó chạy lại `./setup.sh --lang <lang>` để sync `CLAUDE.md` active.
 ## Constraints
 
 - **Không chỉnh sửa `.claude/skills/` trực tiếp** — chỉ `./setup.sh` mới được ghi vào đó
-- **Luôn tạo branch từ `origin/main`** — không từ branch research (có thể chứa wiki database không liên quan đến skill)
+- **Luôn tạo branch từ `main`** — không từ branch research (có thể chứa wiki database không liên quan đến skill), không từ `origin/main` (người dùng có thể chưa push)
 - **Commit i18n trước, commit active files sau** — giữ hai loại commit tách biệt để dễ cherry-pick
 - **Kiểm tra `.claude/.current-lang`** trước khi chạy `setup.sh` — sync sai ngôn ngữ sẽ overwrite active files bằng bản dịch không đúng
 - **Không dùng `git rebase -i`** trong interactive mode — Claude Code không hỗ trợ; dùng `git reset --soft` + commit lại nếu cần tách/gộp commit
@@ -165,7 +166,7 @@ Sau đó chạy lại `./setup.sh --lang <lang>` để sync `CLAUDE.md` active.
 Sửa `/init` để thêm two-turn commit rule:
 
 ```
-git checkout -b fix/init-worktree-flow origin/main
+git checkout -b fix/init-worktree-flow main
 # Sửa i18n/vi/skills/init/SKILL.md và references/parallel-ingest.md
 git add i18n/vi/skills/init/
 git commit -m "fix(init): add two-turn scaffold commit rule [vi]"

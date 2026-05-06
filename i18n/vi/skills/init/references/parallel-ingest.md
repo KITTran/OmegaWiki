@@ -1,14 +1,14 @@
 # /init Parallel Ingest
 
-Use this reference when `/init` is handing sources to parallel `/ingest` subagents and merging their work back.
+Dùng reference này khi `/init` chuyển giao source cho các `/ingest` subagent song song và merge công việc của chúng trở lại.
 
-## Pre-Fan-Out Safety
+## An Toàn Trước Fan-Out
 
-- Run `git status --short`.
-- Treat files under `wiki/`, `raw/papers/`, `raw/tmp/`, `raw/discovered/`, and `.checkpoints/init-*.json` as scaffold files.
-- Stash unrelated dirty files outside those paths.
-- Verify `.gitattributes` contains `merge=union` for `wiki/log.md`, `wiki/graph/edges.jsonl`, and `wiki/index.md`.
-- Commit the scaffold before fan-out so `BASE_COMMIT` contains the generated pages, `raw/tmp/` / `raw/discovered/` sources, and manifests that every worktree must inherit. Because isolated Agent worktrees can capture `HEAD` at tool-call start, the scaffold commit must happen in **its own assistant turn**. Do not launch Agent fan-out in the same response that creates the scaffold commit.
+- Chạy `git status --short`.
+- Coi các file dưới `wiki/`, `raw/papers/`, `raw/tmp/`, `raw/discovered/`, và `.checkpoints/init-*.json` là scaffold files.
+- Stash các file bẩn không liên quan nằm ngoài những path đó.
+- Xác minh `.gitattributes` chứa `merge=union` cho `wiki/log.md`, `wiki/graph/edges.jsonl`, `wiki/graph/citations.jsonl`, và `wiki/index.md`.
+- Commit scaffold trước fan-out để `BASE_COMMIT` chứa các trang đã tạo, source `raw/tmp/` / `raw/discovered/`, và manifests mà mọi worktree phải kế thừa. Vì các Agent worktree cô lập có thể capture `HEAD` tại thời điểm bắt đầu tool-call, scaffold commit phải xảy ra trong **turn assistant riêng của nó**. Không launch Agent fan-out trong cùng response tạo scaffold commit.
 
 ```bash
 git add wiki/ raw/tmp/ raw/discovered/ .checkpoints/init-pdf-titles.json .checkpoints/init-prepare.json .checkpoints/init-plan.json .checkpoints/init-sources.json
@@ -17,14 +17,14 @@ BASE_COMMIT=$(git rev-parse HEAD)
 git ls-tree -r "$BASE_COMMIT" raw/tmp/ raw/discovered/ .checkpoints/init-sources.json | head
 ```
 
-- If the `git ls-tree` verification does not show the canonical source paths from `.checkpoints/init-sources.json`, stop and fix staging before fan-out.
-- After the scaffold commit is verified, end the assistant turn. Launch Agent fan-out only on the next user/assistant turn, using `BASE_COMMIT=$(git rev-parse HEAD)` from the already-committed scaffold.
-- Record `stash_ref`, `base_branch`, and `base_commit` with `tools/research_wiki.py checkpoint-set-meta`.
-- `/init` worktree mode requires a named branch; stop on detached HEAD.
+- Nếu xác minh `git ls-tree` không hiển thị các canonical source paths từ `.checkpoints/init-sources.json`, dừng lại và sửa staging trước fan-out.
+- Sau khi scaffold commit được xác minh, kết thúc turn assistant. Chỉ launch Agent fan-out ở turn user/assistant tiếp theo, dùng `BASE_COMMIT=$(git rev-parse HEAD)` từ scaffold đã commit sẵn.
+- Ghi `stash_ref`, `base_branch`, và `base_commit` bằng `tools/research_wiki.py checkpoint-set-meta`.
+- Chế độ worktree của `/init` yêu cầu một branch có tên; dừng lại nếu đang ở detached HEAD.
 
-## Worktree Creation
+## Tạo Worktree
 
-For each paper, create the worktree from the scaffold commit on the current branch:
+Với mỗi paper, tạo worktree từ scaffold commit trên branch hiện tại:
 
 ```bash
 WT_BRANCH="init-${BASE_BRANCH//\//-}-<rank>-<paper-slug>"
@@ -32,30 +32,31 @@ WT_PATH="../.worktrees/$WT_BRANCH"
 git worktree add -b "$WT_BRANCH" "$WT_PATH" "$BASE_COMMIT"
 ```
 
-- Do not run `git worktree add` against the current branch name itself; Git will refuse because that branch is already checked out in the main workspace.
-- Order papers by `shortlist_rank` from `.checkpoints/init-sources.json`, not by rescanning raw folders or by raw citation count.
+- Không chạy `git worktree add` trực tiếp với tên current branch; Git sẽ từ chối vì branch đó đã được checkout trong workspace chính.
+- Sắp xếp papers theo `shortlist_rank` từ `.checkpoints/init-sources.json`, không quét lại raw folders và không dùng raw citation count.
 
 ## Subagent Prompt Contract
 
-- Execute `/ingest` for exactly one relative source path.
-- Do not bypass `/ingest`.
-- In INIT MODE, consume the handed-off canonical path exactly as provided.
+- Shell working directory của subagent phải là worktree path (`$WT_PATH`), không phải repository root chính. Mọi relative paths resolve từ đó.
+- Thực thi `/ingest` cho đúng một relative source path.
+- Không bypass `/ingest`.
+- Trong INIT MODE, dùng đúng canonical path được chuyển giao, nguyên văn như đã cung cấp.
 - Skip `fetch_s2.py citations`.
 - Skip `fetch_s2.py references`.
 - Skip per-subagent `rebuild-index`.
 - Skip per-subagent `rebuild-context-brief`.
 - Skip per-subagent `rebuild-open-questions`.
-- Skip conflict-prone topic writes.
-- Commit the result inside the worktree before exiting so fan-in merges a real ingest commit.
+- Skip các topic writes dễ gây conflict.
+- Commit kết quả bên trong worktree trước khi thoát để fan-in merge một ingest commit thật.
 
 ## Fan-In
 
-After all agents complete:
+Sau khi tất cả agents hoàn thành:
 
-1. Switch the main workspace back to `BASE_BRANCH` if needed, then merge worktree branches sequentially there in planner order.
-2. Resolve true concept/claim conflicts conservatively: merge, do not multiply near-duplicates.
-3. Merge only committed worktree branches. A branch with no ingest commit is an error to stop and fix, not something to merge through.
-3. Run:
+1. Switch workspace chính về `BASE_BRANCH` nếu cần, rồi merge các worktree branches tuần tự ở đó theo thứ tự planner.
+2. Resolve các concept/claim conflicts thật một cách thận trọng: merge, không nhân bản các near-duplicates.
+3. Chỉ merge các worktree branches đã commit. Branch không có ingest commit là lỗi cần dừng và sửa, không phải thứ để merge tiếp.
+3. Chạy:
 
 ```bash
 git switch "$BASE_BRANCH"
@@ -63,10 +64,11 @@ git merge --no-ff "$WT_BRANCH" --no-edit
 git worktree remove "$WT_PATH"
 git branch -d "$WT_BRANCH"
 "$PYTHON_BIN" tools/research_wiki.py dedup-edges wiki/
+"$PYTHON_BIN" tools/research_wiki.py dedup-citations wiki/
 "$PYTHON_BIN" tools/research_wiki.py rebuild-index wiki/
 "$PYTHON_BIN" tools/research_wiki.py rebuild-context-brief wiki/
 "$PYTHON_BIN" tools/research_wiki.py rebuild-open-questions wiki/
 "$PYTHON_BIN" tools/lint.py --wiki-dir wiki/ --fix
 ```
 
-If `stash_ref` exists, pop it at the end. If stash pop fails, keep the checkpoint and report the failure.
+Nếu `stash_ref` tồn tại, pop nó ở cuối. Nếu stash pop thất bại, giữ checkpoint và báo cáo lỗi.

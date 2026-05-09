@@ -17,7 +17,6 @@ Hãy ghi nhớ sơ đồ này trong ngữ cảnh tức thì:
 
 - `wiki/index.md` là danh mục của tất cả các trang wiki
 - `wiki/log.md` là nhật ký hoạt động chỉ được thêm vào
-- `wiki/overview.md` là tổng quan về chủ đề nghiên cứu và giả thuyết
 - `wiki/open-questions.md` theo dõi các câu hỏi mở và vấn đề chưa giải quyết
 - `wiki/papers/` chứa các bản tóm tắt bài báo
 - `wiki/concepts/`, `wiki/topics/`, và `wiki/foundations/` chứa cấu trúc kiến thức có thể tái sử dụng

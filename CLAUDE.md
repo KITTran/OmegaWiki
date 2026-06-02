@@ -84,9 +84,12 @@ Khi viết một liên kết xuôi, **luôn viết liên kết ngược đồng 
 ## Quy Tắc Đồ Thị
 
 - `graph/` được tạo tự động; không chỉnh sửa thủ công
-- Các tệp phái sinh cốt lõi là `edges.jsonl`, `context_brief.md`, và `open_questions.md`
-- Các loại cạnh hợp lệ là `extends`, `contradicts`, `supports`, `inspired_by`, `tested_by`, `invalidates`, `supersedes`, `addresses_gap`, và `derived_from`
-- Sử dụng `tools/research_wiki.py add-edge`, `rebuild-context-brief`, và `rebuild-open-questions`
+- Các tệp phái sinh cốt lõi là `edges.jsonl`, `citations.jsonl`, `context_brief.md`, và `open_questions.md`
+- Các loại cạnh ngữ nghĩa bao gồm paper-paper (`same_problem_as`, `similar_method_to`, `complementary_to`, `builds_on`, `compares_against`, `improves_on`, `challenges`, `surveys`), paper-concept (`introduces_concept`, `uses_concept`, `extends_concept`, `critiques_concept`), và các loại khẳng định/thí nghiệm/nguồn gốc hiện có (`supports`, `contradicts`, `tested_by`, `invalidates`, `addresses_gap`, `derived_from`, `inspired_by`)
+- Các cạnh ngữ nghĩa paper-paper và paper-concept của `/ingest` phải bao gồm `confidence: high|medium|low`
+- Các cạnh paper-paper đối xứng được lưu trữ một lần với các điểm cuối đã sắp xếp và `symmetric: true`
+- Các trích dẫn thư mục nằm trong `citations.jsonl` dưới dạng `type: cites`
+- Sử dụng `tools/research_wiki.py add-edge`, `add-citation`, `rebuild-context-brief`, và `rebuild-open-questions`
 
 ## Định Dạng log.md
 
@@ -136,6 +139,7 @@ Dòng nhật ký chuẩn:
 | `/init` | `skills/init/SKILL.md` | thủ công |
 | `/prefill` | `skills/prefill/SKILL.md` | thủ công (`[domain] [--add concept]`) |
 | `/ingest` | `skills/ingest/SKILL.md` | thủ công |
+| `/discover` | `skills/discover/SKILL.md` | thủ công / nội bộ (được gọi bởi `/ingest --discover`) |
 | `/ask` | `skills/ask/SKILL.md` | thủ công |
 | `/edit` | `skills/edit/SKILL.md` | thủ công |
 | `/check` | `skills/check/SKILL.md` | hai tuần một lần/thủ công |

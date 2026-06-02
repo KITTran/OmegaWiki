@@ -2,6 +2,26 @@
 
 > Tài liệu tham khảo theo yêu cầu cho các mẫu trang wiki đầy đủ. Xem `docs/runtime-support-files.vi.md` để biết các tệp phái sinh từ đồ thị cùng với `index.md` và `log.md`.
 
+## Quy tắc Markdown chung
+
+### Định dạng công thức
+
+Khi tạo hoặc sửa file Markdown trong wiki, viết công thức theo cú pháp equation của Markdown/Obsidian, không dùng môi trường equation của LaTeX.
+
+- Công thức inline dùng `$...$`.
+- Công thức block dùng `$$...$$`.
+- Không dùng `\begin{equation}`, `\end{equation}`, `\begin{align}`, hoặc các môi trường LaTeX tương tự trong nội dung Markdown wiki.
+
+Ví dụ:
+
+```markdown
+Độ lỗi trung bình là $\mathcal{L}_{\mathrm{MSE}}$.
+
+$$
+\mathcal{L}_{\mathrm{MSE}} = \frac{1}{N}\sum_{i=1}^{N}(u_i - \hat{u}_i)^2
+$$
+```
+
 ## 9 Loại Trang
 
 ### papers/{slug}.md

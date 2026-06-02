@@ -2,6 +2,26 @@
 
 > 仅按需读取的 wiki 页面模板。graph 派生文件以及 `index.md`、`log.md` 请看 `docs/runtime-support-files.zh.md`。
 
+## 通用 Markdown 规则
+
+### 公式格式
+
+创建或修改 wiki 中的 Markdown 文件时，公式应使用 Markdown/Obsidian 的 equation 语法，不使用 LaTeX equation 环境。
+
+- 行内公式使用 `$...$`。
+- 块级公式使用 `$$...$$`。
+- 不要在 wiki Markdown 内容中使用 `\begin{equation}`、`\end{equation}`、`\begin{align}` 或类似的 LaTeX 环境。
+
+示例：
+
+```markdown
+均方误差为 $\mathcal{L}_{\mathrm{MSE}}$。
+
+$$
+\mathcal{L}_{\mathrm{MSE}} = \frac{1}{N}\sum_{i=1}^{N}(u_i - \hat{u}_i)^2
+$$
+```
+
 ## 9 类页面
 
 ### papers/{slug}.md

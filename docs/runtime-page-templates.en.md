@@ -2,6 +2,26 @@
 
 > On-demand reference for full wiki page templates only. See `docs/runtime-support-files.en.md` for graph-derived files plus `index.md` and `log.md`.
 
+## General Markdown Rules
+
+### Equation Formatting
+
+When creating or editing Markdown files in the wiki, write equations using Markdown/Obsidian equation syntax, not LaTeX environments.
+
+- Use `$...$` for inline equations.
+- Use `$$...$$` for block equations.
+- Do not use `\begin{equation}`, `\end{equation}`, `\begin{align}`, or similar LaTeX environments in wiki Markdown content.
+
+Example:
+
+```markdown
+The mean squared error is $\mathcal{L}_{\mathrm{MSE}}$.
+
+$$
+\mathcal{L}_{\mathrm{MSE}} = \frac{1}{N}\sum_{i=1}^{N}(u_i - \hat{u}_i)^2
+$$
+```
+
 ## 9 Page Types
 
 ### papers/{slug}.md

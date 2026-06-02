@@ -20,6 +20,7 @@ build_exclude_file() {
 
     cat > "$exclude_file" <<'EOF'
 .claude/worktrees/
+.obsidian/
 *.tmp
 .venv/
 .git/

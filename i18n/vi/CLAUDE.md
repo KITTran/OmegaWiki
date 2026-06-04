@@ -157,4 +157,5 @@ Dòng nhật ký chuẩn:
 | `/paper-compile` | `skills/paper-compile/SKILL.md` | thủ công |
 | `/survey` | `skills/survey/SKILL.md` | thủ công |
 | `/research` | `skills/research/SKILL.md` | thủ công |
+| `/create-slides` | `skills/create-slides/SKILL.md` | thủ công |
 | `/rebuttal` | `skills/rebuttal/SKILL.md` | thủ công |

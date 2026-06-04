@@ -157,4 +157,5 @@ Standard log line:
 | `/paper-compile` | `skills/paper-compile/SKILL.md` | manual |
 | `/survey` | `skills/survey/SKILL.md` | manual |
 | `/research` | `skills/research/SKILL.md` | manual |
+| `/create-slides` | `skills/create-slides/SKILL.md` | manual |
 | `/rebuttal` | `skills/rebuttal/SKILL.md` | manual |

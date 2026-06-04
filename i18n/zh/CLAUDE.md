@@ -153,4 +153,5 @@
 | `/paper-compile` | `skills/paper-compile/SKILL.md` | 手动 |
 | `/survey` | `skills/survey/SKILL.md` | 手动 |
 | `/research` | `skills/research/SKILL.md` | 手动 |
+| `/create-slides` | `skills/create-slides/SKILL.md` | 手动 |
 | `/rebuttal` | `skills/rebuttal/SKILL.md` | 手动 |

@@ -1,12 +1,12 @@
 ---
 name: create-slides
-description: 按照 docs/slides-guide.vi.md 中的格式、风格和来源规则编写 Reveal.js 幻灯片（Obsidian + obsidian-advanced-slides）
+description: 按照 docs/slides-guide.zh.md 中的格式、风格和来源规则编写 Reveal.js 幻灯片（Obsidian + obsidian-advanced-slides）
 argument-hint: "<output-path> [--from <source>] [--type paper-review|ideas|results|talk]"
 ---
 
 # /create-slides
 
-> 在 `wiki/outputs/` 下编写或更新 Markdown 幻灯片文件，遵循 `docs/slides-guide.vi.md` 中的统一规则集。
+> 在 `wiki/outputs/` 下编写或更新 Markdown 幻灯片文件，遵循 `docs/slides-guide.zh.md` 中的统一规则集。
 > 默认引擎：**Obsidian + 插件 [`obsidian-advanced-slides`](https://github.com/MSzturc/obsidian-advanced-slides)**（底层为 Reveal.js）。
 
 ## 调用方式
@@ -40,7 +40,7 @@ argument-hint: "<output-path> [--from <source>] [--type paper-review|ideas|resul
 ## Wiki 交互
 
 ### 读取
-- 必需：`docs/slides-guide.vi.md` — 唯一规则来源；在编写任何幻灯片之前必须打开
+- 必需：`docs/slides-guide.zh.md` — 唯一规则来源；在编写任何幻灯片之前必须打开
 - 按需：用户通过 `--from` 指定的 wiki 页面
 - 可选：如果输出是 `outputs/` 之外的 wiki 页面，则读取 `docs/runtime-page-templates.vi.md`
 
@@ -53,7 +53,7 @@ argument-hint: "<output-path> [--from <source>] [--type paper-review|ideas|resul
 
 ### 第 1 步：加载规则与确定范围
 
-1. **完整阅读 `docs/slides-guide.vi.md`** — 这是所有格式、风格、来源和幻灯片模式规则的唯一来源。在当前会话中未重新阅读指南之前不得编写幻灯片。
+1. **完整阅读 `docs/slides-guide.zh.md`** — 这是所有格式、风格、来源和幻灯片模式规则的唯一来源。在当前会话中未重新阅读指南之前不得编写幻灯片。
 2. 确定：
    - 幻灯片类型（`--type` 或根据请求推断）
    - 主要语言（VI / EN）— 整个文件保持一致
@@ -74,7 +74,7 @@ argument-hint: "<output-path> [--from <source>] [--type paper-review|ideas|resul
 
 ### 第 3 步：构建幻灯片框架
 
-按照 `docs/slides-guide.vi.md` 中的规定应用与 `--type` 匹配的模式：
+按照 `docs/slides-guide.zh.md` 中的规定应用与 `--type` 匹配的模式：
 
 - **`paper-review`** → 7.1 节的 3 层流程：主题概述幻灯片 → 每篇论文一页幻灯片（标题/方法/结果/引用）→ 总结与差距幻灯片。
 - **`ideas`** → 7.2 节模式：概览表格幻灯片 → 每个想法一页幻灯片（理论→原理）。
@@ -156,7 +156,7 @@ argument-hint: "<output-path> [--from <source>] [--type paper-review|ideas|resul
 
 ## 约束条件
 
-- **`docs/slides-guide.vi.md` 是唯一的规则来源** — 每个格式/风格/来源的决定都必须查阅此文件；不得自创新规则。
+- **`docs/slides-guide.zh.md` 是唯一的规则来源** — 每个格式/风格/来源的决定都必须查阅此文件；不得自创新规则。
 - **不得捏造内容**：如果来源缺失，则不编写；如果声明缺乏依据，按照 7.3 节将其标记为假设。
 - **禁止 LaTeX 环境**（`\begin{equation}`、`\begin{align}`）— Reveal.js 上的 MathJax 对它们支持不稳定。
 - **指数总是用 `{}` 包裹**：`x^{2}`，而不是 `x^2`；多字符下标用 `{}` 包裹；单字符下标保持不变。
@@ -168,7 +168,7 @@ argument-hint: "<output-path> [--from <source>] [--type paper-review|ideas|resul
 
 ## 参考资料
 
-- `docs/slides-guide.vi.md` — 完整规则集：前置元数据、层级结构、两栏、表格、公式、图片、风格、来源、检查清单
+- `docs/slides-guide.zh.md` — 完整规则集：前置元数据、层级结构、两栏、表格、公式、图片、风格、来源、检查清单
 - 插件引擎：[`obsidian-advanced-slides`](https://github.com/MSzturc/obsidian-advanced-slides)
 - `docs/runtime-page-templates.vi.md` — 用于在非幻灯片页面上交叉引用公式规则的一般 Markdown 规则
 - `docs/runtime-support-files.vi.md` — 用于导航更新的 `index.md` / `log.md` 格式

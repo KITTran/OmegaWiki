@@ -1,13 +1,13 @@
 ---
 name: create-ppt
-description: 从论文 PDF 构建高质量 PowerPoint (.pptx) 演示文稿——嵌入原始图表 + 渲染公式，含批判性分析，经过视觉 QA；遵循 docs/ppt-guide.vi.md 中的规则
+description: 从论文 PDF 构建高质量 PowerPoint (.pptx) 演示文稿——嵌入原始图表 + 渲染公式，含批判性分析，经过视觉 QA；遵循 docs/ppt-guide.zh.md 中的规则
 argument-hint: "<output-dir-path> [--from <paper.pdf|slug>] [--type seminar|talk|intro]"
 ---
 
 # /create-ppt
 
 > 在 `wiki/outputs/<deck-slug>/` 下从论文 PDF（或其他内容来源）构建或更新一个**真正的 PowerPoint `.pptx` 文件**，使用 **pptxgenjs** 构建。
-> 唯一规则来源：**`docs/ppt-guide.vi.md`** — 构建前完整阅读。
+> 唯一规则来源：**`docs/ppt-guide.zh.md`** — 构建前完整阅读。
 >
 > 与 `/create-slides`（Obsidian 上的 Reveal.js/Markdown）不同：本 skill 输出可在 PowerPoint/Keynote 打开的 `.pptx` 文件，嵌入论文原始图表和从 LaTeX 渲染的公式。
 
@@ -37,7 +37,7 @@ argument-hint: "<output-dir-path> [--from <paper.pdf|slug>] [--type seminar|talk
 ## Wiki 交互
 
 ### 读取
-- **必需**：`docs/ppt-guide.vi.md` — 唯一规则来源；构建前打开。
+- **必需**：`docs/ppt-guide.zh.md` — 唯一规则来源；构建前打开。
 - 视来源而定：按 `--from` 读取 `raw/papers/<paper>.pdf` 或 wiki 页面。
 
 ### 写入
@@ -49,7 +49,7 @@ argument-hint: "<output-dir-path> [--from <paper.pdf|slug>] [--type seminar|talk
 
 ### 步骤 1：加载规则并询问决策
 
-1. **完整阅读 `docs/ppt-guide.vi.md`** — 未在当前 session 重读规则前不要构建。
+1. **完整阅读 `docs/ppt-guide.zh.md`** — 未在当前 session 重读规则前不要构建。
 2. 询问用户必需的决策（规则 Section 1）：**格式、受众/深度、长度、图表处理、批判性分析、字体、公式字体、配色方案**。**一开始就**询问字体 + 配色——这两项最容易导致返工。
 3. 验证工具链（Section 2）：PyMuPDF、matplotlib、pptxgenjs（本地安装）、`soffice`。用 `fc-list | grep -i <font>` 检查所需字体。
 
@@ -102,7 +102,7 @@ argument-hint: "<output-dir-path> [--from <paper.pdf|slug>] [--type seminar|talk
 
 ## 约束
 
-- **`docs/ppt-guide.vi.md` 是唯一规则来源** — 每个格式/设计/QA 决策都从中查阅；不要自创额外规则。
+- **`docs/ppt-guide.zh.md` 是唯一规则来源** — 每个格式/设计/QA 决策都从中查阅；不要自创额外规则。
 - **不得捏造内容**：数字/引用取自论文；缺失则删除或标注为假设。
 - **论文原始图表逐字嵌入** — 不重绘、不捏造图表。
 - **公式从 LaTeX 渲染**（PowerPoint 无 LaTeX）— 不要用普通文本敲数学符号。
@@ -113,7 +113,7 @@ argument-hint: "<output-dir-path> [--from <paper.pdf|slug>] [--type seminar|talk
 
 ## 参考
 
-- `docs/ppt-guide.vi.md` — 完整规则：工具链、图表裁剪、公式渲染、设计系统、内容框架、QA 循环、pptxgenjs 陷阱、清单
+- `docs/ppt-guide.zh.md` — 完整规则：工具链、图表裁剪、公式渲染、设计系统、内容框架、QA 循环、pptxgenjs 陷阱、清单
 - `skills/create-ppt/references/build_deck.template.js` — 可直接使用的 pptxgenjs 脚手架（配色 + `head/footer/divider/card/bullets/fitImg/caption` helper + 阴影工厂）。复制到 deck 目录，替换配色/内容，然后 `node build_deck.js`
 - `docs/runtime-support-files.vi.md` — 更新导航时的 `index.md` / `log.md` 格式
 - pptxgenjs：<https://github.com/gitbrent/PptxGenJS>

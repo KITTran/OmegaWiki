@@ -1,12 +1,12 @@
 ---
 name: create-slides
-description: Author Reveal.js slides (Obsidian + obsidian-advanced-slides) following the formatting, style, and sourcing rules in docs/slides-guide.vi.md
+description: Author Reveal.js slides (Obsidian + obsidian-advanced-slides) following the formatting, style, and sourcing rules in docs/slides-guide.en.md
 argument-hint: "<output-path> [--from <source>] [--type paper-review|ideas|results|talk]"
 ---
 
 # /create-slides
 
-> Author or update a Markdown slides file under `wiki/outputs/` following the unified rule set in `docs/slides-guide.vi.md`.
+> Author or update a Markdown slides file under `wiki/outputs/` following the unified rule set in `docs/slides-guide.en.md`.
 > Default engine: **Obsidian + plugin [`obsidian-advanced-slides`](https://github.com/MSzturc/obsidian-advanced-slides)** (Reveal.js under the hood).
 
 ## Invocation
@@ -40,7 +40,7 @@ Manual command: `/create-slides <output-path> [--from <source>] [--type <slide-t
 ## Wiki Interactions
 
 ### Reading
-- Required: `docs/slides-guide.vi.md` — sole rule source; must open before writing any slide
+- Required: `docs/slides-guide.en.md` — sole rule source; must open before writing any slide
 - On-demand: wiki pages specified by user via `--from`
 - Optional: `docs/runtime-page-templates.vi.md` if the output is a wiki page outside `outputs/`
 
@@ -53,7 +53,7 @@ Manual command: `/create-slides <output-path> [--from <source>] [--type <slide-t
 
 ### STEP 1: Load Rules & Determine Scope
 
-1. **Read `docs/slides-guide.vi.md` in full** — this is the sole source for all formatting, style, sourcing, and slide pattern rules. Do not write slides without re-reading the guide in the current session.
+1. **Read `docs/slides-guide.en.md` in full** — this is the sole source for all formatting, style, sourcing, and slide pattern rules. Do not write slides without re-reading the guide in the current session.
 2. Determine:
    - Slide type (`--type` or infer from request)
    - Primary language (VI / EN) — consistent throughout the file
@@ -74,7 +74,7 @@ Manual command: `/create-slides <output-path> [--from <source>] [--type <slide-t
 
 ### STEP 3: Build Slide Skeleton
 
-Apply the pattern matching `--type` as per `docs/slides-guide.vi.md`:
+Apply the pattern matching `--type` as per `docs/slides-guide.en.md`:
 
 - **`paper-review`** → 3-layer flow from Section 7.1: topic overview slide → one slide per paper (header / method / results / Ref) → summary & gaps slide.
 - **`ideas`** → Section 7.2 pattern: overview table slide → one slide per idea (Theory → Rationale).
@@ -156,7 +156,7 @@ If any item fails → fix slides before reporting.
 
 ## Constraints
 
-- **`docs/slides-guide.vi.md` is the sole rule source** — every formatting / style / sourcing decision must consult it; do not invent new rules.
+- **`docs/slides-guide.en.md` is the sole rule source** — every formatting / style / sourcing decision must consult it; do not invent new rules.
 - **Do not fabricate content**: if a source is missing, do not write it; if a claim lacks backing, mark it as a hypothesis per Section 7.3.
 - **No LaTeX environments** (`\begin{equation}`, `\begin{align}`) — MathJax on Reveal.js is not stable with them.
 - **Exponents always wrapped in `{}`**: `x^{2}`, not `x^2`; multi-char subscripts in `{}`; single-char subscripts left as-is.
@@ -168,7 +168,7 @@ If any item fails → fix slides before reporting.
 
 ## References
 
-- `docs/slides-guide.vi.md` — full rule set: frontmatter, hierarchy, two-column, tables, equations, images, style, sourcing, checklist
+- `docs/slides-guide.en.md` — full rule set: frontmatter, hierarchy, two-column, tables, equations, images, style, sourcing, checklist
 - Plugin engine: [`obsidian-advanced-slides`](https://github.com/MSzturc/obsidian-advanced-slides)
 - `docs/runtime-page-templates.vi.md` — general Markdown rules for cross-referencing equation rules on non-slide pages
 - `docs/runtime-support-files.vi.md` — `index.md` / `log.md` format for navigation updates

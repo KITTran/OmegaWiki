@@ -1,13 +1,13 @@
 ---
 name: create-ppt
-description: Build a polished PowerPoint (.pptx) deck from a paper PDF — embed original figures + rendered equations, with critical analysis, through visual QA; following the rules in docs/ppt-guide.vi.md
+description: Build a polished PowerPoint (.pptx) deck from a paper PDF — embed original figures + rendered equations, with critical analysis, through visual QA; following the rules in docs/ppt-guide.en.md
 argument-hint: "<output-dir-path> [--from <paper.pdf|slug>] [--type seminar|talk|intro]"
 ---
 
 # /create-ppt
 
 > Build or update a **real PowerPoint `.pptx` file** under `wiki/outputs/<deck-slug>/` from a paper PDF (or another content source), built with **pptxgenjs**.
-> Sole rule source: **`docs/ppt-guide.vi.md`** — read it in full before building.
+> Sole rule source: **`docs/ppt-guide.en.md`** — read it in full before building.
 >
 > Unlike `/create-slides` (Reveal.js/Markdown on Obsidian): this skill outputs a `.pptx` file that opens in PowerPoint/Keynote, embedding the paper's original figures and equations rendered from LaTeX.
 
@@ -37,7 +37,7 @@ Manual command: `/create-ppt <output-dir-path> [--from <source>] [--type seminar
 ## Wiki Interaction
 
 ### Read
-- **Required**: `docs/ppt-guide.vi.md` — the sole rule source; open it before building.
+- **Required**: `docs/ppt-guide.en.md` — the sole rule source; open it before building.
 - Source-dependent: `raw/papers/<paper>.pdf` or a wiki page per `--from`.
 
 ### Write
@@ -49,7 +49,7 @@ Manual command: `/create-ppt <output-dir-path> [--from <source>] [--type seminar
 
 ### STEP 1: Load Rules & Ask Decisions
 
-1. **Read `docs/ppt-guide.vi.md` in full** — do not build without re-reading the guide in the current session.
+1. **Read `docs/ppt-guide.en.md` in full** — do not build without re-reading the guide in the current session.
 2. Ask the user the required decisions (Section 1 of the guide): **format, audience/depth, length, figure handling, critical analysis, font, equation font, color palette**. Ask font + palette **up front** — these are the most likely to force a rebuild.
 3. Verify the toolchain (Section 2): PyMuPDF, matplotlib, pptxgenjs (installed locally), `soffice`. Check the needed fonts with `fc-list | grep -i <font>`.
 
@@ -102,7 +102,7 @@ Go through every item in Section 11 of the guide (figures & equations · design 
 
 ## Constraints
 
-- **`docs/ppt-guide.vi.md` is the sole rule source** — every format/design/QA decision is looked up there; do not invent extra rules.
+- **`docs/ppt-guide.en.md` is the sole rule source** — every format/design/QA decision is looked up there; do not invent extra rules.
 - **Do not fabricate content**: numbers/citations come from the paper; if missing, drop or mark as a hypothesis.
 - **The paper's original figures are embedded verbatim** — do not redraw, do not fabricate charts.
 - **Equations are rendered from LaTeX** (PowerPoint has no LaTeX) — do not type math symbols as plain text.
@@ -113,7 +113,7 @@ Go through every item in Section 11 of the guide (figures & equations · design 
 
 ## References
 
-- `docs/ppt-guide.vi.md` — full rules: toolchain, figure cropping, equation rendering, design system, content frame, QA loop, pptxgenjs pitfalls, checklist
+- `docs/ppt-guide.en.md` — full rules: toolchain, figure cropping, equation rendering, design system, content frame, QA loop, pptxgenjs pitfalls, checklist
 - `skills/create-ppt/references/build_deck.template.js` — ready-to-use pptxgenjs scaffold (palette + `head/footer/divider/card/bullets/fitImg/caption` helpers + shadow factory). Copy into the deck directory, swap palette/content, then `node build_deck.js`
 - `docs/runtime-support-files.vi.md` — `index.md` / `log.md` format when updating navigation
 - pptxgenjs: <https://github.com/gitbrent/PptxGenJS>

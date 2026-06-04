@@ -158,4 +158,5 @@ Standard log line:
 | `/survey` | `skills/survey/SKILL.md` | manual |
 | `/research` | `skills/research/SKILL.md` | manual |
 | `/create-slides` | `skills/create-slides/SKILL.md` | manual |
+| `/create-ppt` | `skills/create-ppt/SKILL.md` | manual (`<output-dir> [--from <pdf>] [--type seminar\|talk\|intro]`) |
 | `/rebuttal` | `skills/rebuttal/SKILL.md` | manual |

@@ -154,4 +154,5 @@
 | `/survey` | `skills/survey/SKILL.md` | 手动 |
 | `/research` | `skills/research/SKILL.md` | 手动 |
 | `/create-slides` | `skills/create-slides/SKILL.md` | 手动 |
+| `/create-ppt` | `skills/create-ppt/SKILL.md` | 手动（`<output-dir> [--from <pdf>] [--type seminar\|talk\|intro]`） |
 | `/rebuttal` | `skills/rebuttal/SKILL.md` | 手动 |

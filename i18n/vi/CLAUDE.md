@@ -158,4 +158,5 @@ Dòng nhật ký chuẩn:
 | `/survey` | `skills/survey/SKILL.md` | thủ công |
 | `/research` | `skills/research/SKILL.md` | thủ công |
 | `/create-slides` | `skills/create-slides/SKILL.md` | thủ công |
+| `/create-ppt` | `skills/create-ppt/SKILL.md` | thủ công (`<output-dir> [--from <pdf>] [--type seminar\|talk\|intro]`) |
 | `/rebuttal` | `skills/rebuttal/SKILL.md` | thủ công |

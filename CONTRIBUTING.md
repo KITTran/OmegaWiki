@@ -51,7 +51,7 @@ python -m pytest tests/ -v
 
 ## Bilingual (i18n)
 
-OmegaWiki ships in English and Chinese. English is canonical.
+OmegaWiki ships in English, Chinese, and Vietnamese. English is canonical.
 
 When modifying any SKILL.md, runtime CLAUDE.md, or shared-references file:
 

@@ -59,12 +59,12 @@ cd OmegaWiki
 npm install -g @anthropic-ai/claude-code
 claude login
 
-# 3. One-click setup
-chmod +x setup.sh && ./setup.sh        # Linux / macOS
-# Windows (PowerShell):
-#   powershell -ExecutionPolicy Bypass -File .\setup.ps1
-# setup creates .venv for OmegaWiki
-# the script does not keep your shell activated, but /init will use .venv automatically
+# 3. One-click setup (choose one)
+chmod +x setup.sh && ./setup.sh                   # .venv (default)
+#   or
+./setup.sh --env conda                            # conda env 'omegawiki'
+#   or
+./setup.sh --lang vi                              # Vietnamese + .venv
 
 # 4. Put your own papers in raw/papers/ (.tex or .pdf)
 #    Optional: add intent notes to raw/notes/ and saved pages to raw/web/
@@ -76,7 +76,7 @@ claude
 ```
 
 <details>
-<summary><b>Manual setup (Linux / macOS)</b></summary>
+<summary><b>Manual setup with .venv (Linux / macOS)</b></summary>
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
@@ -88,7 +88,19 @@ cp config/settings.local.json.example .claude/settings.local.json
 </details>
 
 <details>
-<summary><b>Manual setup (Windows / PowerShell)</b></summary>
+<summary><b>Manual setup with conda</b></summary>
+
+```bash
+conda create -n omegawiki python=3.11 && conda activate omegawiki
+pip install -r requirements.txt
+cp .env.example .env                 # Edit to add API keys
+cp config/settings.local.json.example .claude/settings.local.json
+```
+
+</details>
+
+<details>
+<summary><b>Manual setup with .venv (Windows / PowerShell)</b></summary>
 
 ```powershell
 python -m venv .venv

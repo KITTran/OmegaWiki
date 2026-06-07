@@ -3,8 +3,10 @@
 # ΩmegaWiki — One-Click Setup
 # ============================================================================
 # Usage:
-#   chmod +x setup.sh && ./setup.sh            # English (default)
-#   chmod +x setup.sh && ./setup.sh --lang zh  # Chinese / 中文
+#   chmod +x setup.sh && ./setup.sh                  # English, .venv (default)
+#   chmod +x setup.sh && ./setup.sh --lang zh        # Chinese, .venv
+#   chmod +x setup.sh && ./setup.sh --lang vi        # Vietnamese, .venv
+#   chmod +x setup.sh && ./setup.sh --env conda      # English, conda env 'omegawiki'
 #
 # What it does:
 #   1. Checks prerequisites (Python, pip, Claude Code)
@@ -39,17 +41,23 @@ _sed_i() {
   fi
 }
 
-# ── Language selection ──────────────────────────────────────────────
+# ── Argument parsing ──────────────────────────────────────────────
 LANG_CODE="en"
+ENV_TYPE="venv"
 _ARGS=("$@")
-for i in "${!_ARGS[@]}"; do
+i=0
+while [ $i -lt ${#_ARGS[@]} ]; do
   case "${_ARGS[$i]}" in
     --lang=*) LANG_CODE="${_ARGS[$i]#*=}" ;;
-    --lang)   LANG_CODE="${_ARGS[$((i+1))]}" ;;
+    --lang)   LANG_CODE="${_ARGS[$((i+1))]}"; i=$((i+1)) ;;
+    --env=*)  ENV_TYPE="${_ARGS[$i]#*=}" ;;
+    --env)    ENV_TYPE="${_ARGS[$((i+1))]}"; i=$((i+1)) ;;
   esac
+  i=$((i+1))
 done
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 [[ "$LANG_CODE" == "en" || "$LANG_CODE" == "vi" ]] || { fail "Unknown lang: $LANG_CODE (use 'en' or 'vi')"; exit 1; }
+[[ "$ENV_TYPE" == "venv" || "$ENV_TYPE" == "conda" ]] || { fail "Unknown env: $ENV_TYPE (use 'venv' or 'conda')"; exit 1; }
 I18N_DIR="$PROJECT_ROOT/i18n/$LANG_CODE"
 [ -d "$I18N_DIR" ] || { fail "i18n/$LANG_CODE not found — run from the project root"; exit 1; }
 cd "$PROJECT_ROOT"
@@ -110,31 +118,137 @@ fi
 # ── Step 2: Python environment + dependencies ───────────────────────────
 
 echo ""
-info "Setting up Python environment..."
+info "Setting up Python environment (method: $ENV_TYPE)..."
 
-if [ -n "$VIRTUAL_ENV" ] || { [ -n "$CONDA_DEFAULT_ENV" ] && [ "$CONDA_DEFAULT_ENV" != "base" ]; }; then
-    warn "Active environment detected; setup always installs OmegaWiki into .venv"
-fi
+if [ "$ENV_TYPE" == "conda" ]; then
+    # ── Conda branch ──────────────────────────────────────────────────
+    if command -v conda &>/dev/null; then
+        ok "conda found"
+    else
+        fail "conda not found — install Miniconda or use --env venv"
+        exit 1
+    fi
 
-if [ -d ".venv" ]; then
-    warn ".venv already exists, using it"
+    ENV_NAME="omegawiki"
+    if conda env list | grep -q "^$ENV_NAME "; then
+        warn "conda env '$ENV_NAME' already exists, using it"
+    else
+        info "Creating conda env '$ENV_NAME' with Python 3.11..."
+        conda create -y -n "$ENV_NAME" python=3.11
+        ok "conda env '$ENV_NAME' created"
+    fi
+
+    VENV_PYTHON="$(conda run -n "$ENV_NAME" which python 2>/dev/null || true)"
+    CONDA_PREFIX="$(conda info --envs | grep "^$ENV_NAME " | awk '{print $NF}')"
+    if [ -n "$CONDA_PREFIX" ]; then
+        VENV_PYTHON="$CONDA_PREFIX/bin/python"
+    fi
+    if [ ! -x "$VENV_PYTHON" ]; then
+        fail "Could not resolve python in conda env '$ENV_NAME'"
+        exit 1
+    fi
+    ok "Using conda env '$ENV_NAME' ($($VENV_PYTHON --version 2>&1))"
+
+    info "Installing dependencies into conda env '$ENV_NAME'..."
+    "$VENV_PYTHON" -m pip install -r requirements.txt -q
+    ok "Dependencies installed into conda env"
 else
-    "$PYTHON_CMD" -m venv .venv
-    ok "Created .venv"
+    # ── .venv branch (default) ────────────────────────────────────────
+    if [ -n "$VIRTUAL_ENV" ] || { [ -n "$CONDA_DEFAULT_ENV" ] && [ "$CONDA_DEFAULT_ENV" != "base" ]; }; then
+        warn "Active environment detected; setup always installs OmegaWiki into .venv"
+    fi
+
+    if [ -d ".venv" ]; then
+        warn ".venv already exists, using it"
+    else
+        "$PYTHON_CMD" -m venv .venv
+        ok "Created .venv"
+    fi
+
+    VENV_PYTHON="$PROJECT_ROOT/.venv/bin/python"
+    if [ ! -x "$VENV_PYTHON" ]; then
+        fail "Expected $VENV_PYTHON but it does not exist"
+        exit 1
+    fi
+    ok "Using $VENV_PYTHON"
+
+    info "Installing dependencies into .venv..."
+    "$VENV_PYTHON" -m pip install -r requirements.txt -q
+    ok "Dependencies installed into .venv"
 fi
 
-VENV_PYTHON="$PROJECT_ROOT/.venv/bin/python"
-if [ ! -x "$VENV_PYTHON" ]; then
-    fail "Expected $VENV_PYTHON but it does not exist"
-    exit 1
+# ── Step 3a: /create-ppt & /create-slides dependencies ────────────────
+
+echo ""
+info "Installing /create-ppt and /create-slides dependencies..."
+
+# markitdown — content QA for .pptx decks
+if "$VENV_PYTHON" -c "import markitdown" 2>/dev/null; then
+    ok "markitdown (Python) already installed"
+else
+    "$VENV_PYTHON" -m pip install markitdown -q
+    if "$VENV_PYTHON" -c "import markitdown" 2>/dev/null; then
+        ok "markitdown (Python) installed"
+    else
+        warn "markitdown not available; /create-ppt content QA will be skipped"
+    fi
 fi
-ok "Using $VENV_PYTHON"
 
-info "Installing dependencies into .venv..."
-"$VENV_PYTHON" -m pip install -r requirements.txt -q
-ok "Dependencies installed into .venv"
+# pptxgenjs — build .pptx via Node.js
+if command -v npm &>/dev/null; then
+    if npm ls -g pptxgenjs &>/dev/null; then
+        ok "pptxgenjs (Node) already installed globally"
+    else
+        info "Installing pptxgenjs globally via npm..."
+        npm install -g pptxgenjs
+        if npm ls -g pptxgenjs &>/dev/null; then
+            ok "pptxgenjs (Node) installed"
+        else
+            warn "pptxgenjs not available; /create-ppt will fail at build step"
+        fi
+    fi
+else
+    warn "npm not found; /create-ppt and /create-slides require Node.js"
+fi
 
-# ── Step 3: Configuration files ─────────────────────────────────────────
+# soffice / LibreOffice — QA: pptx → PDF preview
+if command -v soffice &>/dev/null; then
+    ok "LibreOffice (soffice) available — pptx→PDF QA enabled"
+else
+    echo ""
+    warn "LibreOffice (soffice) not detected."
+    echo "  It is used by /create-ppt to convert .pptx → PDF for visual QA."
+    echo "  Install size: ~300 MB."
+    echo ""
+    read -p "  Install LibreOffice (headless)? [y/N] " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        if command -v apt-get &>/dev/null; then
+            info "Installing libreoffice-impress-nogui via apt..."
+            sudo apt-get update -qq && sudo apt-get install -y -qq libreoffice-impress-nogui
+            if command -v soffice &>/dev/null; then
+                ok "LibreOffice installed"
+            else
+                warn "LibreOffice installation failed; pptx→PDF QA will be skipped"
+            fi
+        elif command -v brew &>/dev/null; then
+            info "Installing LibreOffice via brew..."
+            brew install --cask libreoffice
+            if command -v soffice &>/dev/null; then
+                ok "LibreOffice installed"
+            else
+                warn "LibreOffice installation failed; pptx→PDF QA will be skipped"
+            fi
+        else
+            warn "No package manager found; please install LibreOffice manually:"
+            warn "  https://www.libreoffice.org/download/"
+        fi
+    else
+        info "Skipped LibreOffice install; /create-ppt QA will use fallback checks"
+    fi
+fi
+
+# ── Step 3b: Configuration files ─────────────────────────────────────────
 
 echo ""
 info "Setting up configuration..."
@@ -205,6 +319,7 @@ check_tool_import() {
 check_python_snippet "PyMuPDF (fitz)" "import fitz"
 check_python_snippet "requests" "import requests"
 check_python_snippet "feedparser" "import feedparser"
+check_python_snippet "markitdown" "import markitdown"
 
 # Then check the current-stage tools with the same interpreter.
 check_tool_import "tools/init_discovery.py" "from init_discovery import prepare_inputs"
@@ -244,8 +359,12 @@ echo ""
 echo "  1. Authenticate Claude Code (if not already):"
 echo "     claude login"
 echo ""
-echo "  2. Optional: activate .venv for manual Python tool use:"
-echo "     source .venv/bin/activate"
+echo "  2. Optional: activate Python environment for manual use:"
+if [ "$ENV_TYPE" == "conda" ]; then
+  echo "     conda activate omegawiki"
+else
+  echo "     source .venv/bin/activate"
+fi
 echo "     setup.sh does not activate your current shell permanently."
 echo "     /init will use .venv/bin/python automatically when it exists."
 echo ""

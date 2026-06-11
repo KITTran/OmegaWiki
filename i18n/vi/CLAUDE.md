@@ -30,6 +30,7 @@ Hãy ghi nhớ sơ đồ này trong ngữ cảnh tức thì:
 - Mở `docs/runtime-support-files.vi.md` khi bạn cần chi tiết tệp phái sinh từ đồ thị hoặc định dạng `index.md` / `log.md`
 - `SKILL.md` là điểm nhập tức thì cho một kỹ năng; một số kỹ năng lớn hơn cũng có thể cung cấp các tệp tham khảo cục bộ theo yêu cầu trong thư mục kỹ năng của chúng
 - `/init` là ví dụ cụ thể đầu tiên của mẫu này: đọc `skills/init/SKILL.md` trước, sau đó mở `skills/init/references/*` chỉ khi cần thiết
+- **Không dùng LaTeX wrapping ($...$) trong terminal output**: chỉ enforce LaTeX (`$...$` inline, `$$...$$` block) khi ghi file `.md`. Trong hội thoại terminal, dùng unicode math notation (∂, α, β, ∫, ∑, ∇, π, λ, →, ·, ×, ≈, ≡, ≤, ≥, ⊥, ⊕, ⊗, ∞, ∀, ∃, √)
 
 ### `raw/` và `config/`
 

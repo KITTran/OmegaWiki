@@ -30,6 +30,7 @@ Keep this mental map in immediate context:
 - Open `docs/runtime-support-files.en.md` when you need graph-derived file details or `index.md` / `log.md` format
 - `SKILL.md` is the immediate entrypoint for a skill; some larger skills may also provide local on-demand reference files under their skill directory
 - `/init` is the first concrete example of this pattern: read `skills/init/SKILL.md` first, then open `skills/init/references/*` only when needed
+- **No LaTeX wrapping ($...$) in terminal output**: only enforce LaTeX (`$...$` inline, `$$...$$` block) when writing `.md` files. In terminal conversation, use unicode math notation (∂, α, β, ∫, ∑, ∇, π, λ, →, ·, ×, ≈, ≡, ≤, ≥, ⊥, ⊕, ⊗, ∞, ∀, ∃, √)
 
 ### `raw/` and `config/`
 

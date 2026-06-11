@@ -28,6 +28,7 @@
 - 需要 graph 派生文件细节或 `index.md` / `log.md` 格式时，打开 `docs/runtime-support-files.zh.md`
 - `SKILL.md` 是 skill 的即时入口；较大的 skill 也可以在各自目录下提供按需读取的本地参考文件
 - `/init` 是这一模式的第一个具体例子：先读 `skills/init/SKILL.md`，只有在需要时再打开 `skills/init/references/*`
+- **终端输出中不使用 LaTeX 包裹 ($...$)**：仅在写入 `.md` 文件时强制使用 LaTeX（行内 `$...$`，块 `$$...$$`）。在终端对话中，使用 Unicode 数学符号（∂、α、β、∫、∑、∇、π、λ、→、·、×、≈、≡、≤、≥、⊥、⊕、⊗、∞、∀、∃、√）
 
 ### `raw/` 与 `config/`
 

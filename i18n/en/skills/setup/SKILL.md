@@ -206,10 +206,10 @@ it if the user explicitly asks, or if their research area is clearly outside ML/
 
 #### 4e: SmartSync (mirror to another machine)
 
-**Explain**: "SmartSync is a `PostToolUse` hook that runs after every `Write|Edit`
-to push repo state (raw/, wiki/ and untracked files) to a peer machine over
-`rsync` + SSH. Handy when you bounce between Linux/WSL and macOS and want both
-copies in sync. **Disabled by default** on a fresh clone."
+**Explain**: "SmartSync is a `Stop` hook that runs when Claude Code stops, to push
+repo state (raw/, wiki/ and untracked files) to a peer machine over `rsync` + SSH.
+Handy when you bounce between Linux/WSL and macOS and want both copies in sync.
+**Disabled by default** on a fresh clone."
 
 **Ask**: "Do you want to set up SmartSync to push changes to a peer machine? (y/n)"
 
@@ -236,20 +236,27 @@ chmod 600 .claude/hooks/smartsync.conf
 
 **Register the hook** in `.claude/settings.local.json` (per-machine, already
 gitignored) — do NOT touch `.claude/settings.json`; that file is team-wide.
-Add a `PostToolUse` entry with matcher `Write|Edit` running
-`./.claude/hooks/SmartSync.sh`. If `settings.local.json` does not exist yet,
-create it from `config/settings.local.json.example`. If it does, **read first**,
-**merge into existing hooks** (do not replace the array), then `Edit`. Entry shape:
+Add a `Stop` entry running `./.claude/hooks/SmartSync.sh` (timeout 60s). If
+`settings.local.json` does not exist yet, create it from
+`config/settings.local.json.example`. If it does, **read first**, **merge into
+the existing `Stop` array** (do not replace it), then `Edit`. Entry shape:
 
 ```json
-{
-  "type": "command",
-  "command": "./.claude/hooks/SmartSync.sh",
-  "statusMessage": "SmartSync to peer machine"
-}
+"Stop": [
+  {
+    "hooks": [
+      {
+        "type": "command",
+        "command": "./.claude/hooks/SmartSync.sh",
+        "statusMessage": "Syncing changes between machines",
+        "timeout": 60
+      }
+    ]
+  }
+]
 ```
 
-If a SmartSync entry already exists on the same matcher in `settings.local.json`,
+If a SmartSync entry already exists in the `Stop` array of `settings.local.json`,
 do not duplicate — just tell the user.
 
 Note: Claude Code merges `settings.json` ← `settings.local.json` in user →

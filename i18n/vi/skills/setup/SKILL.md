@@ -206,7 +206,7 @@ nó nếu người dùng yêu cầu rõ ràng, hoặc nếu lĩnh vực nghiên 
 
 #### 4e: SmartSync (đồng bộ sang máy khác)
 
-**Giải thích**: "SmartSync là một hook chạy sau mỗi tool `Write|Edit` để đẩy
+**Giải thích**: "SmartSync là một hook chạy khi Claude Code dừng (`Stop`) để đẩy
 nội dung repo (raw/, wiki/ và các tệp không được Git theo dõi) sang một máy khác
 qua `rsync` + SSH. Hữu ích khi bạn vừa làm việc trên Linux/WSL vừa trên macOS
 và muốn nội dung luôn đồng bộ. Tính năng này **tắt mặc định** khi clone repo."
@@ -236,20 +236,28 @@ chmod 600 .claude/hooks/smartsync.conf
 
 **Đăng ký hook** trong `.claude/settings.local.json` (per-machine, đã có trong
 `.gitignore`) — KHÔNG ghi vào `.claude/settings.json` vì file đó là cấu hình
-team-wide. Thêm một mục `PostToolUse` với matcher `Write|Edit` chạy
-`./.claude/hooks/SmartSync.sh`. Nếu `settings.local.json` chưa tồn tại, tạo mới
-từ `config/settings.local.json.example`. Nếu đã tồn tại, phải **đọc trước**,
-**hợp nhất với hooks hiện có** (không thay thế mảng), rồi `Edit` lại. Schema mục mới:
+team-wide. Thêm một mục `Stop` chạy `./.claude/hooks/SmartSync.sh` (timeout 60s).
+Nếu `settings.local.json` chưa tồn tại, tạo mới từ
+`config/settings.local.json.example`. Nếu đã tồn tại, phải **đọc trước**,
+**hợp nhất với hooks hiện có** (không thay thế mảng `Stop`), rồi `Edit` lại.
+Schema mục mới:
 
 ```json
-{
-  "type": "command",
-  "command": "./.claude/hooks/SmartSync.sh",
-  "statusMessage": "SmartSync to peer machine"
-}
+"Stop": [
+  {
+    "hooks": [
+      {
+        "type": "command",
+        "command": "./.claude/hooks/SmartSync.sh",
+        "statusMessage": "Syncing changes between machines",
+        "timeout": 60
+      }
+    ]
+  }
+]
 ```
 
-Nếu mục SmartSync đã tồn tại trên cùng matcher trong `settings.local.json`,
+Nếu mục SmartSync đã tồn tại trong mảng `Stop` của `settings.local.json`,
 không thêm trùng — chỉ thông báo.
 
 Lưu ý: Claude Code merge `settings.json` ← `settings.local.json` theo thứ tự

@@ -11,18 +11,6 @@
           }
         ]
       }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "./.claude/hooks/SmartSync.sh",
-            "statusMessage": "Syncing changes between machines",
-            "timeout": 60
-          }
-        ]
-      }
     ]
   }
 }

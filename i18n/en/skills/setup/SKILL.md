@@ -81,6 +81,7 @@ Recommended:
 Optional:
 ✗  DeepXiv                 — not set  (semantic search unavailable)
 ✗  Review LLM              — not set  (cross-model review unavailable)
+✗  SmartSync               — not set  (hook pushing changes to a peer machine via rsync/SSH)
 ```
 
 Ask the user: "Which would you like to configure? (You can skip any or all.)"
@@ -200,6 +201,70 @@ launches and reads `.env` at that time — changes take effect after restarting 
 
 This key has a sensible default (`cs.LG,cs.CV,cs.CL,cs.AI,stat.ML`). Only configure
 it if the user explicitly asks, or if their research area is clearly outside ML/AI.
+
+---
+
+#### 4e: SmartSync (mirror to another machine)
+
+**Explain**: "SmartSync is a `PostToolUse` hook that runs after every `Write|Edit`
+to push repo state (raw/, wiki/ and untracked files) to a peer machine over
+`rsync` + SSH. Handy when you bounce between Linux/WSL and macOS and want both
+copies in sync. **Disabled by default** on a fresh clone."
+
+**Ask**: "Do you want to set up SmartSync to push changes to a peer machine? (y/n)"
+
+If **no**, skip this section.
+
+If **yes**, ask:
+
+1. `username@<peer-host>` — e.g. `tuank@kiets-macbook` or `tuank@192.168.1.20`.
+   Must be a host this machine can SSH to (key-based auth or an alias in
+   `~/.ssh/config`).
+2. **Destination path on the peer** — absolute path, e.g.
+   `/Users/tuank/Documents/Projects/xrayWiki`. The skill appends a trailing `/`
+   if missing.
+
+**Write config** to `.claude/hooks/smartsync.conf` (already gitignored), starting
+from the `config/smartsync.conf.example` template:
+
+```bash
+cp config/smartsync.conf.example .claude/hooks/smartsync.conf
+# Replace the placeholder with what the user gave you (via Edit):
+#   SMARTSYNC_REMOTE="<username@host>:<path-with-trailing-slash>"
+chmod 600 .claude/hooks/smartsync.conf
+```
+
+**Register the hook** in `.claude/settings.local.json` (per-machine, already
+gitignored) — do NOT touch `.claude/settings.json`; that file is team-wide.
+Add a `PostToolUse` entry with matcher `Write|Edit` running
+`./.claude/hooks/SmartSync.sh`. If `settings.local.json` does not exist yet,
+create it from `config/settings.local.json.example`. If it does, **read first**,
+**merge into existing hooks** (do not replace the array), then `Edit`. Entry shape:
+
+```json
+{
+  "type": "command",
+  "command": "./.claude/hooks/SmartSync.sh",
+  "statusMessage": "SmartSync to peer machine"
+}
+```
+
+If a SmartSync entry already exists on the same matcher in `settings.local.json`,
+do not duplicate — just tell the user.
+
+Note: Claude Code merges `settings.json` ← `settings.local.json` in user →
+project → local order, so the hook runs without touching `settings.json`.
+
+**Smoke-test** SSH/rsync before finishing:
+
+```bash
+ssh -o BatchMode=yes -o ConnectTimeout=5 <username@host> "echo ok" \
+  || echo "WARN: SSH not ready — configure ~/.ssh/config or ssh-copy-id then retry."
+command -v rsync >/dev/null || echo "WARN: install rsync on this machine."
+```
+
+**Remind the user**: SmartSync is one-way — from this machine to the configured
+peer. On each machine you have to run `/setup` again to declare its own peer.
 
 ---
 

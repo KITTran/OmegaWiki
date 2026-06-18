@@ -16,6 +16,9 @@ build/
 # Claude Code local settings (contains MCP server permissions, may contain API keys)
 .claude/settings.local.json
 
+# SmartSync per-machine config (contains remote host/path)
+.claude/hooks/smartsync.conf
+
 # IDE
 .vscode/
 .idea/

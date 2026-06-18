@@ -81,6 +81,7 @@ Trạng Thái Cấu Hình ΩmegaWiki
 Tùy chọn:
 ✗  DeepXiv                 — chưa thiết lập  (tìm kiếm ngữ nghĩa không khả dụng)
 ✗  Review LLM              — chưa thiết lập  (đánh giá chéo giữa các mô hình không khả dụng)
+✗  SmartSync               — chưa thiết lập  (hook đẩy thay đổi sang máy khách qua rsync/SSH)
 ```
 
 Hỏi người dùng: "Bạn muốn cấu hình cái nào? (Bạn có thể bỏ qua bất kỳ hoặc tất cả.)"
@@ -200,6 +201,71 @@ khởi chạy và đọc `.env` tại thời điểm đó — các thay đổi c
 
 Khóa này có giá trị mặc định hợp lý (`cs.LG,cs.CV,cs.CL,cs.AI,stat.ML`). Chỉ cấu hình
 nó nếu người dùng yêu cầu rõ ràng, hoặc nếu lĩnh vực nghiên cứu của họ rõ ràng nằm ngoài ML/AI.
+
+---
+
+#### 4e: SmartSync (đồng bộ sang máy khác)
+
+**Giải thích**: "SmartSync là một hook chạy sau mỗi tool `Write|Edit` để đẩy
+nội dung repo (raw/, wiki/ và các tệp không được Git theo dõi) sang một máy khác
+qua `rsync` + SSH. Hữu ích khi bạn vừa làm việc trên Linux/WSL vừa trên macOS
+và muốn nội dung luôn đồng bộ. Tính năng này **tắt mặc định** khi clone repo."
+
+**Hỏi**: "Bạn có muốn thiết lập SmartSync để đẩy thay đổi sang một máy khách khác không? (y/n)"
+
+Nếu người dùng trả lời **không**, bỏ qua phần này.
+
+Nếu người dùng trả lời **có**, hỏi tiếp:
+
+1. `username@<địa chỉ máy khách>` — ví dụ: `tuank@kiets-macbook` hoặc
+   `tuank@192.168.1.20`. Phải là một host mà máy hiện tại có thể SSH tới
+   (đã cấu hình khóa SSH hoặc alias trong `~/.ssh/config`).
+2. **Đường dẫn thư mục lưu trên máy khách** — đường dẫn tuyệt đối, ví dụ:
+   `/Users/tuank/Documents/Projects/xrayWiki`. Nếu thiếu dấu `/` cuối, kỹ năng
+   tự thêm vào.
+
+**Ghi tệp cấu hình** `.claude/hooks/smartsync.conf` (đã có trong `.gitignore`)
+dựa trên template `config/smartsync.conf.example`:
+
+```bash
+cp config/smartsync.conf.example .claude/hooks/smartsync.conf
+# Thay placeholder bằng giá trị người dùng cung cấp (qua Edit):
+#   SMARTSYNC_REMOTE="<username@host>:<đường-dẫn-có-dấu-/>"
+chmod 600 .claude/hooks/smartsync.conf
+```
+
+**Đăng ký hook** trong `.claude/settings.local.json` (per-machine, đã có trong
+`.gitignore`) — KHÔNG ghi vào `.claude/settings.json` vì file đó là cấu hình
+team-wide. Thêm một mục `PostToolUse` với matcher `Write|Edit` chạy
+`./.claude/hooks/SmartSync.sh`. Nếu `settings.local.json` chưa tồn tại, tạo mới
+từ `config/settings.local.json.example`. Nếu đã tồn tại, phải **đọc trước**,
+**hợp nhất với hooks hiện có** (không thay thế mảng), rồi `Edit` lại. Schema mục mới:
+
+```json
+{
+  "type": "command",
+  "command": "./.claude/hooks/SmartSync.sh",
+  "statusMessage": "SmartSync to peer machine"
+}
+```
+
+Nếu mục SmartSync đã tồn tại trên cùng matcher trong `settings.local.json`,
+không thêm trùng — chỉ thông báo.
+
+Lưu ý: Claude Code merge `settings.json` ← `settings.local.json` theo thứ tự
+user → project → local, nên hook chạy bình thường mà không cần đụng tới
+`settings.json`.
+
+**Kiểm tra nhanh** SSH/rsync trước khi kết thúc:
+
+```bash
+ssh -o BatchMode=yes -o ConnectTimeout=5 <username@host> "echo ok" \
+  || echo "WARN: SSH chưa sẵn sàng — cấu hình ~/.ssh/config hoặc ssh-copy-id rồi thử lại."
+command -v rsync >/dev/null || echo "WARN: cần cài rsync trên máy này."
+```
+
+**Nhắc người dùng**: SmartSync chỉ đẩy MỘT chiều — từ máy hiện tại sang máy khách
+đã cấu hình. Trên mỗi máy bạn phải chạy lại `/setup` để khai báo peer riêng của nó.
 
 ---
 

@@ -1,0 +1,16 @@
+# SmartSync configuration (per-machine, do not commit).
+#
+# This is a template — copy to `.claude/hooks/smartsync.conf` (per-machine,
+# gitignored) and fill in the values. `/setup` does this for you when you opt
+# in. Each machine has its own conf file pointing at the peer it should push to.
+#
+#   cp config/smartsync.conf.example .claude/hooks/smartsync.conf
+#   chmod 600 .claude/hooks/smartsync.conf
+#
+# SMARTSYNC_LOCAL  — absolute path to this repo on THIS machine. Optional;
+#                    defaults to the repo root containing this hook.
+# SMARTSYNC_REMOTE — rsync destination on the PEER machine, in the form
+#                    user@host:/absolute/path/. Trailing slash recommended.
+
+# SMARTSYNC_LOCAL="/home/you/projects/xrayWiki/"
+SMARTSYNC_REMOTE="user@peer-host:/absolute/path/to/repo/"

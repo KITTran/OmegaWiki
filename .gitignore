@@ -37,3 +37,7 @@ raw/papers/*.pdf
 
 # Obsidian settings
 .obsidian/
+.worktrees/
+
+# Graphify settings
+graphify-out/

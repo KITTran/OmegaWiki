@@ -5,3 +5,4 @@ markdownify>=0.11.0
 chardet>=5.0.0
 deepxiv-sdk>=0.2.0
 markitdown>=0.1.0
+httpx>=0.26.0
